@@ -1,0 +1,165 @@
+/* --- 5. Danh sách các mục sản phẩm --- */
+/* --- 1. Cấu trúc Megamenu chung --- */
+
+.zdcm-megamenu {
+    /* Đảm bảo Megamenu che phủ nội dung dưới nó */
+    position: absolute;
+    top: 100%; /* Đặt ngay dưới header */
+    left: 0;
+    width: 100%;
+    background-color: #fff; /* Nền trắng cho Megamenu */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 100; /* Luôn hiển thị trên các nội dung khác */
+    /* Thêm transition cho hiệu ứng mượt mà khi hiện/ẩn */
+    opacity: 0; 
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* Lớp này được áp dụng khi Megamenu hiển thị */
+header:hover .zdcm-megamenu,
+.zdcm-megamenu.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.zdcm-megamenu-products-wrapper {
+    max-width: 1440px; /* Độ rộng tối đa của nội dung */
+    margin: 0 auto;
+    padding: 32px 40px;
+    display: flex; /* Dùng flex cho container Tab và News */
+}
+
+/* --- 2. Hệ thống Tabs (Zoom Workplace / Business Services) --- */
+
+.zdcm-megamenu-products-categories {
+    flex-grow: 1; /* Cho phép phần tab chiếm không gian */
+}
+
+.fdn-tabs__tablist {
+    display: flex;
+    flex-direction: column;
+    width: 280px; /* Chiều rộng cố định cho cột Tabs */
+    border-right: 1px solid #eee; /* Đường phân cách */
+    padding-right: 20px;
+}
+
+.fdn-tabs__tab {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 15px 0;
+    cursor: pointer;
+    position: relative;
+    border-left: 3px solid transparent; /* Viền trái mặc định */
+}
+
+.fdn-tabs__tab.active,
+.fdn-tabs__tab[aria-selected="true"] {
+    border-left-color: #007bff; /* Màu xanh khi active */
+}
+
+.fdn-tabs__title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.fdn-tabs__description {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* --- 3. Nội dung Tab (Tab Panel) --- */
+
+.fdn-tabs__tabpanel {
+    padding-left: 30px;
+    flex-grow: 1;
+}
+
+.zdcm-megamenu__column--block {
+    display: flex;
+    /* Các kiểu khác đã được định nghĩa ở câu trả lời trước */
+}
+/* --- 4. Phần News/Điểm nổi bật (ảnh và mô tả) --- */
+
+.zdcm-megamenu-products-news {
+    width: 350px; /* Chiều rộng cố định cho phần ảnh */
+    margin-left: 40px;
+}
+
+.zdcm-news-container {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 100%; 
+}
+
+.zdcm-news-background {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.3s ease; /* Thêm transition khi ảnh thay đổi */
+}
+
+.zdcm-news-content {
+    position: absolute;
+    bottom: 0; /* Đặt nội dung ở dưới ảnh */
+    width: 100%;
+    padding: 20px;
+    /* Dùng overlay gradient để chữ dễ đọc hơn */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
+    color: #fff;
+}
+
+.zdcm-icon-label span {
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.zdcm-news-description p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+.zdcm-megamenu__list-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.zdcm-megamenu__list-item:hover {
+    background-color: #f5f5f5; /* Hiệu ứng hover nhẹ */
+}
+
+.zdcm-megamenu__list-item-icon {
+    /* Đây là nơi chứa font icon (như iconzdcm-meetings) */
+    font-size: 1.5rem;
+    color: #007bff; /* Màu icon chính */
+    margin-right: 10px;
+    width: 24px; /* Đảm bảo căn chỉnh */
+    text-align: center;
+}
+
+.zdcm-megamenu__list-item-heading {
+    line-height: 1.2;
+}
+
+.zdcm-megamenu__list-item a {
+    text-decoration: none;
+    color: #333;
+    display: block;
+}
+
+.zdcm-megamenu__list-item-description {
+    display: block;
+    font-size: 0.75rem;
+    color: #666;
+}

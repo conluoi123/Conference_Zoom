@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+#root {
+  @apply min-h-screen text-white;
+  background: linear-gradient(135deg, #1f295e 0%, #0d1b3f 100%);
+}
