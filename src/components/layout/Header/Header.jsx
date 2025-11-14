@@ -61,7 +61,7 @@ const Header = () => {
             </button>
             
             {/* Logo */}
-            <a href="https://www.zoom.com/" className="flex-shrink-0">
+            <a href="https://www.zoom.com/" className="shrink-0">
               {/* Giả định logo là màu trắng cho chế độ tối (dark-mode) */}
               <span>
                 <img src="https://st1.zoom.us/homepage/publish/primary/assets/images/zoom-logo.svg" alt="" className ="w-114px h-26px" />
