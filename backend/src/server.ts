@@ -44,9 +44,17 @@ if (ENV.NODE_ENV === "production") {
     res.sendFile(path.join(__dirname, "../../frontend", "dist", "index.html"));
   });
 }
+const startServer = async () => {
+  try {
+    await connectDB();
 
-server.listen(PORT, () => {
-  console.log(`Server is listening on port: ${PORT}`);
-});
+    server.listen(PORT, () => {
+      console.log(`Server is listening on port: ${PORT}`);
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
 
-export { app, server, io };
+startServer();
+export { io };

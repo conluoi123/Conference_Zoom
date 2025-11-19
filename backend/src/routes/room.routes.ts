@@ -1,11 +1,12 @@
 import { Router, Express } from "express";
+import { createNewRoom } from "../controllers/room.controller";
 
 const router = Router();
 const roomRoutes = (app: Express) => {
-  app.post("/rooms" /*createNewRoom*/);
-  app.get("/rooms/:roomId" /*getRoomInfo*/);
-  app.post("/rooms/:roomId/join" /*userJoinRoom*/);
-  app.post("/rooms/:roomId/leave" /*userLeaveRoom*/);
+  app.post("/rooms", createNewRoom);
+  // app.get("/rooms/:roomId" /*getRoomInfo*/);
+  // app.post("/rooms/:roomId/join" /*userJoinRoom*/);
+  // app.post("/rooms/:roomId/leave" /*userLeaveRoom*/);
   app.use("/rooms", router);
 };
 
