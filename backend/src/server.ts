@@ -36,14 +36,6 @@ app.use(morgan("dev"));
 
 roomRoutes(app);
 
-//Connect with frontend
-if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../frontend/dist")));
-
-  app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../frontend", "dist", "index.html"));
-  });
-}
 const startServer = async () => {
   try {
     await connectDB();
@@ -57,4 +49,3 @@ const startServer = async () => {
 };
 
 startServer();
-export { io };

@@ -1,8 +1,7 @@
 import Room from "../models/room.model";
 import { Request, Response } from "express";
 import { ENV } from "../configs/env";
-import { generateToken } from "../services/room.services";
-import { start } from "repl";
+import { createRoomOnVideoSDK, generateToken } from "../services/room.services";
 
 /*
   Tạo phòng họp:
@@ -14,38 +13,9 @@ import { start } from "repl";
 const createNewRoom = async (req: Request, res: Response) => {
   try {
     const { peerId, userType, title, meetingType, startTime } = req.body;
-    if (!userType || !peerId) {
-      return res.status(400).json({ error: "Missing essential information" });
-    }
-    // 1. Lấy token
-    const managementToken = generateToken(userType);
-
-    const region = "sg001";
-    const url = `${ENV.VIDEOSDK_API_ENDPOINT}/rooms`;
-    const options = {
-      method: "POST",
-      headers: {
-        Authorization: managementToken,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ region }),
-    };
-
-    // 2. Gọi API
-    const response = await fetch(url, options);
-
-    // 3. Parse dữ liệu JSON
-    const data = await response.json();
-
-    // 4. Trả về kết quả duy nhất 1 lần
-    // Kiểm tra xem VideoSDK có trả về lỗi không (ví dụ sai token)
-    if (!response.ok) {
-      console.error("VideoSDK Error:", data);
-      return res.status(response.status).json(data);
-    }
-
-    const newRoom = await Room.create({
-      roomId: data.roomId, // ID lấy từ VideoSDK
+    const roomId = await createRoomOnVideoSDK();
+    await Room.create({
+      roomId: roomId, // ID lấy từ VideoSDK
       hostId: peerId, // Người tạo là Host
       title: title || "Cuộc họp mới",
       type: meetingType === "schedule" ? "SCHEDULED" : "INSTANT",
@@ -54,14 +24,38 @@ const createNewRoom = async (req: Request, res: Response) => {
       createdAt: new Date(),
     });
 
-    const token = generateToken(userType, peerId, data.roomId);
+    const token = generateToken(userType, peerId, roomId);
 
-    return res.json({ roomId: data.roomId, token });
-  } catch (error) {
-    // 5. Bắt lỗi mạng hoặc lỗi server
-    console.error("Network/Server error:", error);
-    res.status(500).json({ error: "Failed to create room" });
+    return res.status(200).json({ roomId, token });
+  } catch (error: any) {
+    console.error("Tạo phòng:", error.message);
+
+    if (error.message.includes("Lỗi VideoSDK")) {
+      return res.status(502).json({ error: error.message });
+    }
+
+    // Lỗi server/DB nói chung
+    return res.status(500).json({ error: "Tạo phòng thất bại!" });
   }
 };
 
-export { createNewRoom };
+/*
+  Khi xác thực đầy đủ thông tin từ client
+  Tạo token tham gia phòng cho client và gửi lại kèm 1 số thông tin về room cho client hỗ trợ giao diện
+  Ngoài ra còn phải cài đặt kết nối socketIO
+  Thêm phần activeParticipant[] và invitedPariticipant[]
+ */
+const userJoinRoom = (req: Request, res: Response) => {
+  const { roomId, peerId, userType } = req.body;
+  const token = generateToken(userType, peerId, roomId);
+
+  const roomInfo = res.locals.roomInfo;
+  return res.status(200).json(token);
+};
+
+const userLeaveRoom = (req: Request, res: Response) => {
+  const { roomId, peerId, userType } = req.body;
+  return 1;
+};
+
+export { createNewRoom, userJoinRoom, userLeaveRoom };

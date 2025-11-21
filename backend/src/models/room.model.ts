@@ -6,9 +6,9 @@ export interface IRoom extends Document {
   type: "INSTANT" | "SCHEDULED";
   startTime?: Date;
   title?: string;
-  status: "ACTIVE" | "ENDED";
+  status: "ACTIVE" | "ENDED"; //Dùng để đánh dấu là đang họp hay đã kết thúc
   createdAt: Date;
-  endedAt?: Date;
+  lastUsedAt?: Date;
 }
 
 const roomSchema = new Schema<IRoom>({
@@ -32,7 +32,7 @@ const roomSchema = new Schema<IRoom>({
   },
 
   createdAt: { type: Date, default: Date.now },
-  endedAt: { type: Date },
+  lastUsedAt: { type: Date },
 });
 
 // 3. Export Model
