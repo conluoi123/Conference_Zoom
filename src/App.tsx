@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { LoginPage } from "./components/LoginPage";
-import { RegisterPage } from "./components/RegisterPage.tsx";
+import { LoginPage } from "./components/LoginPage.tsx";
+import { OTPPage } from "./components/OTPPage.tsx";
 
-type Page = "login" | "register";
+type Page = "otp" | "register"| "home";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>("login");
-
+  const [currentPage, setCurrentPage] = useState<"login" | "otp" | "home">("login");
+  const [email, setEmail] = useState("");
   return (
     <div 
       className="content-stretch flex items-center justify-center relative w-full h-screen overflow-hidden bg-white" 
@@ -15,9 +15,18 @@ export default function App() {
       }}
     >
       {currentPage === "login" ? (
-        <LoginPage onSwitchToRegister={() => setCurrentPage("register")} />
+        <LoginPage onSwitchToOTP={(enteredEmail) => { 
+          setEmail(enteredEmail); 
+          setCurrentPage("otp"); 
+        }} />
+      ) : currentPage === "otp" ? (
+        <OTPPage 
+          email={email} 
+          onBack={() => setCurrentPage("login")} 
+          onSwitchHome={() => setCurrentPage("home")} 
+        />
       ) : (
-        <RegisterPage onSwitchToLogin={() => setCurrentPage("login")} />
+        <div>Home Page</div>
       )}
     </div>
   );

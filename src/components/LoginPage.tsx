@@ -7,11 +7,12 @@ import { MdOutlineMailOutline } from "react-icons/md";
 // viết thêm phần validate cho email 
 
 interface LoginPageProps {
-  onSwitchToRegister: () => void;
+  onSwitchToOTP: (email: string) => void;
+  email: string;
 }
 
-export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
-    const [email, setEmail] = useState("");
+export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps) {
+    const [email, setEmail] = useState(initialEmail);
     const [error, setError] = useState(""); 
     const [touched, setTouched] = useState(false); 
     
@@ -38,6 +39,7 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
     }
     const handleEmailLogin = () => {
         console.log("Login with email:", email);
+        onSwitchToOTP(email);
     };
 
     const handleGoogleLogin = () => {
@@ -49,8 +51,8 @@ export function LoginPage({ onSwitchToRegister }: LoginPageProps) {
     };
 
     return (
-        <div className="w-full min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-blue-600 to-violet-600">
-        <div className="w-full max-w-[448px] flex flex-col gap-8">
+        <div className="w-full min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-blue-600 to-violet-600 ">
+        <div className="w-full max-w-[448px]  pt-8 pb-8 flex flex-col gap-8">
             {/* Header */}
             <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-4 items-center ">
