@@ -30,7 +30,7 @@ interface HomePageProps {
 export function HomePage({ userEmail }: HomePageProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10)); // November 2025
   const [showTip, setShowTip] = useState(true);
-
+  const [currentDay, setCurrentDay] = useState(new Date());
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
   
@@ -49,6 +49,12 @@ export function HomePage({ userEmail }: HomePageProps) {
   const goToNextMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
   };
+  const goToNextDay = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  }
+  const goToPreviousDay = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  }
 
   return (
     <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll">  
@@ -206,15 +212,19 @@ export function HomePage({ userEmail }: HomePageProps) {
                 
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
-                  const isToday = day === 16;
+                  const isSelected = 
+                    currentDay.getDate() === day &&
+                    currentDay.getMonth() === currentMonth.getMonth() &&
+                    currentDay.getFullYear() === currentMonth.getFullYear();
                   return (
                     <button
                       key={day}
                       className={`h-9 rounded-lg text-sm font-medium transition-colors ${
-                        isToday
+                        isSelected
                           ? "bg-blue-600 text-white"
                           : "text-gray-700 hover:bg-gray-100"
                       }`}
+                      onClick={() => setCurrentDay(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day))} // click vào ngày cũng cập nhật
                     >
                       {day}
                     </button>
