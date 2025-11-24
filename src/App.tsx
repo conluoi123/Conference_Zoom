@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LoginPage } from "./components/LoginPage.tsx";
 import { OTPPage } from "./components/OTPPage.tsx";
-
+import { HomePage } from "./components/Home.tsx";
 type Page = "otp" | "register"| "home";
 
 export default function App() {
@@ -26,7 +26,7 @@ export default function App() {
           onSwitchHome={() => setCurrentPage("home")} 
         />
       ) : (
-        <div>Home Page</div>
+        <HomePage  />
       )}
     </div>
   );
