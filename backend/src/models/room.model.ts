@@ -7,8 +7,10 @@ export interface IRoom extends Document {
   startTime?: Date;
   title?: string;
   status: "ACTIVE" | "ENDED"; //Dùng để đánh dấu là đang họp hay đã kết thúc
+  askBeforeJoin: boolean;
   createdAt: Date;
   lastUsedAt?: Date;
+  sessions: string[];
 }
 
 const roomSchema = new Schema<IRoom>({
@@ -31,8 +33,12 @@ const roomSchema = new Schema<IRoom>({
     default: "ACTIVE",
   },
 
+  askBeforeJoin: { type: Boolean },
+
   createdAt: { type: Date, default: Date.now },
   lastUsedAt: { type: Date },
+
+  sessions: [{ type: String }],
 });
 
 // 3. Export Model

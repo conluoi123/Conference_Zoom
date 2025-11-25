@@ -2,6 +2,7 @@ import Room from "../models/room.model";
 import { Request, Response } from "express";
 import { ENV } from "../configs/env";
 import { createRoomOnVideoSDK, generateToken } from "../services/room.services";
+import Session from "../models/session.model";
 
 /*
   Tạo phòng họp:
@@ -12,8 +13,10 @@ import { createRoomOnVideoSDK, generateToken } from "../services/room.services";
  */
 const createNewRoom = async (req: Request, res: Response) => {
   try {
-    const { peerId, userType, title, meetingType, startTime } = req.body;
+    const { peerId, title, meetingType, startTime } = req.body;
+
     const roomId = await createRoomOnVideoSDK();
+
     await Room.create({
       roomId: roomId, // ID lấy từ VideoSDK
       hostId: peerId, // Người tạo là Host
@@ -21,10 +24,12 @@ const createNewRoom = async (req: Request, res: Response) => {
       type: meetingType === "schedule" ? "SCHEDULED" : "INSTANT",
       startTime: meetingType === "schedule" ? new Date(startTime) : undefined,
       status: "ACTIVE", // Mặc định vừa tạo là đang hoạt động
+      askBeforeJoin: true,
       createdAt: new Date(),
+      sessions: [],
     });
 
-    const token = generateToken(userType, peerId, roomId);
+    const token = generateToken("host", peerId, roomId);
 
     return res.status(200).json({ roomId, token });
   } catch (error: any) {
@@ -45,11 +50,27 @@ const createNewRoom = async (req: Request, res: Response) => {
   Ngoài ra còn phải cài đặt kết nối socketIO
   Thêm phần activeParticipant[] và invitedPariticipant[]
  */
-const userJoinRoom = (req: Request, res: Response) => {
-  const { roomId, peerId, userType } = req.body;
+
+const userJoinRoom = async (req: Request, res: Response) => {
+  const { roomId, peerId } = req.body;
+  const roomInfo = res.locals.roomInfo;
+  const sessionInfo = await Session.findOne({
+    sessionId: roomInfo.sessions.at(-1),
+  });
+
+  let userType = "waiting";
+
+  if (peerId === roomInfo.hostId) {
+    userType = "host";
+  } else if (
+    !roomInfo.askBeforeJoin ||
+    sessionInfo.invitedUsers.includes(peerId)
+  ) {
+    userType = "no_waiting";
+  }
+
   const token = generateToken(userType, peerId, roomId);
 
-  const roomInfo = res.locals.roomInfo;
   return res.status(200).json(token);
 };
 

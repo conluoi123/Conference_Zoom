@@ -8,16 +8,9 @@ const createRoomMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { peerId, userType, meetingType, startTime } = req.body;
+  const { peerId, meetingType, startTime } = req.body;
 
-  // 1. Check bắt buộc
-  if (!userType) {
-    return res
-      .status(400)
-      .json({ error: "Không đủ quyền thực hiện thao tác!" });
-  }
-
-  const user = await User.findOne({ userId: peerId });
+  const user = await User.findOne({ __id: peerId });
 
   if (!peerId || !user) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });
@@ -52,8 +45,8 @@ const joinRoomMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { roomId, peerId, userType } = req.body;
-  const user = await User.findOne({ userId: peerId });
+  const { roomId, peerId } = req.body;
+  const user = await User.findOne({ __id: peerId });
 
   if (!peerId || !user) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });
@@ -62,12 +55,6 @@ const joinRoomMiddleware = async (
   const room = await Room.findOne({ roomId: roomId });
   if (!roomId || !room || !(await validateRoomOnVideoSDK(roomId))) {
     return res.status(400).json({ error: "Phòng không tồn tại!" });
-  }
-
-  if (!userType) {
-    return res
-      .status(400)
-      .json({ error: "Không đủ quyền thực hiện thao tác!" });
   }
 
   res.locals.roomInfo = room;
