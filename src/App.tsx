@@ -18,7 +18,9 @@ export default function App() {
         <LoginPage onSwitchToOTP={(enteredEmail) => { 
           setEmail(enteredEmail); 
           setCurrentPage("otp"); 
-        }} />
+        }}
+        email= {email} 
+        />
       ) : currentPage === "otp" ? (
         <OTPPage 
           email={email} 
@@ -26,7 +28,7 @@ export default function App() {
           onSwitchHome={() => setCurrentPage("home")} 
         />
       ) : (
-        <HomePage  />
+        <HomePage  userEmail={email}/>
       )}
     </div>
   );

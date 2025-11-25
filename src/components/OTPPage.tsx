@@ -139,6 +139,12 @@ export function OTPPage({email, onBack, onSwitchHome}: OTPPageProps) {
                   value={digit}
                   onChange={e => handleChange(index, e.target.value)}
                   onKeyDown={e => handlBackspace(index, e)}
+                  // xử lí enter 
+                  onKeyPress={e => {
+                    if(e.key === 'Enter' && isComplete) {
+                      handleVerify();
+                    }
+                  }}
                   className={`w-12 h-14 text-center text-2xl font-semibold border-2 rounded-lg focus:outline-none transition-colors ${
                     error
                       ? "border-red-500 focus:border-red-500"

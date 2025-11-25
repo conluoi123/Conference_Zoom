@@ -55,7 +55,7 @@ export function HomePage({ userEmail }: HomePageProps) {
   const goToPreviousDay = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   }
-
+  // 
   return (
     <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll">  
       {/* Header */}

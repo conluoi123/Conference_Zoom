@@ -121,6 +121,11 @@ export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps
                     type="email"
                     value={email}
                     onChange = {handleEmailChange}
+                    onKeyPress= {(e) => {
+                    if(e.key === 'Enter') {
+                        handleEmailLogin();
+                    }
+                }}
                     placeholder="abc@example.com"
                     className= {'w-full h-12 pl-10 pr-3 bg-gray-100 border-2 border-gray-300 rounded-lg text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 transition-colors ' + (error ? 'border-red-500' : '') }
                     />
@@ -134,6 +139,8 @@ export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps
                 
                 <button 
                 onClick={handleEmailLogin}
+                // xử lí nút enter cho form email
+                
                 className="w-full h-12 bg-blue-600 text-white rounded-lg font-medium text-sm cursor-pointer hover:bg-blue-700 transition-colors" 
                 >
                 Tiếp tục với Email
