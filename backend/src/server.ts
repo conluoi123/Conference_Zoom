@@ -13,6 +13,7 @@ import morgan from "morgan";
 import { ENV } from "./configs/env";
 import { connectDB } from "./configs/db";
 import roomRoutes from "./routes/room.routes";
+import webHook from "./routes/webhook.routes";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 roomRoutes(app);
+webHook(app);
 
 const startServer = async () => {
   try {

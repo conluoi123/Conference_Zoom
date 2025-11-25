@@ -6,6 +6,7 @@ export interface IUser extends Document {
   avatar?: string;
   provider: "local" | "google" | "outlook";
   role: "user" | "admin";
+
   createdAt: Date;
   lastLoginAt?: Date;
   refreshToken: {
@@ -19,7 +20,7 @@ export interface IUser extends Document {
 }
 
 const userSchema: Schema<IUser> = new Schema({
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   displayName: { type: String, required: true },
   avatar: { type: String, default: "" },
 

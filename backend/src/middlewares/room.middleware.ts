@@ -10,9 +10,9 @@ const createRoomMiddleware = async (
 ) => {
   const { peerId, meetingType, startTime } = req.body;
 
-  const user = await User.findOne({ __id: peerId });
+  //const user = await User.findOne({ __id: peerId });
 
-  if (!peerId || !user) {
+  if (!peerId /*|| !user*/) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });
   }
 
@@ -46,9 +46,9 @@ const joinRoomMiddleware = async (
   next: NextFunction
 ) => {
   const { roomId, peerId } = req.body;
-  const user = await User.findOne({ __id: peerId });
+  //const user = await User.findOne({ __id: peerId });
 
-  if (!peerId || !user) {
+  if (!peerId /*|| !user*/) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });
   }
 

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import Room from "../models/room.model";
 import crypto from "crypto";
+import Session from "../models/session.model";
 
 const videoSdkWebhook = async (req: Request, res: Response) => {
   try {
@@ -11,52 +11,32 @@ const videoSdkWebhook = async (req: Request, res: Response) => {
     console.log(`Webhook Event: ${webhookType}`);
 
     switch (webhookType) {
-      // 1. Có người vào phòng
-      case "participant-joined": {
-        const { roomId, participantId } = data;
-        await Room.updateOne(
-          { roomId },
-          {
-            $addToSet: { currentParticipants: participantId }, // Thêm vào danh sách
-            $set: { lastUsedAt: new Date() }, // Cập nhật thời gian dùng
-          }
-        );
+      case "session-started": {
+        const { sessionId, meetingId, start } = data;
+        await Session.create({
+          roomId: meetingId,
+          sessionId: sessionId,
+          start: new Date(start),
+          end: null,
+          invitedUsers: [],
+        });
         break;
       }
 
-      // 2. Có người rời phòng
-      case "participant-left": {
-        const { roomId, participantId } = data;
-        await Room.updateOne(
-          { roomId },
-          { $pull: { currentParticipants: participantId } } // Xóa khỏi danh sách
-        );
-        break;
-      }
-
-      // 3. Cuộc họp kết thúc (Hết giờ hoặc mọi người đã ra hết)
       case "session-ended": {
-        const { roomId } = data;
-        await Room.updateOne(
-          { roomId },
+        const { sessionId, meetingId, end } = data;
+        await Session.updateOne(
           {
-            status: "ENDED",
-            currentParticipants: [], // Xóa sạch
-            activeParticipants: [],
+            roomId: meetingId,
+            sessionId: sessionId,
+          },
+          {
+            end: new Date(end),
           }
         );
-        break;
-      }
-
-      // 4. Ghi hình xong (Nếu có dùng Recording)
-      case "recording-stopped": {
-        const { roomId, fileUrl } = data;
-        console.log("Link video:", fileUrl);
-        // Lưu link này vào DB để xem lại
         break;
       }
     }
-
     // BẮT BUỘC: Trả về 200 OK ngay lập tức
     return res.status(200).send("OK");
   } catch (error) {

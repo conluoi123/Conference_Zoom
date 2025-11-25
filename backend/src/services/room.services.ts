@@ -46,7 +46,17 @@ const createRoomOnVideoSDK = async () => {
       Authorization: managementToken,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ region }),
+    body: JSON.stringify({
+      webhook: {
+        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        events: [
+          "session-started",
+          "session-ended",
+          "recording-started",
+          "recording-stopped",
+        ],
+      },
+    }),
   };
 
   // 2. Gọi API

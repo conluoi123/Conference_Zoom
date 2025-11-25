@@ -1,16 +1,15 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 // 1. Interface (Copy từ thiết kế của bạn)
-export interface ISession extends Document {
+export interface IRecord extends Document {
   roomId: string;
   sessionId: string;
-  start: Date;
-  end: Date;
-  invitedUsers: string[];
+  sharedUsers: string[];
+  fileUrl: string;
 }
 
 // 2. Schema (Triển khai cho Mongoose)
-const sessionSchema = new Schema<ISession>({
+const recordSchema = new Schema<IRecord>({
   roomId: {
     type: String,
     required: true,
@@ -25,11 +24,10 @@ const sessionSchema = new Schema<ISession>({
     index: true,
   },
 
-  start: { type: Date },
-  end: { type: Date },
+  sharedUsers: { type: [String], default: [] },
 
-  invitedUsers: { type: [String], default: [] },
+  fileUrl: { type: String },
 });
 
-const Session = mongoose.model<ISession>("Session", sessionSchema);
-export default Session;
+const Record = mongoose.model<IRecord>("Record", recordSchema);
+export default Record;

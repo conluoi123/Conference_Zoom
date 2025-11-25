@@ -1,8 +1,11 @@
-import express from "express";
+import { Router, Express } from "express";
 import webhook from "../controllers/webhook.controller";
 
-const router = express.Router();
+const router = Router();
 
-router.post("/events", webhook);
+const webHook = (app: Express) => {
+  app.post("/", webhook);
+  app.use("/", router);
+};
 
-export default router;
+export default webHook;

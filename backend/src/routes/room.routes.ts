@@ -9,10 +9,16 @@ import {
   joinRoomMiddleware,
 } from "../middlewares/room.middleware";
 
+/*
+  Tạo phòng
+  Tham gia phòng
+  Rời phòng
+  Lấy thông tin phòng
+*/
+
 const router = Router();
 const roomRoutes = (app: Express) => {
-  app.post("/rooms", createRoomMiddleware, createNewRoom); // create new meeting room
-  //app.get("/rooms/:roomId" getRoomInfo); //get participant info
+  app.post("/rooms/create", createRoomMiddleware, createNewRoom); // create new meeting room
   app.post("/rooms/:roomId/join", joinRoomMiddleware, userJoinRoom);
   app.post("/rooms/:roomId/leave", userLeaveRoom);
   app.use("/rooms", router);

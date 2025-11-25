@@ -1,12 +1,11 @@
 import Room from "../models/room.model";
 import { Request, Response } from "express";
-import { ENV } from "../configs/env";
 import { createRoomOnVideoSDK, generateToken } from "../services/room.services";
 import Session from "../models/session.model";
 
 /*
   Tạo phòng họp:
-  - Để tạo phòng, thực hiện gọi API: POST "/rooms"
+  - Để tạo phòng, thực hiện gọi API: POST "/rooms/create"
   - Client sẽ gửi data bao gồm "peerId: Id của user" và "userType: user thuộc nhóm nào để tạo token"
   - Server sẽ chịu trách nhiệm gọi API đến VideoSDK để tạo phòng
   - Khi đã có đầy đủ thông tin phòng, lưu lại vào cơ sở dữ liệu và trả về cho client roomId kèm token xác thực để vào roomId đó
@@ -58,22 +57,23 @@ const userJoinRoom = async (req: Request, res: Response) => {
     sessionId: roomInfo.sessions.at(-1),
   });
 
-  let userType = "waiting";
+  let userType = "no_waiting"; //set lại waiting
 
-  if (peerId === roomInfo.hostId) {
-    userType = "host";
-  } else if (
-    !roomInfo.askBeforeJoin ||
-    sessionInfo.invitedUsers.includes(peerId)
-  ) {
-    userType = "no_waiting";
-  }
+  // if (peerId === roomInfo.hostId) {
+  //   userType = "host";
+  // } else if (
+  //   !roomInfo.askBeforeJoin ||
+  //   sessionInfo.invitedUsers.includes(peerId)
+  // ) {
+  //   userType = "no_waiting";
+  // }
 
   const token = generateToken(userType, peerId, roomId);
 
   return res.status(200).json(token);
 };
 
+//Rời phòng ngắt socket
 const userLeaveRoom = (req: Request, res: Response) => {
   const { roomId, peerId, userType } = req.body;
   return 1;
