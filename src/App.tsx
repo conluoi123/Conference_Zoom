@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LoginPage } from "./components/LoginPage.tsx";
 import { OTPPage } from "./components/OTPPage.tsx";
 import { HomePage } from "./components/Home.tsx";
-type Page = "otp" | "register"| "home";
+//type Page = "otp" | "register"| "home";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<"login" | "otp" | "home">("login");
@@ -15,18 +15,21 @@ export default function App() {
       }}
     >
       {currentPage === "login" ? (
-        <LoginPage onSwitchToOTP={(enteredEmail) => { 
+        <LoginPage  
+        onSwitchToOTP={(enteredEmail) => { 
           setEmail(enteredEmail); 
           setCurrentPage("otp"); 
-        }} />
+        }}
+        email={email}
+        />
       ) : currentPage === "otp" ? (
         <OTPPage 
           email={email} 
-          onBack={() => setCurrentPage("login")} 
-          onSwitchHome={() => setCurrentPage("home")} 
+          onBack={() => {setCurrentPage("login")}} 
+          onSwitchHome={() => {setCurrentPage("home")}} 
         />
       ) : (
-        <HomePage  />
+        <HomePage userEmail={email}  />
       )}
     </div>
   );

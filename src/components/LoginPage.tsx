@@ -14,7 +14,6 @@ interface LoginPageProps {
 export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps) {
     const [email, setEmail] = useState(initialEmail);
     const [error, setError] = useState(""); 
-    const [touched, setTouched] = useState(false); 
     
     const regexEmail = (value:string) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,8 +50,8 @@ export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps
     };
 
     return (
-        <div className="w-full min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-blue-600 to-violet-600 ">
-        <div className="w-full max-w-[448px]  pt-8 pb-8 flex flex-col gap-8">
+            <div className="w-full min-h-[100dvh] flex justify-center px-4 py-12 bg-gradient-to-br from-blue-600 to-violet-600">
+            <div className="w-full max-w-[448px]  pt-8 pb-8 flex flex-col gap-8">
             {/* Header */}
             <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-4 items-center ">
@@ -156,19 +155,6 @@ export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps
                 </p>
             </div>
             </div>
-
-            {/* Register Link
-            <div className="text-center">
-            <p className="text-base text-white">
-                Chưa có tài khoản?{" "}
-                <button 
-                onClick={onSwitchToRegister}
-                className="font-semibold hover:underline cursor-pointer"
-                >
-                Đăng ký ngay
-                </button>
-            </p>
-            </div> */}
         </div>
         </div>
     );
