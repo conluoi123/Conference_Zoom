@@ -50,7 +50,7 @@ export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps
     };
 
     return (
-            <div className="w-full min-h-[100dvh] flex justify-center px-4 py-12 bg-gradient-to-br from-blue-600 to-violet-600">
+            <div className="w-full min-h-screen flex justify-center px-4 py-12 bg-gradient-to-br from-blue-600 to-violet-600">
             <div className="w-full max-w-[448px]  pt-8 pb-8 flex flex-col gap-8">
             {/* Header */}
             <div className="flex flex-col items-center gap-4">

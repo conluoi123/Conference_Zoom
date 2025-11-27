@@ -83,7 +83,7 @@ export function OTPPage({email, onBack, onSwitchHome}: OTPPageProps) {
 
     const isComplete = otp.every((digit) => digit !==""); 
     return(
-      <div className="w-full min-h-screen flex flex-col justify-between px-4 py-8 bg-gradient-to-br from-blue-600 to-violet-600">
+      <div className="w-full min-h-screen overflow-y-scroll flex flex-col justify-between px-4 py-8 bg-gradient-to-br from-blue-600 to-violet-600">
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-[448px] bg-white rounded-2xl p-8 flex flex-col gap-6 shadow-2xl">
             {/* Header */}

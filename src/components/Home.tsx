@@ -1,13 +1,11 @@
-// import {useState} from 'react'; 
-// import { BiLogoZoom } from 'react-icons/bi';
-// import { IoVideocamOutline } from "react-icons/io5";
-// import { AiOutlinePlus } from "react-icons/ai";
-// import { IoCalendarClearOutline } from "react-icons/io5";
-// import { MdOutlineFileUpload } from "react-icons/md";
-// import {Circle} from "lucide-react"
-// import { FaClock } from "react-icons/fa";
+// Home.tsx 
 import { useState } from "react";
 import { BiLogoZoom } from "react-icons/bi";
+import MeetingRoom  from './MeetingRoom';
+import type { Participant } from "./MeetingRoom"; // phải import type vì nó là interface
+import { Navigate, useNavigate, type NavigateFunction } from "react-router-dom";
+import AppMeeting from './AppMeeting';
+import { useMediaDevice, useMeeting, useParticipant }   from "@videosdk.live/react-sdk";
 import { 
   Video, 
   Plus, 
@@ -20,28 +18,164 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Users
+  Users,
+  Mic,
+  Camera,
 } from "lucide-react";
 
 interface HomePageProps {
   userEmail: string;
+  // ================= KO SỬ DỤNG NAVIGATION NÀY NỮA ======================//
+  //===================== THAY VÀO ĐÓ LÀ PAGE NAVIGATION ==================//
+  onNewMeeting: () => void; 
+  onJoinMeeting: (meetingCode: string, displayName: string) => void; 
 }
 
-export function HomePage({ userEmail }: HomePageProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10)); // November 2025
+export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePageProps) {
+  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10));
   const [showTip, setShowTip] = useState(true);
   const [currentDay, setCurrentDay] = useState(new Date());
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-  
+  const [token, setToken] = useState("");
+  //============================== Trước khi vào phòng=============================//
+  const { checkPermissions } = useMediaDevice(); 
+  //================================== PHÒNG HỌP ==================================//
+  const [showJoinModal, setShowJoinModal] = useState(false); // modal để nhập mã phong họp 
+  const [preShowJoinModal, setPreShowJoinModal] = useState(false); // modal xác nhận trước khi vào phòng 
+  const [meetingCode, setMeetingCode] = useState(""); // mã phòng họp  
+  const [meetingLink, setMeetingLink] = useState(""); // link phòng họp 
+  const [displayName, setDisplayName] = useState(userEmail || ""); // tên hiển thị 
+  const [inMeeting, setInMeeting] = useState(false); // xem có ở trong phòng họp hay chưa 
+  const navigate = useNavigate(); // chuyển hướng trang
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
-
+  // ================= SAU CÓ XỬ LÍ ĐOẠN LÊN LỊCH HỌP THÌ SẼ THAY ĐỔI PHẦN NÀY ====================
   const upcomingMeetings = [
     { title: "Team Standup", time: "09:00 AM", duration: "30 min", participants: 5 },
     { title: "Product Review", time: "02:00 PM", duration: "1 hr", participants: 8 }
   ];
+  
+  // nếu làm việc với BE 
+  // const [parrticipants, setParticipants] = useState<ParticiPantType[]>([]); 
+  // định nghĩa lại interface tùy theo BE trả về
+  // xử lí lại hàm này 
 
+
+  // ==================================== CŨ ============================
+  // const handleJoinmeeting = () => {
+  //   if(meetingCode.trim()!==""|| meetingLink.trim()!==""){
+  //     // nếu là join thì sẽ vào như này 
+  //     navigate('/pre-join', {
+  //       state : {
+  //         meetingCode: meetingCode.trim(),
+  //         meetingLink: meetingLink.trim(),
+  //         displayName: displayName || userEmail || "Guest"
+  //       }
+  //     })
+  //     // setShowJoinModal(false); 
+
+  //     // setPreShowJoinModal(true);
+  //   }
+  //   else 
+  //   {
+  //     alert("Vui lòng nhập mã cuộc họp hoặc link mời")
+  //   }
+  // };
+  // //=================================== PHẦN XỬ LÍ NÀY CHƯA XONG==========///
+  // const handleNewMeeting = () => {
+  //   const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiNGNjNjlmNy0xZTNkLTQ3NmMtODlkMC1mNGMwZGE1NTU1NTciLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc2NDE1MTg1MCwiZXhwIjoxNzY0NzU2NjUwfQ.CsiPzYBbx3ZHxh7KGEpoI_qxYGkwabEJGEyE6JWo2QE"; 
+  //   const roomId = "3494-3huj-pikr";
+  //   // displayName = "Quoc113";
+    
+  //   navigate(`/meeting/${roomId}`, {
+  //     state: {
+  //       token: testToken, 
+  //       name: displayName || userEmail || "Guest"
+  //     }
+  //   });
+  // };
+
+  //=================================== MỚI + Dễ mở rộng hơn, chuyển logic sang APP hết ================================//
+  const handleNewMeeting = () => {
+    onNewMeeting();
+  }
+
+  const handleJoinMeeting = () => {
+    if(meetingCode.trim() !== "" || meetingLink.trim() !== ""){
+      onJoinMeeting(meetingCode.trim(), displayName || userEmail || "Guest"); 
+      setShowJoinModal(false);
+      setMeetingCode("");
+      setMeetingLink("");
+    } else {
+      alert("Vui lòng nhập mã cuộc họp hoặc link mời")
+    }
+  }
+
+
+
+
+
+
+  //================================================================////
+  // làm việc với API có sẵn 
+  // ============= JOINMODAL là component composition: kiểu render trong component cha nên ko cần route và gọi callback như PreJoin ==============
+  // const handleEnterMeeting = () => {
+  //   setPreShowJoinModal(false); 
+    
+  //   const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiNGNjNjlmNy0xZTNkLTQ3NmMtODlkMC1mNGMwZGE1NTU1NTciLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc2NDE1MTg1MCwiZXhwIjoxNzY0NzU2NjUwfQ.CsiPzYBbx3ZHxh7KGEpoI_qxYGkwabEJGEyE6JWo2QE"; 
+  //   const roomId =  "3494-3huj-pikr";
+
+  //   navigate(`/meeting/${roomId}`, {
+  //     state : {
+  //       token : testToken,
+  //       name: displayName || name || "Guest"
+  //     }
+  //   })
+  // }
+
+
+
+  //==============================================================================
+  // code để link với BE, chưa test lấy từ Chat 
+  //   const handleNewMeeting = async () => {
+  //   try {
+  //     // Bước 1: Gọi API backend để lấy token
+  //     const response = await fetch('YOUR_BACKEND_URL/api/create-meeting', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         // Thông tin cần thiết nếu có
+  //       })
+  //     });
+
+  //     const data = await response.json();
+      
+  //     // Bước 2: Navigate với đúng cấu trúc
+  //     navigate(`/meeting/${data.roomId}`, {
+  //       state: {
+  //         token: data.token,  // Token từ backend
+  //         name: displayName || userEmail  // Tên người dùng
+  //       }
+  //     }); 
+  //   } catch (error) {
+  //     console.error('Error creating meeting:', error);
+  //     alert('Không thể tạo phòng họp. Vui lòng thử lại!');
+  //   }
+  // };
+  // giả sử có cuộc họp tạo sẵn test FE, cái này sẽ có phần đọc từ bE
+  
+
+  // Cái này để xem lại là có cần hay ko? 
+  const handleLeaveMeeting = () => {
+    setInMeeting(false);
+    setMeetingCode(""); 
+    setMeetingLink("");  
+  }
+
+  
   const goToPreviousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   };
@@ -55,9 +189,76 @@ export function HomePage({ userEmail }: HomePageProps) {
   const goToPreviousDay = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   }
-  // 
   return (
-    <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll">  
+    <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll"> 
+       {/*Join Modal  */}
+        {showJoinModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl p-8 max-w-md  w-full shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Tham gia cuộc họp</h2>
+                <button
+                  onClick={()=>{
+                    setShowJoinModal(false); 
+                    setMeetingCode(""); 
+                    setMeetingLink(""); 
+                  }}
+                  className = {`p-2 hover:bg-gray-100 rounded-lg`}
+                >
+                  <X  className="w-6 h-6 text-gray-600"/>
+                </button>
+              </div>
+              <div className="space-y-6 mb-4">
+                  <div>
+                    <label htmlFor="" className="block text-sm font-medium text-gray-700 mb-2">
+                      Mã ID cuộc họp
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nhập mã cuộc họp (VD: 123-456-789)"
+                      value={meetingCode}
+                      onChange={(e) => setMeetingCode(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">hoặc</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Link mời
+                </label>
+                <input
+                  type="text"
+                  placeholder="Dán link mời cuộc họp"
+                  value={meetingLink}
+                  onChange={(e) => setMeetingLink(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                onClick = {handleJoinMeeting}
+                disabled = {!meetingCode.trim() && !meetingLink.trim()}
+                className= "w-full bg-blue-600 text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disbaled:cursor-not-allowed mt-4"
+              >
+                Tiếp tục
+              </button>
+              <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+              <h4 className="font-medium text-gray-900 mb-2">💡 Ghi chú</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• Mã cuộc họp thường có dạng: XXX-XXX-XXX</li>
+                <li>• Link mời được gửi qua email hoặc tin nhắn</li>
+              </ul>
+            </div>
+            </div>        
+          </div>
+      )}
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4  w-full z-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -121,14 +322,18 @@ export function HomePage({ userEmail }: HomePageProps) {
           <div className="lg:col-span-2 space-y-6">
             {/* Action Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
+              <button 
+                onClick={handleNewMeeting}
+                className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
                 <div className="bg-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ">
                   <Video className="w-7 h-7 text-white" />
                 </div>
                 <p className="text-gray-900  font-medium text-sm">New meeting</p>
               </button>
 
-              <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
+              <button 
+                onClick = {()=> setShowJoinModal(true)}
+                className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
                 <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Plus className="w-7 h-7 text-white" />
                 </div>
