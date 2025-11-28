@@ -52,84 +52,25 @@ export default function App() {
     </Router>
   );
 }
-function PreJoinMeetingWrapper() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  // ================== CẦN XỬ LÍ THÊM CASE =====================//
-  //======= BẤM VÀO NEW MEETINGS THÌ CŨNG RA =======//
 
-  // Nhận data từ HomePage, nhận từ phần nhập 
-  const { meetingCode, meetingLink, displayName: initialDisplayName } = location.state || {};
 
-  const [meetingSettings, setMeetingSettings] = useState<MeetingSettings | null>(null);
-
-  // Khi user bấm "Tham gia" trong PreJoinMeeting
-  const handleJoinMeeting = (settings: MeetingSettings) => {
-    setMeetingSettings(settings);
-
-    // Navigate đến meeting page với settings
-    navigate(`/meeting/${settings.meetingCode || meetingCode}`, {
-      state: settings
-    });
-  };
-
-  const handleCancel = () => {
-    navigate(`/home`); // Quay lại HomePage
-  };
-
-  // Nếu chưa có meeting settings, hiển thị PreJoinMeeting
-  if (!meetingSettings) {
-    return (
-      <PreJoinMeeting
-        onJoinMeeting={handleJoinMeeting}
-        onCancel={handleCancel}
-        initialMeetingCode={meetingCode}
-        initialDisplayName={initialDisplayName}
-      />
-    );
-  }
-
-  // Nếu đã có settings, tự động join meeting
-  return (
-    <MeetingProvider
-      config={{
-        meetingId: meetingSettings.meetingCode || meetingCode,
-        micEnabled: meetingSettings.micEnabled,
-        webcamEnabled: meetingSettings.cameraEnabled,
-        name: meetingSettings.name || "User",
-        debugMode: true
-      }}
-      token={meetingSettings.token}
-    >
-      <PreJoinMeeting
-        onJoinMeeting={handleJoinMeeting}
-        onCancel={handleCancel}
-        initialMeetingCode={meetingCode}
-        initialDisplayName={initialDisplayName}
-      // micDeviceId={meetingSettings.micId}
-      // cameraDeviceId={meetingSettings.cameraId}
-      />
-    </MeetingProvider>
-  );
-}
-
-// Viết Wrapper để giữ state 
-// Wrapper để giữ email state
+// Wrapper cho login page
 function LoginWrapper() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const email = location.state?.email || "";
 
   return (
     <LoginPage
-      email={email}
+      initEmail={email}
       onSwitchToOTP={(enteredEmail) => {
-        setEmail(enteredEmail);
         navigate("/otp", { state: { email: enteredEmail } });
       }}
     />
   );
 }
 
+//Wrapper cho OTP page
 function OTPWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -138,12 +79,13 @@ function OTPWrapper() {
   return (
     <OTPPage
       email={email}
-      onBack={() => navigate("/login")}
+      onBack={() => navigate("/login", { state: { email } })}
       onSwitchHome={() => navigate("/home", { state: { email } })}
     />
   );
 }
 
+//Wrapper cho HomePage
 function HomeWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -193,12 +135,14 @@ function HomeWrapper() {
 
       if (response && response.roomId && response.token) {
         // ========== LINK với Prejoin =============//
-        navigate('/pre-join', {
+        navigate(`/meeting/${response.roomId}`, {
           state: {
             token: response.token,
-            meetingCode: response.roomId,
-            displayName: email || "Guest",
-            isNewMeeting: true
+            roomId: response.roomId,
+            settings: {
+              micEnabled: true,
+              cameraEnabled: true,
+            }
           }
         });
       } else {
@@ -219,6 +163,9 @@ function HomeWrapper() {
         roomId: meetingCode,
         peerId: localStorage.getItem("peerId") || "",
       }
+
+      console.log("joinData", joinData);
+
       const token = await meetingAPI.joinMeeting(joinData);
 
       if (token) {
@@ -227,7 +174,6 @@ function HomeWrapper() {
             token: token,
             roomId: meetingCode,
             displayName: localStorage.getItem("displayName") || "",
-            isNewMeeting: false
           }
         });
       } else {
@@ -249,15 +195,61 @@ function HomeWrapper() {
   );
 
 }
+
+function PreJoinMeetingWrapper() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  // ================== CẦN XỬ LÍ THÊM CASE =====================//
+  //======= BẤM VÀO NEW MEETINGS THÌ CŨNG RA =======//
+
+  // Nhận data từ HomePage, nhận từ phần nhập 
+  const { roomId, token, displayName } = location.state || {};
+
+  const [meetingSettings, setMeetingSettings] = useState<MeetingSettings | null>(null);
+
+  // Khi user bấm "Tham gia" trong PreJoinMeeting
+  const handleJoinMeeting = (settings: MeetingSettings) => {
+    setMeetingSettings(settings);
+
+    // Navigate đến meeting page với settings
+    navigate(`/meeting/${roomId}`, {
+      state: {
+        roomId: roomId,
+        token: token,
+        settings: settings
+      }
+    });
+  };
+
+  const handleCancel = () => {
+    navigate(`/home`); // Quay lại HomePage
+  };
+
+  // Nếu chưa có meeting settings, hiển thị PreJoinMeeting
+  if (!meetingSettings) {
+    return (
+      <PreJoinMeeting
+        onJoinMeeting={handleJoinMeeting}
+        onCancel={handleCancel}
+        initialRoomId={roomId}
+        initialPeerId={localStorage.getItem("peerId") || ""}
+        initialDisplayName={displayName}
+      />
+    );
+  }
+}
+
 // AppMeetingRoom wrapper
 function AppMeetingWrapper() {
-  const { roomId } = useParams<{ roomId: string }>(); // lấy từ URL
   const location = useLocation();
   const navigate = useNavigate();
 
-  // token có thể được truyền qua state khi navigate
+  const roomId = location.state?.roomId || "";
   const token = location.state?.token || "";
-  const displayName = location.state?.name || "";
+  const settings = location.state?.settings || null;
+
+  console.log(roomId, token);
+
   const handleLeaveMeeting = () => {
     // Khi leave, quay lại Home, chỗ nay chưa render lại được 
     navigate("/home");
@@ -272,7 +264,9 @@ function AppMeetingWrapper() {
       roomId={roomId}
       token={token}
       onLeaveMeeting={handleLeaveMeeting}
-      name={displayName}
+      name={localStorage.getItem("displayName") || ""}
+      peerId={localStorage.getItem("peerId") || ""}
+      settings={settings}
     />
   );
 }

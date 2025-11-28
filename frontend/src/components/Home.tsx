@@ -1,20 +1,20 @@
 // Home.tsx 
 import { useState } from "react";
 import { BiLogoZoom } from "react-icons/bi";
-import MeetingRoom  from './MeetingRoom';
+import MeetingRoom from './MeetingRoom';
 import type { Participant } from "./MeetingRoom"; // phải import type vì nó là interface
 import { Navigate, useNavigate, type NavigateFunction } from "react-router-dom";
 import AppMeeting from './AppMeeting';
-import { useMediaDevice, useMeeting, useParticipant }   from "@videosdk.live/react-sdk";
-import { 
-  Video, 
-  Plus, 
-  Calendar, 
-  Upload, 
-  Circle, 
-  Clock, 
-  Bell, 
-  Settings, 
+import { useMediaDevice, useMeeting, useParticipant } from "@videosdk.live/react-sdk";
+import {
+  Video,
+  Plus,
+  Calendar,
+  Upload,
+  Circle,
+  Clock,
+  Bell,
+  Settings,
   X,
   ChevronLeft,
   ChevronRight,
@@ -28,11 +28,11 @@ interface HomePageProps {
   userEmail: string;
   // ================= KO SỬ DỤNG NAVIGATION NÀY NỮA ======================//
   //===================== THAY VÀO ĐÓ LÀ PAGE NAVIGATION ==================//
-  onNewMeeting: () => void; 
-  onJoinMeeting: (meetingCode: string, displayName: string) => void; 
+  onNewMeeting: () => void;
+  onJoinMeeting: (meetingCode: string, displayName: string) => void;
 }
 
-export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePageProps) {
+export function HomePage({ userEmail, onNewMeeting, onJoinMeeting }: HomePageProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10));
   const [showTip, setShowTip] = useState(true);
   const [currentDay, setCurrentDay] = useState(new Date());
@@ -40,7 +40,7 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
   const [token, setToken] = useState("");
   //============================== Trước khi vào phòng=============================//
-  const { checkPermissions } = useMediaDevice(); 
+  const { checkPermissions } = useMediaDevice();
   //================================== PHÒNG HỌP ==================================//
   const [showJoinModal, setShowJoinModal] = useState(false); // modal để nhập mã phong họp 
   const [preShowJoinModal, setPreShowJoinModal] = useState(false); // modal xác nhận trước khi vào phòng 
@@ -56,15 +56,15 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
     { title: "Team Standup", time: "09:00 AM", duration: "30 min", participants: 5 },
     { title: "Product Review", time: "02:00 PM", duration: "1 hr", participants: 8 }
   ];
-  
+
   //=================================== MỚI + Dễ mở rộng hơn, chuyển logic sang APP hết ================================//
   const handleNewMeeting = () => {
     onNewMeeting();
   }
 
   const handleJoinMeeting = () => {
-    if(meetingCode.trim() !== "" || meetingLink.trim() !== ""){
-      onJoinMeeting(meetingCode.trim(), displayName || userEmail || "Guest"); 
+    if (meetingCode.trim() !== "" || meetingLink.trim() !== "") {
+      onJoinMeeting(meetingCode.trim(), displayName || userEmail || "Guest");
       setShowJoinModal(false);
       setMeetingCode("");
       setMeetingLink("");
@@ -78,11 +78,11 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
   // Cái này để xem lại là có cần hay ko? 
   const handleLeaveMeeting = () => {
     setInMeeting(false);
-    setMeetingCode(""); 
-    setMeetingLink("");  
+    setMeetingCode("");
+    setMeetingLink("");
   }
 
-  
+
   const goToPreviousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   };
@@ -97,74 +97,74 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
   }
   return (
-    <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll"> 
-       {/*Join Modal  */}
-        {showJoinModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-md  w-full shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Tham gia cuộc họp</h2>
-                <button
-                  onClick={()=>{
-                    setShowJoinModal(false); 
-                    setMeetingCode(""); 
-                    setMeetingLink(""); 
-                  }}
-                  className = {`p-2 hover:bg-gray-100 rounded-lg`}
-                >
-                  <X  className="w-6 h-6 text-gray-600"/>
-                </button>
-              </div>
-              <div className="space-y-6 mb-4">
-                  <div>
-                    <label htmlFor="" className="block text-sm font-medium text-gray-700 mb-2">
-                      Mã ID cuộc họp
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nhập mã cuộc họp (VD: 123-456-789)"
-                      value={meetingCode}
-                      onChange={(e) => setMeetingCode(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">hoặc</span>
-                </div>
-              </div>
+    <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll">
+      {/*Join Modal  */}
+      {showJoinModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md  w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Tham gia cuộc họp</h2>
+              <button
+                onClick={() => {
+                  setShowJoinModal(false);
+                  setMeetingCode("");
+                  setMeetingLink("");
+                }}
+                className={`p-2 hover:bg-gray-100 rounded-lg`}
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+            <div className="space-y-6 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Link mời
+                <label htmlFor="" className="block text-sm font-medium text-gray-700 mb-2">
+                  Mã ID cuộc họp
                 </label>
                 <input
                   type="text"
-                  placeholder="Dán link mời cuộc họp"
-                  value={meetingLink}
-                  onChange={(e) => setMeetingLink(e.target.value)}
+                  placeholder="Nhập mã cuộc họp (VD: 123-456-789)"
+                  value={meetingCode}
+                  onChange={(e) => setMeetingCode(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <button
-                onClick = {handleJoinMeeting}
-                disabled = {!meetingCode.trim() && !meetingLink.trim()}
-                className= "w-full bg-blue-600 text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disbaled:cursor-not-allowed mt-4"
-              >
-                Tiếp tục
-              </button>
-              <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+            </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">hoặc</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Link mời
+              </label>
+              <input
+                type="text"
+                placeholder="Dán link mời cuộc họp"
+                value={meetingLink}
+                onChange={(e) => setMeetingLink(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              onClick={handleJoinMeeting}
+              disabled={!meetingCode.trim() && !meetingLink.trim()}
+              className="w-full bg-blue-600 text-white py-3 rounded-2xl font-bold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disbaled:cursor-not-allowed mt-4"
+            >
+              Tiếp tục
+            </button>
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl">
               <h4 className="font-medium text-gray-900 mb-2">💡 Ghi chú</h4>
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• Mã cuộc họp thường có dạng: XXX-XXX-XXX</li>
                 <li>• Link mời được gửi qua email hoặc tin nhắn</li>
               </ul>
             </div>
-            </div>        
           </div>
+        </div>
       )}
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4  w-full z-10">
@@ -174,7 +174,7 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
               <BiLogoZoom className="w-8 h-8 text-blue-600" />
               <span className="text-xl font-semibold text-gray-900">ZUS</span>
             </div>
-            
+
             <nav className="hidden md:flex items-center gap-6">
               <button className="text-blue-600 font-medium text-sm">Home</button>
               <button className="text-gray-600 hover:text-gray-900 font-medium text-sm">Meetings</button>
@@ -229,7 +229,7 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
           <div className="lg:col-span-2 space-y-6">
             {/* Action Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <button 
+              <button
                 onClick={handleNewMeeting}
                 className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
                 <div className="bg-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ">
@@ -238,8 +238,8 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
                 <p className="text-gray-900  font-medium text-sm">New meeting</p>
               </button>
 
-              <button 
-                onClick = {()=> setShowJoinModal(true)}
+              <button
+                onClick={() => setShowJoinModal(true)}
                 className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
                 <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Plus className="w-7 h-7 text-white" />
@@ -295,13 +295,13 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
                   {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </h3>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={goToPreviousMonth}
                     className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5 text-gray-600" />
                   </button>
-                  <button 
+                  <button
                     onClick={goToNextMonth}
                     className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                   >
@@ -317,25 +317,24 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
                     {day}
                   </div>
                 ))}
-                
+
                 {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                   <div key={`empty-${i}`} />
                 ))}
-                
+
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
-                  const isSelected = 
+                  const isSelected =
                     currentDay.getDate() === day &&
                     currentDay.getMonth() === currentMonth.getMonth() &&
                     currentDay.getFullYear() === currentMonth.getFullYear();
                   return (
                     <button
                       key={day}
-                      className={`h-9 rounded-lg text-sm font-medium transition-colors ${
-                        isSelected
+                      className={`h-9 rounded-lg text-sm font-medium transition-colors ${isSelected
                           ? "bg-blue-600 text-white"
                           : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                        }`}
                       onClick={() => setCurrentDay(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day))} // click vào ngày cũng cập nhật
                     >
                       {day}

@@ -81,9 +81,7 @@ export const meetingAPI = {
 
       const result = await response.json();
 
-      const { token } = result;
-
-      return token;
+      return result;
       // Tại dòng 56 (trong block catch)
     } catch (error) {
       if (error instanceof Error) {

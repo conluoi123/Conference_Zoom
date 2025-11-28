@@ -10,11 +10,11 @@ import { logIn, type LoginData } from "../apis/userApi";
 
 interface LoginPageProps {
     onSwitchToOTP: (email: string) => void;
-    email: string;
+    initEmail: string;
 }
 
-export function LoginPage({ onSwitchToOTP, email: initialEmail }: LoginPageProps) {
-    const [email, setEmail] = useState(initialEmail);
+export function LoginPage({ onSwitchToOTP, initEmail }: LoginPageProps) {
+    const [email, setEmail] = useState(initEmail);
     const [error, setError] = useState("");
 
     const regexEmail = (value: string) => {
