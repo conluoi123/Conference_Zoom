@@ -23,7 +23,8 @@ export default function AppMeeting({ roomId, token, onLeaveMeeting, name, peerId
         micEnabled: settings.micEnabled,    // optional
         webcamEnabled: settings.cameraEnabled, // optional  
         autoConsume: true,   // optional
-        debugMode: true      // optional
+        debugMode: true,      // optional
+        multiStream: true
       }}
       token={token}
     >

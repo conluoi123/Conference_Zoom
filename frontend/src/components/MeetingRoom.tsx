@@ -1,5 +1,5 @@
 // MeetingRoom.tsx 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMeeting, useParticipant } from "@videosdk.live/react-sdk";
 import { BiLogoZoom } from "react-icons/bi";
 import {
@@ -33,9 +33,10 @@ interface MeetingRoomProps {
 }
 
 // Component hiển thị từng participant
-function ParticipantTile({ participantId }: { participantId: string }) {
-  const { webcamStream, webcamOn, micOn, isLocal, displayName } = useParticipant(participantId);
+const ParticipantTile = React.memo(function ParticipantTile({ participantId }: { participantId: string }) {
+  const { webcamStream, webcamOn, micStream, micOn, isLocal, displayName } = useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Render video stream khi có webcam
   useEffect(() => {
@@ -46,6 +47,20 @@ function ParticipantTile({ participantId }: { participantId: string }) {
       videoRef.current.play().catch(err => console.error("Error playing video:", err));
     }
   }, [webcamStream]);
+
+  useEffect(() => {
+    // Chỉ phát âm thanh khi có micStream và mic đang bật
+    if (audioRef.current && micStream && micOn) {
+      const mediaStream = new MediaStream();
+      mediaStream.addTrack(micStream.track);
+      audioRef.current.srcObject = mediaStream;
+
+      // Bắt buộc phải có catch lỗi vì trình duyệt chặn auto-play
+      audioRef.current.play().catch((err) => {
+        console.error("Audio play error", err);
+      });
+    }
+  }, [micStream]);
 
   // Lấy chữ cái đầu từ tên
   const getInitials = (name?: string) => {
@@ -62,6 +77,9 @@ function ParticipantTile({ participantId }: { participantId: string }) {
       className="relative rounded-2xl overflow-hidden"
       style={{ background: webcamOn ? '#000' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
     >
+      {/* 4. Thẻ Audio ẩn */}
+      {/* muted={isLocal} là QUAN TRỌNG NHẤT: Để bạn không nghe thấy tiếng vọng của chính mình */}
+      <audio ref={audioRef} autoPlay playsInline muted={isLocal} controls={false} />
       {webcamOn && webcamStream ? (
         <video
           ref={videoRef}
@@ -86,7 +104,7 @@ function ParticipantTile({ participantId }: { participantId: string }) {
       </div>
     </div>
   );
-}
+})
 
 // Component điều khiển cuộc họp
 function MeetingControls({ onLeaveMeeting }: { onLeaveMeeting: () => void }) {
@@ -223,6 +241,7 @@ function MeetingRoomContent({ roomId, onLeaveMeeting }: { roomId: string; onLeav
           {/* Grid hiển thị participants */}
           <div className="flex-1 p-6 grid grid-cols-2 gap-4">
             {participantIds.map((participantId) => (
+
               <ParticipantTile key={participantId} participantId={participantId} />
             ))}
           </div>
