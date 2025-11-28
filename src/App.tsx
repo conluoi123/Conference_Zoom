@@ -188,11 +188,29 @@ function AppMeetingWrapper() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // token có thể được truyền qua state khi navigate
-  const token = location.state?.token || "";
-  const displayName = location.state?.name || ""; 
+  // Nhận tất cả thông tin từ PreJoinMeeting
+  const {
+    token = "",
+    name = "",
+    micId,
+    cameraId, 
+    micEnabled = true,
+    cameraEnabled = true
+  } = location.state || {};
+  
+  console.log('=== AppMeetingWrapper Debug ===');
+  console.log('roomId from URL:', roomId);
+  console.log('location.state:', location.state);
+  console.log('Extracted values:');
+  console.log('  - token:', token);
+  console.log('  - name:', name);
+  console.log('  - micId:', micId);
+  console.log('  - cameraId:', cameraId);
+  console.log('  - micEnabled:', micEnabled);
+  console.log('  - cameraEnabled:', cameraEnabled);
+  
   const handleLeaveMeeting = () => {
-    // Khi leave, quay lại Home, chỗ nay chưa render lại được 
+    // Khi leave, quay lại Home
     navigate("/home");
   }
 
@@ -205,7 +223,11 @@ function AppMeetingWrapper() {
       roomId={roomId}
       token={token}
       onLeaveMeeting={handleLeaveMeeting}
-      name = {displayName}
+      name={name}
+      micId={micId}
+      cameraId={cameraId}
+      micEnabled={micEnabled}
+      cameraEnabled={cameraEnabled}
     />
   );
 }
