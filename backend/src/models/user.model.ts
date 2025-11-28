@@ -5,22 +5,22 @@ export interface IUser extends Document {
   displayName: string;
   avatar?: string;
   provider: "local" | "google" | "outlook";
-  role: "user" | "admin";
-
+  // isVerified: boolean;
+  // role: "user" | "admin";
   createdAt: Date;
   lastLoginAt?: Date;
   refreshToken: {
     refreshToken: String;
     expiredTime: Date;
   };
-  ggRefreshToken: {
-    refreshToken?: String;
-    expiredTime?: Date;
-  };
+  // ggRefreshToken: {
+  //   refreshToken?: String,
+  //   expiredTime?: Date,
+  // }
 }
 
 const userSchema: Schema<IUser> = new Schema({
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   displayName: { type: String, required: true },
   avatar: { type: String, default: "" },
 
@@ -41,21 +41,21 @@ const userSchema: Schema<IUser> = new Schema({
     refreshToken: { type: String, required: true },
     expiredTime: { type: Date, required: true },
   },
-  ggRefreshToken: {
-    refreshToken: {
-      type: String,
-      required: function (this: IUser) {
-        return this.provider === "google";
-      },
-      default: undefined,
-    },
-    expiredTime: {
-      type: Date,
-      required: function (this: IUser) {
-        return !!this.ggRefreshToken?.refreshToken;
-      },
-    },
-  },
+  // ggRefreshToken: {
+  //   refreshToken: {
+  //     type: String,
+  //     required: function(this: IUser) {
+  //       return this.provider === "google";
+  //     },
+  //     default: undefined,
+  //   },
+  //   expiredTime: {
+  //       type: Date,
+  //       required: function(this: IUser) {
+  //           return !!this.ggRefreshToken?.refreshToken;
+  //       }
+  //   },
+  // }
 });
 
 // tạo index để tránh trùng username/email

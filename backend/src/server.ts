@@ -1,4 +1,4 @@
-import { session } from "express-session";
+import session from "express-session";
 import express from "express";
 import path from "path";
 
@@ -18,6 +18,7 @@ import webHook from "./routes/webhook.routes";
 import { userRoutes } from "./routes/user.routes";
 import {
   outlookSignInRouter,
+  sendOtpRouter,
   signInRouter,
   verifyOtpRouter,
 } from "./routes/signIn.routes";
@@ -57,7 +58,7 @@ app.use(
 );
 
 signInRouter(app);
-//sendOtpRouter(app);
+sendOtpRouter(app);
 verifyOtpRouter(app);
 outlookSignInRouter(app);
 userRoutes(app);

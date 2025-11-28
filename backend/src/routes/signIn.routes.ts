@@ -5,18 +5,18 @@ import { outlookLogInCallback } from "../services/signIn.services";
 import { ENV } from "../configs/env";
 import session from "express-session";
 import { SignInWithGG, DirectGoogle } from "../controllers/signIn.controller";
-import {
-  setCsrfToken,
-  sendCsrfToken,
-  csrfProtection,
-} from "../middlewares/signIn.middleware";
+// import {
+//   setCsrfToken,
+//   sendCsrfToken,
+//   csrfProtection,
+// } from "../middlewares/signIn.middleware";
 
-// const sendOtpRouter = (app: Express) => {
-//   const sendRouter = Router();
-//   sendRouter.get("/reqCsrfCode", setCsrfToken, sendCsrfToken);
-//   sendRouter.post("/sendOTP",csrfProtection, sendOtp);
-//   app.use("/auth", sendRouter);
-// };
+const sendOtpRouter = (app: Express) => {
+  const sendRouter = Router();
+  // sendRouter.get("/reqCsrfCode", setCsrfToken, sendCsrfToken);
+  sendRouter.post("/sendOTP", sendOtp);
+  app.use("/auth", sendRouter);
+};
 
 const verifyOtpRouter = (app: Express) => {
   const verifyRouter = Router();
@@ -56,4 +56,4 @@ const signInRouter = (app: Express) => {
   callbackRouter.get("/google/callback", SignInWithGG);
   app.use("/auth", callbackRouter);
 };
-export { verifyOtpRouter, outlookSignInRouter, signInRouter };
+export { sendOtpRouter, verifyOtpRouter, outlookSignInRouter, signInRouter };

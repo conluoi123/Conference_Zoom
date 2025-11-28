@@ -41,7 +41,7 @@ async function verifyEmail(req: Request, res: Response) {
     const { email, otp } = req.body;
     if (!email || !otp) {
       console.log("Miss otp or email");
-      return res.status(401).json({error: "Miss otp or email"})
+      return res.status(401).json({ error: "Miss otp or email" });
     }
     const isVerify = await supportVerifyOtp(email, otp);
     if (isVerify === 1) {
@@ -86,6 +86,12 @@ async function verifyEmail(req: Request, res: Response) {
       await user.save();
     }
 
+    const data = {
+      userId: user._id,
+      email: user.email,
+      displayName: user.displayName,
+    };
+
     const tokenPayLoad = {
       id: user._id,
       email: user.email,
@@ -101,7 +107,7 @@ async function verifyEmail(req: Request, res: Response) {
       maxAge: 15 * 24 * 3600 * 1000,
       path: "/",
     });
-    return res.status(200).json({ message: "SUCCESS", accessToken });
+    return res.status(200).json({ message: "SUCCESS", accessToken, data });
   } catch (error) {
     console.error("Verify OTP Failed!!!", error);
   }
@@ -155,6 +161,7 @@ function DirectGoogle(req: RequestWithUser, res: Response) {
 
     const ggLoginURL = `${ENV.GOOGLE_LOGIN_URL}?${param.toString()}`;
     console.log("Redirect URL:", ggLoginURL);
+    // return res.status(200).json({ redirect_url: ggLoginURL });
     return res.redirect(ggLoginURL);
   });
 }
@@ -166,7 +173,7 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
     if (!codeUser)
       return res.status(400).json({ error: "Missing code redirect_uri" });
     const stateReturn = req.query.state as string;
-    if(req.session){
+    if (req.session) {
       console.log(req.session.name);
     }
     console.log(stateReturn);
@@ -174,9 +181,9 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
     console.log("typeof =", typeof stateReturn);
     console.log("typeof =", typeof req.query.state);
     console.log("isArray =", Array.isArray(stateReturn));
-    console.log(req.session.oauthState)
+    console.log(req.session.oauthState);
     const savedState = req.session.oauthState as string;
-    console.log(savedState)
+    console.log(savedState);
     if (!stateReturn) {
       console.log(1);
     }
@@ -258,6 +265,14 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       await user.save();
     }
 
+    console.log("pass");
+
+    const data = {
+      userId: user._id,
+      email: user.email,
+      displayName: user.displayName,
+    };
+
     const tokenPayLoad = {
       id: user._id,
       email: user.email,
@@ -275,11 +290,15 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       path: "/",
     });
 
-    return res.status(200).json({
-      message,
-      access_token: accessToken,
-      // google_access_token: ggAccessToken,
-    });
+    console.log("pass");
+
+    // return res.status(200).json({
+    //   message,
+    //   access_token: accessToken,
+    //   data,
+    //   // google_access_token: ggAccessToken,
+    // });
+    return res.redirect(`http://localhost:5173/home?data=${data}`);
   } catch (err) {
     console.log(err);
     return res
@@ -287,4 +306,11 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       .json({ error: "Cannot Sign In/ Sign Up with Google" });
   }
 }
-export { RequestWithUser, sendOtp, verifyEmail, passport, SignInWithGG, DirectGoogle };
+export {
+  RequestWithUser,
+  sendOtp,
+  verifyEmail,
+  passport,
+  SignInWithGG,
+  DirectGoogle,
+};
