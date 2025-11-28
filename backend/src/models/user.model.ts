@@ -33,7 +33,7 @@ const userSchema: Schema<IUser> = new Schema({
 
   // isVerified: { type: Boolean, default: false },
 
-  role: { type: String, enum: ["user", "admin"], default: "user" },
+  // role: { type: String, enum: ["user", "admin"], default: "user" },
 
   createdAt: { type: Date, default: () => new Date() },
   lastLoginAt: { type: Date },
