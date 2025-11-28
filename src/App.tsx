@@ -11,6 +11,8 @@ import AppMeeting from "./components/AppMeeting.tsx";
 import PreJoinMeeting from "./components/PreJoinMeeting.tsx";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
 import type {MeetingSettings}   from './components/PreJoinMeeting';
+import { meetingAPI } from "./apis/meetingApi.ts";
+
 
 
 // có AppMeeting để bọc Provider cho meetingroom dùng Hook 
@@ -149,9 +151,9 @@ function HomeWrapper() {
   const email = location.state?.email||""; 
 
   // ====================== CALLBACK cho homepage =======================//
-  const handleNewMeeting = () => {
-    const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiNGNjNjlmNy0xZTNkLTQ3NmMtODlkMC1mNGMwZGE1NTU1NTciLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc2NDE1MTg1MCwiZXhwIjoxNzY0NzU2NjUwfQ.CsiPzYBbx3ZHxh7KGEpoI_qxYGkwabEJGEyE6JWo2QE"
-    const roomId = "3494-3huj-pikr";
+  const handleNewMeeting = async() => {
+
+    const response = await meetingAPI.createMeeting();
     // ========== LINK với Prejoin =============//
     navigate('/pre-join', {
         state: {
