@@ -6,7 +6,8 @@ export interface ISession extends Document {
   sessionId: string;
   start: Date;
   end: Date;
-  invitedUsers: string[];
+  sessionInvitedUsers: string[];
+  participants: string[];
 }
 
 // 2. Schema (Triển khai cho Mongoose)
@@ -28,7 +29,8 @@ const sessionSchema = new Schema<ISession>({
   start: { type: Date },
   end: { type: Date },
 
-  invitedUsers: { type: [String], default: [] },
+  sessionInvitedUsers: { type: [String], default: [] },
+  participants: { type: [String], default: [] },
 });
 
 const Session = mongoose.model<ISession>("Session", sessionSchema);

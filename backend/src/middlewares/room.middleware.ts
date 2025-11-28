@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../models/user.model";
 import Room from "../models/room.model";
 import { validateRoomOnVideoSDK } from "../services/room.services";
 
@@ -10,7 +9,7 @@ const createRoomMiddleware = async (
 ) => {
   const { peerId, meetingType, startTime } = req.body;
 
-  //const user = await User.findOne({ __id: peerId });
+  //const user = await User.findOne({ _id: peerId });
 
   if (!peerId /*|| !user*/) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });
@@ -46,7 +45,7 @@ const joinRoomMiddleware = async (
   next: NextFunction
 ) => {
   const { roomId, peerId } = req.body;
-  //const user = await User.findOne({ __id: peerId });
+  //const user = await User.findOne({ _id: peerId });
 
   if (!peerId /*|| !user*/) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });

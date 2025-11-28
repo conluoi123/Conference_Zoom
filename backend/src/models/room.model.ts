@@ -7,6 +7,7 @@ export interface IRoom extends Document {
   startTime?: Date;
   title?: string;
   status: "ACTIVE" | "ENDED"; //Dùng để đánh dấu là đang họp hay đã kết thúc
+  defaultInvitedUsers: string[];
   askBeforeJoin: boolean;
   createdAt: Date;
   lastUsedAt?: Date;
@@ -22,6 +23,8 @@ const roomSchema = new Schema<IRoom>({
     enum: ["INSTANT", "SCHEDULED"],
     default: "INSTANT",
   },
+
+  defaultInvitedUsers: [{ type: String }],
 
   startTime: { type: Date },
 

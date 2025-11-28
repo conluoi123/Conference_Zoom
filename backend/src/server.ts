@@ -14,6 +14,7 @@ import { ENV } from "./configs/env";
 import { connectDB } from "./configs/db";
 import roomRoutes from "./routes/room.routes";
 import webHook from "./routes/webhook.routes";
+import { userRoutes } from "./routes/user.routes";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -35,6 +36,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
+userRoutes(app);
 roomRoutes(app);
 webHook(app);
 
