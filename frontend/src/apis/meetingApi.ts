@@ -1,27 +1,14 @@
+import type { JoinMeetingData, MeetingData } from "../App";
+
 const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
 
-// Định nghĩa kiểu dữ liệu cho thông tin cuộc họp
-interface MeetingData {
-  peerId: string;
-  title: string;
-  meetingType: string;
-  startTime: Date; // Hoặc Date tùy backend
-}
-
-// Định nghĩa kiểu dữ liệu cho hàm join (Sửa lỗi dòng 60)
-interface JoinMeetingData {
-  roomId: string;
-  peerId: string;
-  // Thêm các trường khác nếu có
-}
-
 export const meetingAPI = {
-  createMeeting: async (meetingData: MeetingData) => {
+  createMeeting: async (meetingData?: MeetingData) => {
     try {
-      const { peerId, title, meetingType, startTime } = meetingData;
+      const { peerId, title, meetingType, startTime } = meetingData || {};
 
       const requestBody = {
-        peerId: peerId, // Default to 'abc' if not provided, or handle as needed
+        peerId: peerId,
         title: title || "Cuộc họp mới",
         meetingType: meetingType || "instant", // 'instant' or 'scheduled'
         ...(meetingType === "scheduled" && startTime
@@ -33,7 +20,7 @@ export const meetingAPI = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
         },
         body: JSON.stringify(requestBody),
       });
@@ -47,8 +34,10 @@ export const meetingAPI = {
 
       const result = await response.json();
 
+      const { roomId, token } = result;
+
       // Response từ backend: { success: true, data: { roomId, token, meeting } }
-      return result;
+      return { roomId, token };
     } catch (error) {
       if (error instanceof Error) {
         // Lúc này TypeScript đã biết đây là Error, bạn có thể gọi .message
@@ -56,6 +45,7 @@ export const meetingAPI = {
         throw error;
       } else {
         console.error("Lỗi lạ:", error);
+        throw new Error("Đã xảy ra lỗi không xác định khi tạo phòng họp");
       }
     }
   },
@@ -68,11 +58,11 @@ export const meetingAPI = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
         },
         body: JSON.stringify({
           roomId,
-          peerId: peerId || "abc",
+          peerId: peerId,
         }),
       });
 
@@ -89,37 +79,11 @@ export const meetingAPI = {
         );
       }
 
-      // Handle different response formats
-      const contentType = response.headers.get("content-type");
-      let token;
+      const result = await response.json();
 
-      if (contentType && contentType.indexOf("application/json") !== -1) {
-        const result = await response.json();
-        // Case 1: { success: true, data: { token } }
-        if (result.success && result.data?.token) {
-          token = result.data.token;
-        }
-        // Case 2: { token: "..." }
-        else if (result.token) {
-          token = result.token;
-        }
-        // Case 3: Just the token string in JSON
-        else if (typeof result === "string") {
-          token = result;
-        }
-      } else {
-        // Case 4: Plain text token
-        token = await response.text();
-      }
+      const { token } = result;
 
-      if (token) {
-        return {
-          success: true,
-          data: { token },
-        };
-      } else {
-        throw new Error("Không nhận được token từ backend");
-      }
+      return token;
       // Tại dòng 56 (trong block catch)
     } catch (error) {
       if (error instanceof Error) {
@@ -128,6 +92,7 @@ export const meetingAPI = {
         throw error;
       } else {
         console.error("Lỗi lạ:", error);
+        throw new Error("Đã xảy ra lỗi không xác định khi tham gia phòng họp");
       }
     }
   },
@@ -137,3 +102,5 @@ export const meetingAPI = {
 export default {
   meeting: meetingAPI,
 };
+
+export type { MeetingData, JoinMeetingData };

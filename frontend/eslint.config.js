@@ -15,6 +15,7 @@ export default defineConfig([
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
+    tsconfigRootDir: __dirname,
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

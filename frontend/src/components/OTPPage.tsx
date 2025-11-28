@@ -61,8 +61,10 @@ export function OTPPage({ email, onBack, onSwitchHome }: OTPPageProps) {
     //lưu thêm các dữ liệu khác mà server trả về
     // xử lí với BE, trường hợp giả đỉnh là 123456
     if (otpCode === "123456" || res) {
+      localStorage.setItem("peerId", res.data.userId);
+      localStorage.setItem("email", res.data.email);
+      localStorage.setItem("displayName", res.data.displayName);
       localStorage.setItem("accessToken", res.accessToken);
-      localStorage.setItem("user", res.user);
       console.log("Đăng nhập thành công với OTP:", otpCode);
       onSwitchHome();
     } else {
@@ -155,13 +157,12 @@ export function OTPPage({ email, onBack, onSwitchHome }: OTPPageProps) {
                       handleVerify();
                     }
                   }}
-                  className={`w-12 h-14 text-center text-2xl font-semibold border-2 rounded-lg focus:outline-none transition-colors ${
-                    error
-                      ? "border-red-500 focus:border-red-500"
-                      : digit
+                  className={`w-12 h-14 text-center text-2xl font-semibold border-2 rounded-lg focus:outline-none transition-colors ${error
+                    ? "border-red-500 focus:border-red-500"
+                    : digit
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-300 focus:border-blue-500"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -185,11 +186,10 @@ export function OTPPage({ email, onBack, onSwitchHome }: OTPPageProps) {
             <button
               onClick={handleVerify}
               disabled={!isComplete}
-              className={`w-full h-12 rounded-lg font-medium text-sm transition-colors mb-4 ${
-                isComplete
-                  ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+              className={`w-full h-12 rounded-lg font-medium text-sm transition-colors mb-4 ${isComplete
+                ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
             >
               Xác thực
             </button>
@@ -201,11 +201,10 @@ export function OTPPage({ email, onBack, onSwitchHome }: OTPPageProps) {
                 <button
                   onClick={handleResend}
                   disabled={isResendDisabled}
-                  className={`text-blue-600 font-medium hover:underline ${
-                    isResendDisabled
-                      ? "cursor-not-allowed text-gray-400 hover:no-underline"
-                      : "cursor-pointer"
-                  }`}
+                  className={`text-blue-600 font-medium hover:underline ${isResendDisabled
+                    ? "cursor-not-allowed text-gray-400 hover:no-underline"
+                    : "cursor-pointer"
+                    }`}
                 >
                   {isResendDisabled ? `Gửi lại sau ${timer}s` : "Gửi lại OTP"}
                 </button>

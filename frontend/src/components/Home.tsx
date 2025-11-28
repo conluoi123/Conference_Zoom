@@ -22,6 +22,7 @@ import {
   Mic,
   Camera,
 } from "lucide-react";
+import { meetingAPI } from "../apis/meetingApi";
 
 interface HomePageProps {
   userEmail: string;
@@ -56,46 +57,6 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
     { title: "Product Review", time: "02:00 PM", duration: "1 hr", participants: 8 }
   ];
   
-  // nếu làm việc với BE 
-  // const [parrticipants, setParticipants] = useState<ParticiPantType[]>([]); 
-  // định nghĩa lại interface tùy theo BE trả về
-  // xử lí lại hàm này 
-
-
-  // ==================================== CŨ ============================
-  // const handleJoinmeeting = () => {
-  //   if(meetingCode.trim()!==""|| meetingLink.trim()!==""){
-  //     // nếu là join thì sẽ vào như này 
-  //     navigate('/pre-join', {
-  //       state : {
-  //         meetingCode: meetingCode.trim(),
-  //         meetingLink: meetingLink.trim(),
-  //         displayName: displayName || userEmail || "Guest"
-  //       }
-  //     })
-  //     // setShowJoinModal(false); 
-
-  //     // setPreShowJoinModal(true);
-  //   }
-  //   else 
-  //   {
-  //     alert("Vui lòng nhập mã cuộc họp hoặc link mời")
-  //   }
-  // };
-  // //=================================== PHẦN XỬ LÍ NÀY CHƯA XONG==========///
-  // const handleNewMeeting = () => {
-  //   const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiNGNjNjlmNy0xZTNkLTQ3NmMtODlkMC1mNGMwZGE1NTU1NTciLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc2NDE1MTg1MCwiZXhwIjoxNzY0NzU2NjUwfQ.CsiPzYBbx3ZHxh7KGEpoI_qxYGkwabEJGEyE6JWo2QE"; 
-  //   const roomId = "3494-3huj-pikr";
-  //   // displayName = "Quoc113";
-    
-  //   navigate(`/meeting/${roomId}`, {
-  //     state: {
-  //       token: testToken, 
-  //       name: displayName || userEmail || "Guest"
-  //     }
-  //   });
-  // };
-
   //=================================== MỚI + Dễ mở rộng hơn, chuyển logic sang APP hết ================================//
   const handleNewMeeting = () => {
     onNewMeeting();
@@ -113,60 +74,6 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting  }: HomePagePr
   }
 
 
-
-
-
-
-  //================================================================////
-  // làm việc với API có sẵn 
-  // ============= JOINMODAL là component composition: kiểu render trong component cha nên ko cần route và gọi callback như PreJoin ==============
-  // const handleEnterMeeting = () => {
-  //   setPreShowJoinModal(false); 
-    
-  //   const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlrZXkiOiJiNGNjNjlmNy0xZTNkLTQ3NmMtODlkMC1mNGMwZGE1NTU1NTciLCJwZXJtaXNzaW9ucyI6WyJhbGxvd19qb2luIl0sImlhdCI6MTc2NDE1MTg1MCwiZXhwIjoxNzY0NzU2NjUwfQ.CsiPzYBbx3ZHxh7KGEpoI_qxYGkwabEJGEyE6JWo2QE"; 
-  //   const roomId =  "3494-3huj-pikr";
-
-  //   navigate(`/meeting/${roomId}`, {
-  //     state : {
-  //       token : testToken,
-  //       name: displayName || name || "Guest"
-  //     }
-  //   })
-  // }
-
-
-
-  //==============================================================================
-  // code để link với BE, chưa test lấy từ Chat 
-  //   const handleNewMeeting = async () => {
-  //   try {
-  //     // Bước 1: Gọi API backend để lấy token
-  //     const response = await fetch('YOUR_BACKEND_URL/api/create-meeting', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         // Thông tin cần thiết nếu có
-  //       })
-  //     });
-
-  //     const data = await response.json();
-      
-  //     // Bước 2: Navigate với đúng cấu trúc
-  //     navigate(`/meeting/${data.roomId}`, {
-  //       state: {
-  //         token: data.token,  // Token từ backend
-  //         name: displayName || userEmail  // Tên người dùng
-  //       }
-  //     }); 
-  //   } catch (error) {
-  //     console.error('Error creating meeting:', error);
-  //     alert('Không thể tạo phòng họp. Vui lòng thử lại!');
-  //   }
-  // };
-  // giả sử có cuộc họp tạo sẵn test FE, cái này sẽ có phần đọc từ bE
-  
 
   // Cái này để xem lại là có cần hay ko? 
   const handleLeaveMeeting = () => {
