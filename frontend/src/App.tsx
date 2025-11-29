@@ -1,6 +1,13 @@
 // App.tsx
-// trong này chỉ để link và gọi callback function 
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+// trong này chỉ để link và gọi callback function
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { LoginPage } from "./components/LoginPage.tsx";
 import { OTPPage } from "./components/OTPPage.tsx";
 import { HomePage } from "./components/Home.tsx";
@@ -9,14 +16,13 @@ import { useParams } from "react-router-dom";
 import AppMeeting from "./components/AppMeeting.tsx";
 import PreJoinMeeting from "./components/PreJoinMeeting.tsx";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
-import type { MeetingSettings } from './components/PreJoinMeeting';
+import type { MeetingSettings } from "./components/PreJoinMeeting";
 import { meetingAPI } from "./apis/meetingApi.ts";
 
-
 interface IUser {
-  id: string,
-  email: string,
-  displayName: string,
+  id: string;
+  email: string;
+  displayName: string;
 }
 
 // Định nghĩa kiểu dữ liệu cho Meeting
@@ -38,7 +44,6 @@ interface MeetingResponse {
 }
 
 export default function App() {
-
   return (
     <Router>
       <Routes>
@@ -52,7 +57,6 @@ export default function App() {
     </Router>
   );
 }
-
 
 // Wrapper cho login page
 function LoginWrapper() {
@@ -94,7 +98,7 @@ function HomeWrapper() {
   // Xử lý OAuth redirect (Google/Outlook login)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const dataParam = params.get('data');
+    const dataParam = params.get("data");
 
     if (dataParam) {
       try {
@@ -109,11 +113,18 @@ function HomeWrapper() {
           localStorage.setItem("accessToken", userData.accessToken);
         }
         if (userData.user) {
-          localStorage.setItem("user", JSON.stringify(userData.user));
+          localStorage.setItem(`user`, JSON.stringify(userData.user));
+          localStorage.setItem(`peerId`, userData.user.userId);
+          // console.log(localStorage.getItem(`peerId${email}`))
+          localStorage.setItem(`email`, userData.user.email);
+          localStorage.setItem(`displayName`, userData.user.displayName);
         }
 
         // Clear query params sau khi đã lưu
-        navigate('/home', { replace: true, state: { email: userData.user?.email || "" } });
+        navigate("/home", {
+          replace: true,
+          state: { email: userData.user?.email || "" },
+        });
       } catch (error) {
         console.error("Lỗi khi parse OAuth data:", error);
       }
@@ -124,14 +135,19 @@ function HomeWrapper() {
   const handleNewMeeting = async () => {
     try {
       // Gọi API tạo phòng họp
+      console.log(localStorage.getItem("peerId"))
+      const email = localStorage.getItem("email")
       const meetingData: MeetingData = {
         peerId: localStorage.getItem("peerId") || "",
         title: "Cuộc họp mới",
         meetingType: "instant",
         startTime: new Date().toISOString(),
-      }
+      };
+      console.log(1)
       // createMeeting already returns parsed JSON data { roomId, token }, not a Response object
-      const response: MeetingResponse = await meetingAPI.createMeeting(meetingData);
+      const response: MeetingResponse = await meetingAPI.createMeeting(
+        meetingData
+      );
 
       if (response && response.roomId && response.token) {
         // ========== LINK với Prejoin =============//
@@ -142,8 +158,8 @@ function HomeWrapper() {
             settings: {
               micEnabled: true,
               cameraEnabled: true,
-            }
-          }
+            },
+          },
         });
       } else {
         console.error("Không nhận được roomId hoặc token từ API");
@@ -153,28 +169,27 @@ function HomeWrapper() {
       console.error("Lỗi khi tạo phòng họp:", error);
       alert("Có lỗi xảy ra khi tạo phòng họp.");
     }
-  }
+  };
 
   // CALL BACK - Join meeting
   const handleJoinMeeting = async (meetingCode: string) => {
     try {
-
       const joinData: JoinMeetingData = {
         roomId: meetingCode,
         peerId: localStorage.getItem("peerId") || "",
-      }
+      };
 
       console.log("joinData", joinData);
 
       const token = await meetingAPI.joinMeeting(joinData);
 
       if (token) {
-        navigate('/pre-join', {
+        navigate("/pre-join", {
           state: {
             token: token,
             roomId: meetingCode,
             displayName: localStorage.getItem("displayName") || "",
-          }
+          },
         });
       } else {
         console.error("Không nhận được token từ API join");
@@ -193,7 +208,6 @@ function HomeWrapper() {
       onJoinMeeting={handleJoinMeeting}
     />
   );
-
 }
 
 function PreJoinMeetingWrapper() {
@@ -202,10 +216,11 @@ function PreJoinMeetingWrapper() {
   // ================== CẦN XỬ LÍ THÊM CASE =====================//
   //======= BẤM VÀO NEW MEETINGS THÌ CŨNG RA =======//
 
-  // Nhận data từ HomePage, nhận từ phần nhập 
+  // Nhận data từ HomePage, nhận từ phần nhập
   const { roomId, token, displayName } = location.state || {};
 
-  const [meetingSettings, setMeetingSettings] = useState<MeetingSettings | null>(null);
+  const [meetingSettings, setMeetingSettings] =
+    useState<MeetingSettings | null>(null);
 
   // Khi user bấm "Tham gia" trong PreJoinMeeting
   const handleJoinMeeting = (settings: MeetingSettings) => {
@@ -216,8 +231,8 @@ function PreJoinMeetingWrapper() {
       state: {
         roomId: roomId,
         token: token,
-        settings: settings
-      }
+        settings: settings,
+      },
     });
   };
 
@@ -251,9 +266,9 @@ function AppMeetingWrapper() {
   console.log(roomId, token);
 
   const handleLeaveMeeting = () => {
-    // Khi leave, quay lại Home, chỗ nay chưa render lại được 
+    // Khi leave, quay lại Home, chỗ nay chưa render lại được
     navigate("/home");
-  }
+  };
 
   if (!roomId || !token) {
     return <div>Đang tải thông tin phòng họp...</div>;
@@ -270,6 +285,5 @@ function AppMeetingWrapper() {
     />
   );
 }
-
 
 export type { MeetingData, JoinMeetingData };

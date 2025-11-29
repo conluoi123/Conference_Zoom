@@ -1,6 +1,8 @@
 import type { JoinMeetingData, MeetingData } from "../App";
 
 const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
+// const API_BASE_URL = "http://localhost:5500";
+// const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev";
 
 export const meetingAPI = {
   createMeeting: async (meetingData?: MeetingData) => {

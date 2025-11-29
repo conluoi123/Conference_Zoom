@@ -1,5 +1,4 @@
 // AppMeeting.tsx
-import React from "react";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
 import MeetingRoom from "./MeetingRoom";
 import type { MeetingSettings } from "./PreJoinMeeting";

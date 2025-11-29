@@ -1,11 +1,13 @@
 // Home.tsx 
 import { useState } from "react";
 import { BiLogoZoom } from "react-icons/bi";
-import MeetingRoom from './MeetingRoom';
-import type { Participant } from "./MeetingRoom"; // phải import type vì nó là interface
-import { Navigate, useNavigate, type NavigateFunction } from "react-router-dom";
-import AppMeeting from './AppMeeting';
-import { useMediaDevice, useMeeting, useParticipant } from "@videosdk.live/react-sdk";
+// import MeetingRoom from './MeetingRoom';
+// import type { Participant } from "./MeetingRoom"; // phải import type vì nó là interface
+// import { Navigate, useNavigate, type NavigateFunction } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
+// import AppMeeting from './AppMeeting';
+// import { useMediaDevice, useMeeting, useParticipant } from "@videosdk.live/react-sdk";
+// import { useMediaDevice } from "@videosdk.live/react-sdk";
 import {
   Video,
   Plus,
@@ -19,10 +21,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
-  Mic,
-  Camera,
+  // Mic,
+  // Camera,
 } from "lucide-react";
-import { meetingAPI } from "../apis/meetingApi";
+// import { meetingAPI } from "../apis/meetingApi";
 
 interface HomePageProps {
   userEmail: string;
@@ -38,17 +40,17 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting }: HomePagePro
   const [currentDay, setCurrentDay] = useState(new Date());
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
-  const [token, setToken] = useState("");
+  // const [token, setToken] = useState("");
   //============================== Trước khi vào phòng=============================//
-  const { checkPermissions } = useMediaDevice();
+  // const { checkPermissions } = useMediaDevice();
   //================================== PHÒNG HỌP ==================================//
   const [showJoinModal, setShowJoinModal] = useState(false); // modal để nhập mã phong họp 
-  const [preShowJoinModal, setPreShowJoinModal] = useState(false); // modal xác nhận trước khi vào phòng 
+  // const [preShowJoinModal, setPreShowJoinModal] = useState(false); // modal xác nhận trước khi vào phòng 
   const [meetingCode, setMeetingCode] = useState(""); // mã phòng họp  
   const [meetingLink, setMeetingLink] = useState(""); // link phòng họp 
   const [displayName, setDisplayName] = useState(userEmail || ""); // tên hiển thị 
   const [inMeeting, setInMeeting] = useState(false); // xem có ở trong phòng họp hay chưa 
-  const navigate = useNavigate(); // chuyển hướng trang
+  // const navigate = useNavigate(); // chuyển hướng trang
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
   // ================= SAU CÓ XỬ LÍ ĐOẠN LÊN LỊCH HỌP THÌ SẼ THAY ĐỔI PHẦN NÀY ====================
