@@ -143,8 +143,8 @@ passport.use(
 function DirectGoogle(req: RequestWithUser, res: Response) {
   const state = crypto.randomBytes(16).toString("hex");
   req.session.oauthState = state;
-  // console.log(req.session.oauthState);
-  // console.log(111)
+  console.log(req.session.oauthState);
+  console.log(111)
   req.session.save((Error) => {
     if (Error) {
       console.error("Session save error:", Error);
@@ -267,12 +267,6 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
 
     console.log("pass");
 
-    const data = {
-      userId: user._id,
-      email: user.email,
-      displayName: user.displayName,
-    };
-
     const tokenPayLoad = {
       id: user._id,
       email: user.email,
@@ -290,15 +284,22 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       path: "/",
     });
 
-    console.log("pass");
-
+    const data = {
+      accessToken: accessToken,
+      user:{
+        userId: user._id,
+        email: user.email,
+        displayName: user.displayName,
+      }
+    };
+    const encodedData = encodeURIComponent(JSON.stringify(data));
+    return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
     // return res.status(200).json({
     //   message,
     //   access_token: accessToken,
     //   data,
     //   // google_access_token: ggAccessToken,
     // });
-    return res.redirect(`http://localhost:5173/home?data=${data}`);
   } catch (err) {
     console.log(err);
     return res

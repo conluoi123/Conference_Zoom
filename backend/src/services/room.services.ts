@@ -40,6 +40,7 @@ const createRoomOnVideoSDK = async () => {
 
   const region = "sg001";
   const url = `${ENV.VIDEOSDK_API_ENDPOINT}/rooms`;
+  console.log(1)
   const options = {
     method: "POST",
     headers: {
@@ -49,6 +50,8 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       webhook: {
         endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        // endPoint: "http://localhost:5500",
+        // endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
         events: [
           "session-started",
           "session-ended",
@@ -58,9 +61,11 @@ const createRoomOnVideoSDK = async () => {
       },
     }),
   };
+  console.log(5)
 
   // 2. Gọi API
   const response = await fetch(url, options);
+  console.log(10)
 
   // 3. Parse dữ liệu JSON
   const data = await response.json();
@@ -71,7 +76,7 @@ const createRoomOnVideoSDK = async () => {
     const errorMessage = data.error || "Tạo phòng trên VideoSDK thất bại";
     throw new Error(`Lỗi VideoSDK: ${errorMessage}`);
   }
-
+  console.log(data.roomId)
   return data.roomId;
 };
 

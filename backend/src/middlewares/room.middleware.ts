@@ -37,7 +37,6 @@ const createRoomMiddleware = async (
         .json({ error: "Thời gian họp không được ở quá khứ!" });
     }
   }
-
   // Dữ liệu ngon -> Cho đi tiếp
   next();
 };

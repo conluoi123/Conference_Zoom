@@ -69,7 +69,7 @@ const userJoinRoom = async (req: Request, res: Response) => {
   // }
 
   const token = generateToken(userType, peerId, roomId);
-
+  console.log(peerId)
   return res.status(200).json(token);
 };
 
