@@ -24,6 +24,8 @@ import {
   // Mic,
   // Camera,
 } from "lucide-react";
+import { ProfileMenu } from "./ProfileMenu";
+import { ProfileModal } from "./ProfilePage/ProfileModal";
 // import { meetingAPI } from "../apis/meetingApi";
 
 interface HomePageProps {
@@ -34,12 +36,20 @@ interface HomePageProps {
   onJoinMeeting: (meetingCode: string, displayName: string) => void;
 }
 
+interface HeaderProps {
+  onOpenProfile: () => void;
+  onOpenSettings: () => void;
+}
+
+
 export function HomePage({ userEmail, onNewMeeting, onJoinMeeting }: HomePageProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 10));
   const [showTip, setShowTip] = useState(true);
   const [currentDay, setCurrentDay] = useState(new Date());
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   // const [token, setToken] = useState("");
   //============================== Trước khi vào phòng=============================//
   // const { checkPermissions } = useMediaDevice();
@@ -97,6 +107,11 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting }: HomePagePro
   }
   const goToPreviousDay = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  }
+
+  // Nhấn avt để hiển thị menu
+  const shơwProfileMenuHandler = () => {
+    setShowProfileMenu(!showProfileMenu);
   }
   return (
     <div className="w-[100vw] h-[100vh] bg-gray-50 overflow-y-scroll">
@@ -194,8 +209,22 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting }: HomePagePro
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Settings className="w-5 h-5 text-gray-600" />
             </button>
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-              NK
+            <div className="relative">
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700"
+              >
+                <span className="text-sm">NK</span>
+              </button>
+              {showProfileMenu && (
+                <ProfileMenu 
+                  onClose={() => setShowProfileMenu(false)}
+                  onOpenProfile={() => {
+                    setShowProfileMenu(false);
+                    setShowProfileModal(true);
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -390,6 +419,10 @@ export function HomePage({ userEmail, onNewMeeting, onJoinMeeting }: HomePagePro
           </div>
         </div>
       </main>
+
+      {showProfileModal && (
+        <ProfileModal onClose={() => setShowProfileModal(false)} />
+      )}
     </div>
   );
 }

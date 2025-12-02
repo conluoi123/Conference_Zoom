@@ -8,16 +8,17 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { LoginPage } from "./components/LoginPage.tsx";
-import { OTPPage } from "./components/OTPPage.tsx";
-import { HomePage } from "./components/Home.tsx";
+import { LoginPage } from "./pages/LoginPage.tsx";
+import { OTPPage } from "./pages/OTPPage.tsx";
+import { HomePage } from "./pages/Home.tsx";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import AppMeeting from "./components/AppMeeting.tsx";
-import PreJoinMeeting from "./components/PreJoinMeeting.tsx";
+import AppMeeting from "./pages/AppMeeting.tsx";
+import PreJoinMeeting from "./pages/PreJoinMeeting.tsx";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
-import type { MeetingSettings } from "./components/PreJoinMeeting";
+import type { MeetingSettings } from "./pages/PreJoinMeeting.tsx";
 import { meetingAPI } from "./apis/meetingApi.ts";
+import { ProfileModal } from "./pages/ProfilePage/ProfileModal.tsx";
 
 interface IUser {
   id: string;
@@ -53,6 +54,11 @@ export default function App() {
         <Route path="/home" element={<HomeWrapper />} />
         <Route path="/meeting/:roomId" element={<AppMeetingWrapper />} />
         <Route path="/pre-join" element={<PreJoinMeetingWrapper />} />
+        <Route path="/settings/profile" element={<ProfileModal onClose={() => {}} chosenPage="profile"/>} />
+        <Route path="/settings/calendar" element={<ProfileModal onClose={() => {}} chosenPage="calendar"/>} />
+        <Route path="/settings/notifications" element={<ProfileModal onClose={() => {}} chosenPage="notifications"/>} />
+        <Route path="/settings/privacy" element={<ProfileModal onClose={() => {}} chosenPage="privacy"/>} />
+        <Route path="/settings/meetings" element={<ProfileModal onClose={() => {}} chosenPage="meetings"/>} />
       </Routes>
     </Router>
   );
