@@ -1,4 +1,19 @@
-import type { JoinMeetingData, MeetingData } from "../App";
+interface MeetingData {
+  peerId?: string;
+  title?: string;
+  meetingType?: "instant" | "scheduled";
+  startTime?: string;
+}
+
+interface JoinMeetingData {
+  roomId: string;
+  peerId?: string;
+}
+
+interface MeetingResponse {
+  roomId: string;
+  token: string;
+}
 
 // const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
 const API_BASE_URL = "http://localhost:8080";

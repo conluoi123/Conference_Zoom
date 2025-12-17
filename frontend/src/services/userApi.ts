@@ -68,6 +68,7 @@ export const logIn = {
       return result
     } catch (error) {
       console.log("Loi", error);
+      throw error;  // Thêm để propagate error
     }
   },
   outsideLogin: async (appName: string) => {
