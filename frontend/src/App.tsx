@@ -10,7 +10,7 @@ import { LoginPage } from "./components/pages/LoginPage.tsx";
 import { OTPPage } from "./components/pages/OTPPage.tsx";
 import { HomePage } from "./components/pages/Home.tsx";
 import { MeetingPage } from "./components/pages/MeetingPage.tsx";
-import { ProfileModal } from "./pages/ProfilePage/ProfileModal.tsx";
+// import { ProfileModal } from "./pages/ProfilePage/ProfileModal.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { PreJoinPage } from "./components/pages/PreJoinMeetingPage.tsx";
 
@@ -26,11 +26,11 @@ export default function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/meeting/:roomId" element={<MeetingPage  />} />
           <Route path="/pre-join" element={<PreJoinPage />} />
-          <Route path="/settings/profile" element={<ProfileModal onClose={() => {}} chosenPage="profile"/>} />
-          <Route path="/settings/calendar" element={<ProfileModal onClose={() => {}} chosenPage="calendar"/>} />
+          {/* <Route path="/settings/profile" element={<ProfileModal onClose={() => {}} chosenPage="profile"/>} /> */}
+          {/* <Route path="/settings/calendar" element={<ProfileModal onClose={() => {}} chosenPage="calendar"/>} />
           <Route path="/settings/notifications" element={<ProfileModal onClose={() => {}} chosenPage="notifications"/>} />
           <Route path="/settings/privacy" element={<ProfileModal onClose={() => {}} chosenPage="privacy"/>} />
-          <Route path="/settings/meetings" element={<ProfileModal onClose={() => {}} chosenPage="meetings"/>} />
+          <Route path="/settings/meetings" element={<ProfileModal onClose={() => {}} chosenPage="meetings"/>} /> */}
         </Routes>
       </AuthProvider>
     </Router>
