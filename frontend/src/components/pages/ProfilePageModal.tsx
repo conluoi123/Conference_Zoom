@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { ProfileSidebar } from './common/ProfileSidebar';
 import { ProfileContent } from './common/ProfileContent';
 import { MeetingsSettings } from './common/MeetingsSettings';
-import {CalendarSettings} from './common/CalendarSettings';
+import { CalendarSettings } from './common/CalendarSettings';
 import { NotificationsSettings } from './common/NotificationsSettings';
 import { PrivacySettings } from './common/PrivacySettings';
 

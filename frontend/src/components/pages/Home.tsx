@@ -12,7 +12,7 @@ import {
   ChevronRight,
   Users,
 } from "lucide-react";
-import MainLayout from "../../layout/MainLayout";
+import {MainLayout} from "../../layout/MainLayout";
 import { useAuth } from "../../context/AuthContext";
 import { meetingAPI } from "../../services/meetingApi";
 

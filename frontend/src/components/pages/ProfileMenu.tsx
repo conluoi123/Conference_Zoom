@@ -1,106 +1,87 @@
 import { User, UserPlus, Settings, LogOut } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import {useAuth} from '../../context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-interface ProfileMenuProps {
-  onClose: () => void;
-  onOpenProfile: () => void;
-}
+export function ProfileDropdown({ onOpenProfile }: { onOpenProfile: () => void }) {
+  const { user, logout } = useAuth();
 
-export function ProfileMenu({ onClose, onOpenProfile }: ProfileMenuProps) {
-  const menuRef = useRef<HTMLDivElement>(null);
+  const displayName = user?.displayName || "User";
+  const email = user?.email || "";
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
-
-  const handleViewProfile = () => {
-    onClose();
-    onOpenProfile();
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
-  const handleAddAccount = () => {
-    alert('Thêm tài khoản mới');
-    onClose();
-  };
-
-  const handleLogOut = () => {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-      alert('Đã đăng xuất');
-      onClose();
+  const handleLogout = () => {
+    if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      logout();
     }
   };
 
   return (
-    <div 
-      ref={menuRef}
-      className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-    >
-      <div className="px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center gap-3">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm">NK</span>
+            <span className="text-white text-sm font-semibold">
+              {getInitials(displayName)}
+            </span>
           </div>
-          <div>
-            <div className="text-gray-900">Nguyễn Khôi</div>
-            <div className="text-sm text-gray-500">nguyen.khoi@zus.com</div>
-          </div>
-        </div>
-      </div>
 
-      <div className="py-2">
-        <button
-          onClick={handleViewProfile}
-          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors"
-        >
-          <User size={18} className="text-blue-600" />
-          <div className="text-left">
-            <div className="text-sm">View Profile</div>
-            <div className="text-xs text-gray-500">Xem và chỉnh sửa hồ sơ</div>
+          <div className="hidden md:block text-left">
+            <div className="text-sm font-medium">{displayName}</div>
+            <div className="text-xs text-gray-500">{email}</div>
           </div>
         </button>
+      </DropdownMenuTrigger>
 
-        <button
-          onClick={handleAddAccount}
-          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors"
-        >
-          <UserPlus size={18} className="text-purple-600" />
-          <div className="text-left">
-            <div className="text-sm">Add Account</div>
-            <div className="text-xs text-gray-500">Thêm tài khoản mới</div>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel>
+          <div className="flex flex-col">
+            <span className="font-medium">{displayName}</span>
+            <span className="text-xs text-muted-foreground">{email}</span>
           </div>
-        </button>
+        </DropdownMenuLabel>
 
-        <button
-          onClick={handleViewProfile}
-          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors"
-        >
-          <Settings size={18} className="text-gray-600" />
-          <div className="text-left">
-            <div className="text-sm">Settings</div>
-            <div className="text-xs text-gray-500">Cài đặt ứng dụng</div>
-          </div>
-        </button>
-      </div>
+        <DropdownMenuSeparator />
 
-      <div className="border-t border-gray-200 pt-2">
-        <button
-          onClick={handleLogOut}
-          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-red-600 transition-colors"
+        <DropdownMenuItem onClick={onOpenProfile}>
+          <User className="mr-2 h-4 w-4 text-blue-600" />
+          View Profile
+        </DropdownMenuItem>
+
+        <DropdownMenuItem>
+          <UserPlus className="mr-2 h-4 w-4 text-purple-600" />
+          Add Account
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={onOpenProfile}>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="text-red-600 focus:text-red-600"
         >
-          <LogOut size={18} />
-          <div className="text-left">
-            <div className="text-sm">Log Out</div>
-            <div className="text-xs text-red-500">Đăng xuất tài khoản</div>
-          </div>
-        </button>
-      </div>
-    </div>
+          <LogOut className="mr-2 h-4 w-4" />
+          Log Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

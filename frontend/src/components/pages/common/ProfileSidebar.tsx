@@ -1,5 +1,5 @@
 import { User, Video, Calendar, Bell, Shield } from 'lucide-react';
-import type { PageType } from './ProfileModal';
+export type PageType = 'profile' | 'meetings' | 'calendar' | 'notifications' | 'privacy';
 
 interface ProfileSidebarProps {
   currentPage: PageType;
