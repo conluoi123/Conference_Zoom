@@ -67,7 +67,6 @@ async function verifyEmail(req: Request, res: Response) {
         displayName: displayName,
         avatar: "", // thiết kế avatar sau
         provider: "local",
-        // role: "user",
         createdAt: new Date(Date.now()),
         lastLoginAt: new Date(Date.now()),
         refreshToken: {
@@ -161,7 +160,6 @@ function DirectGoogle(req: RequestWithUser, res: Response) {
 
     const ggLoginURL = `${ENV.GOOGLE_LOGIN_URL}?${param.toString()}`;
     console.log("Redirect URL:", ggLoginURL);
-    // return res.status(200).json({ redirect_url: ggLoginURL });
     return res.redirect(ggLoginURL);
   });
 }
@@ -212,9 +210,7 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
     });
 
     const {
-      // access_token: ggAccessToken,
       id_token: ggIdToken,
-      // refresh_token: ggRefreshToken
     } = reqGgToken.data;
 
     if (!ggIdToken) return res.status(400).json({ error: "Missing id_token" });
@@ -238,17 +234,12 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
         displayName: userData.displayName,
         avatar: userData.avatar,
         provider: "google",
-        // role: "user",
         createdAt: new Date(Date.now()),
         lastLoginAt: new Date(Date.now()),
         refreshToken: {
           refreshToken: hashRefToken,
           expiredTime: new Date(Date.now() + 15 * 24 * 3600 * 1000),
         },
-        // ggRefreshToken:  {
-        //     refreshToken: ggRefreshToken ? ggRefreshToken : undefined,
-        //     expiredTime: ggRefreshToken ? new Date(Date.now()+6*30*24*3600*1000) : undefined,
-        // }
       });
       user = newUser;
       message = "SIGN UP SUCCESSFULLY!";
@@ -257,10 +248,6 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       user.refreshToken.expiredTime = new Date(
         Date.now() + 15 * 24 * 3600 * 1000
       );
-      // if(ggRefreshToken){
-      //   user.ggRefreshToken.refreshToken = ggRefreshToken;
-      //   user.ggRefreshToken.expiredTime = new Date(Date.now()+6*30*24*3600*1000);
-      // }
       message = "SIGN IN SUCCESSFULLY!";
       await user.save();
     }
@@ -294,12 +281,6 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
     };
     const encodedData = encodeURIComponent(JSON.stringify(data));
     return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
-    // return res.status(200).json({
-    //   message,
-    //   access_token: accessToken,
-    //   data,
-    //   // google_access_token: ggAccessToken,
-    // });
   } catch (err) {
     console.log(err);
     return res

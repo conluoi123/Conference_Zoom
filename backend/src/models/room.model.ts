@@ -4,14 +4,15 @@ export interface IRoom extends Document {
   roomId: string;
   hostId: string;
   type: "INSTANT" | "SCHEDULED";
-  startTime?: Date;
   title?: string;
-  status: "ACTIVE" | "ENDED"; //Dùng để đánh dấu là đang họp hay đã kết thúc
-  defaultInvitedUsers: string[];
-  askBeforeJoin: boolean;
+  settings: {
+    allowShareScreen: Boolean;
+    allowChat: Boolean;
+    allowMic: Boolean;
+    allowCam: Boolean;
+  };
   createdAt: Date;
   lastUsedAt?: Date;
-  sessions: string[];
 }
 
 const roomSchema = new Schema<IRoom>({
@@ -24,24 +25,16 @@ const roomSchema = new Schema<IRoom>({
     default: "INSTANT",
   },
 
-  defaultInvitedUsers: [{ type: String }],
-
-  startTime: { type: Date },
-
   title: { type: String },
-
-  status: {
-    type: String,
-    enum: ["ACTIVE", "ENDED"],
-    default: "ACTIVE",
+  settings: {
+    allowShareScreen: {type: Boolean, default: true},
+    allowChat: {type: Boolean, default: true},
+    allowMic: {type: Boolean, default: true},
+    allowCam: {type: Boolean, default: true},
   },
-
-  askBeforeJoin: { type: Boolean },
 
   createdAt: { type: Date, default: Date.now },
   lastUsedAt: { type: Date },
-
-  sessions: [{ type: String }],
 });
 
 // 3. Export Model

@@ -168,7 +168,6 @@ async function outlookLogIn(accessToken, refreshToken, profile, done) {
         displayName: profile.displayName,
         avatar: avatar,
         provider: "outlook",
-        // role: "user",
         createdAt: new Date(Date.now()),
         lastLoginAt: new Date(Date.now()),
         refreshToken: {
@@ -214,15 +213,6 @@ async function outlookLogInCallback(req: Request, res: Response) {
     path: "/",
   });
   let message = isLogIn ? "LOGIN SUCCESSFUL" : "SIGN UP SUCCESSFUL";
-  // return res.status(200).json({
-  //     message: message,
-  //     access_token: accessToken,
-  //     user_data: {
-  //         id: user._id,
-  //         displayName: user.displayName,
-  //         avatar: user.avatar
-  //     }
-  // });
   const data = {
     accessToken: accessToken,
     user:{

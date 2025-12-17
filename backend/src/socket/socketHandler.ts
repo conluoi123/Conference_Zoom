@@ -1,7 +1,8 @@
 import { Server, Socket } from "socket.io";
 
 export const socketHandler = (io: Server) => {
-  io.on("connection", (socket: Socket) => {
+ 
+ io.on("connection", (socket: Socket) => {
     console.log(`New Connection: ${socket.id}`);
 
     //Vào phòng
