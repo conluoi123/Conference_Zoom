@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useMeeting, useParticipant } from "@videosdk.live/react-sdk";
 import { BiLogoZoom } from "react-icons/bi";
+import ChatPanel from "./common/ChatPanel";
 import {
   X,
   Circle,
@@ -99,7 +100,15 @@ const ParticipantTile = React.memo(function ParticipantTile({
 });
 
 // Meeting Controls Component
-function MeetingControls({ onLeaveMeeting }: { onLeaveMeeting: () => void }) {
+function MeetingControls({ 
+  onLeaveMeeting,
+  onToggleChat,
+  isChatOpen
+}: { 
+  onLeaveMeeting: () => void;
+  onToggleChat: () => void;
+  isChatOpen: boolean;
+}) {
   const { leave, toggleMic, toggleWebcam, localMicOn, localWebcamOn } = useMeeting();
 
   const handleLeave = () => {
@@ -147,7 +156,10 @@ function MeetingControls({ onLeaveMeeting }: { onLeaveMeeting: () => void }) {
           <span className="text-white text-xs">Chia sẻ</span>
         </button>
 
-        <button className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors">
+        <button 
+          onClick={onToggleChat}
+          className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors"
+        >
           <MessageSquare className="w-6 h-6 text-white" />
           <span className="text-white text-xs">Trò chuyện</span>
         </button>
@@ -188,6 +200,7 @@ function MeetingRoomContent({
   onLeaveMeeting: () => void;
 }) {
   const [joined, setJoined] = useState<"JOINING" | "JOINED" | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const { join, leave, participants } = useMeeting({
     onMeetingJoined: () => {
@@ -264,7 +277,19 @@ function MeetingRoomContent({
           </div>
 
           {/* Controls */}
-          <MeetingControls onLeaveMeeting={onLeaveMeeting} />
+          <MeetingControls 
+            onLeaveMeeting={onLeaveMeeting} 
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            isChatOpen={isChatOpen}
+          />
+
+          <ChatPanel
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+            roomId={roomId}
+            userName="User Name"
+            userId="user-id-123"
+          />
         </>
       ) : joined === "JOINING" ? (
         <div className="flex-1 flex items-center justify-center">
