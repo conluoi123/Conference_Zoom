@@ -12,7 +12,7 @@ import Session from "../models/session.model";
  */
 const createNewRoom = async (req: Request, res: Response) => {
   try {
-    const { peerId, title, meetingType, startTime } = req.body;
+    const { peerId, title, meetingType } = req.body;
 
     const roomId = await createRoomOnVideoSDK();
 
@@ -21,11 +21,7 @@ const createNewRoom = async (req: Request, res: Response) => {
       hostId: peerId, // Người tạo là Host
       title: title || "Cuộc họp mới",
       type: meetingType === "schedule" ? "SCHEDULED" : "INSTANT",
-      startTime: meetingType === "schedule" ? new Date(startTime) : undefined,
-      status: "ACTIVE", // Mặc định vừa tạo là đang hoạt động
-      askBeforeJoin: true,
       createdAt: new Date(),
-      sessions: [],
     });
 
     const token = generateToken("host", peerId, roomId);

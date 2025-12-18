@@ -8,34 +8,14 @@ const createRoomMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { peerId, meetingType, startTime } = req.body;
+  const { peerId, meetingType } = req.body;
 
-  console.log(peerId, meetingType, startTime);
+  console.log(peerId, meetingType);
 
   const user = await User.findOne({ _id: peerId });
 
   if (!peerId || !user) {
     return res.status(404).json({ error: "Người dùng không tồn tại!" });
-  }
-
-  if (meetingType === "schedule") {
-    // 2. Check logic Lên lịch
-    if (!startTime) {
-      return res
-        .status(400)
-        .json({ error: "Lên lịch họp thì bắt buộc phải có startTime!" });
-    }
-
-    const startDate = new Date(startTime);
-    if (isNaN(startDate.getTime())) {
-      return res.status(400).json({ error: "startTime không đúng định dạng!" });
-    }
-
-    if (startDate < new Date()) {
-      return res
-        .status(400)
-        .json({ error: "Thời gian họp không được ở quá khứ!" });
-    }
   }
 
   // Dữ liệu ngon -> Cho đi tiếp

@@ -223,7 +223,16 @@ async function outlookLogInCallback(req: Request, res: Response) {
   //         avatar: user.avatar
   //     }
   // });
-  return res.redirect("http://localhost:5173/home");
+  const data = {
+    accessToken: accessToken,
+    user: {
+      userId: user._id,
+      email: user.email,
+      displayName: user.displayName,
+    },
+  };
+  const encodedData = encodeURIComponent(JSON.stringify(data));
+  return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
 }
 
 //GOOGLE

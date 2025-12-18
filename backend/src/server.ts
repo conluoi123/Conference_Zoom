@@ -22,6 +22,7 @@ import {
   signInRouter,
   verifyOtpRouter,
 } from "./routes/signIn.routes";
+import { socketHandler } from "./socket/socketHandler";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -36,6 +37,8 @@ const io = new Server(server, {
   pingInterval: 60000, // 60s gửi ping 1 lần
   pingTimeout: 3000, // timeout 3s nếu không pong lại -> disconnect
 });
+
+socketHandler(io);
 
 //middlewares
 app.use(cors());
@@ -61,6 +64,7 @@ signInRouter(app);
 sendOtpRouter(app);
 verifyOtpRouter(app);
 outlookSignInRouter(app);
+
 userRoutes(app);
 roomRoutes(app);
 webHook(app);
@@ -68,7 +72,6 @@ webHook(app);
 const startServer = async () => {
   try {
     await connectDB();
-
     server.listen(PORT, () => {
       console.log(`Server is listening on port: ${PORT}`);
     });

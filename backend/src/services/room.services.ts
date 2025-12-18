@@ -24,6 +24,7 @@ const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
     payload.version = 2;
     payload.roles = ["rtc"];
   }
+  
   if (roomId) {
     payload.roomId = roomId;
   }
@@ -47,13 +48,17 @@ const createRoomOnVideoSDK = async () => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      region,
       webhook: {
         endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
         events: [
+          "participant-joined",
+          "participant-left",
           "session-started",
           "session-ended",
           "recording-started",
           "recording-stopped",
+          "recording-failed",
         ],
       },
     }),
