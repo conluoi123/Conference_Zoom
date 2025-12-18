@@ -50,7 +50,8 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        // endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",

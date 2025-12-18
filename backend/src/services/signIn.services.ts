@@ -7,7 +7,6 @@ import { Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import { error } from "console";
-let isLogIn = false;
 interface RequestWithUser extends Request {
   user: any;
   session: any;
@@ -154,28 +153,21 @@ async function outlookLogIn(accessToken, refreshToken, profile, done) {
     return done(new Error("No ID found"), null);
   }
   try {
+    
     let user = await User.findOne({ email: email });
     if (user) {
-      isLogIn = true;
       user.avatar = avatar;
       user.displayName = profile.displayName;
-      user.lastLoginAt = new Date(Date.now());
       await user.save();
       return done(null, user);
     } else {
-      const newUser = await User.create({
-        email: email,
-        displayName: profile.displayName,
-        avatar: avatar,
-        provider: "outlook",
-        // role: "user",
-        createdAt: new Date(Date.now()),
-        lastLoginAt: new Date(Date.now()),
-        refreshToken: {
-          refreshToken: "ref",
-          expiredTime: new Date(Date.now() + 15 * 24 * 3600 * 1000),
-        },
-      });
+      const newUser = await createNewUser(
+        email,
+        avatar,
+        profile.displayName,
+        "outlook",
+        "refTokenTemp"
+      );
       user = newUser;
       return done(null, user);
     }
@@ -191,21 +183,8 @@ async function outlookLogInCallback(req: Request, res: Response) {
     (req as RequestWithUser).session.destroy(resolve)
   );
   res.clearCookie("connect.sid");
-  const tokenPayLoad = {
-    id: user._id,
-    email: user.email,
-  };
-  const accessToken = jwt.sign(tokenPayLoad, ENV.JWT_SECRET, {
-    expiresIn: "15m",
-  });
-  const refToken = crypto.randomBytes(64).toString("hex");
-  const hashRefToken = crypto
-    .createHash("sha256")
-    .update(refToken)
-    .digest("hex");
-  user.refreshToken.refreshToken = hashRefToken;
-  user.refreshToken.expiredTime = new Date(Date.now() + 15 * 24 * 3600 * 1000);
-  await user.save();
+  const accessToken = createAccessToken(user);
+  const refToken = await createRefreshTokenAndStorageInDb(user);
   res.cookie("refreshToken", refToken, {
     httpOnly: true,
     secure: true,
@@ -213,16 +192,6 @@ async function outlookLogInCallback(req: Request, res: Response) {
     maxAge: 15 * 24 * 3600 * 1000,
     path: "/",
   });
-  let message = isLogIn ? "LOGIN SUCCESSFUL" : "SIGN UP SUCCESSFUL";
-  // return res.status(200).json({
-  //     message: message,
-  //     access_token: accessToken,
-  //     user_data: {
-  //         id: user._id,
-  //         displayName: user.displayName,
-  //         avatar: user.avatar
-  //     }
-  // });
   const data = {
     accessToken: accessToken,
     user: {
@@ -244,11 +213,68 @@ async function verifyGoogleToken(idToken) {
   });
   return ticket.getPayload();
 }
+
+// hàm tạo user mới
+async function createNewUser(
+  email,
+  avatar,
+  displayName,
+  provider,
+  refreshToken
+) {
+  const newUser = await User.create({
+    email: email,
+    displayName: displayName,
+    avatar: avatar,
+    provider: provider,
+    createdAt: new Date(Date.now()),
+    isActive: true,
+    refreshToken: {
+      refreshToken: refreshToken,
+      expiredTime: new Date(Date.now() + 15 * 24 * 3600 * 1000),
+    },
+    accountType: {
+      accType: "free",
+      maxDuration: 60,
+      maxParticipants: 40,
+      expiredAt: null,
+    },
+  });
+  return newUser;
+}
+
+// hàm tạo refreshToken xác thực mới và accessToken mới gủi về user
+function createAccessToken(user) {
+  const tokenPayLoad = {
+    id: user._id,
+    email: user.email,
+  };
+  const accessToken = jwt.sign(tokenPayLoad, ENV.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+  return accessToken
+}
+
+async function createRefreshTokenAndStorageInDb(user) {
+  const refToken = crypto.randomBytes(64).toString("hex");
+  const hashRefToken = crypto
+    .createHash("sha256")
+    .update(refToken)
+    .digest("hex");
+  user.refreshToken.refreshToken = hashRefToken;
+  user.refreshToken.expiredTime = new Date(Date.now() + 15 * 24 * 3600 * 1000);
+  await user.save();
+  return refToken;
+}
+
 export {
   supportSendOtp,
   generateOtp,
   supportVerifyOtp,
+  createNewUser,
   outlookLogIn,
   outlookLogInCallback,
   verifyGoogleToken,
+  createAccessToken,
+  createRefreshTokenAndStorageInDb
 };
