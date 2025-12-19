@@ -5,49 +5,6 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../configs/env";
 import User from "../models/user.model";
 
-// function setCsrfToken(req: RequestWithUser, res: Response, next: NextFunction) {
-//   if (!req.session.csrfToken) {
-//     req.session.csrfToken = crypto.randomBytes(64).toString("hex");
-//     req.session.save();
-//   }
-//   next();
-// }
-
-// function sendCsrfToken(req: RequestWithUser, res: Response) {
-//   const csrfToken = req.session.csrfToken;
-//   if (!csrfToken) {
-//     return res.status(500).json({ message: "CSRF IS NOT EXIST." });
-//   }
-//   return res.status(200).json({
-//     csrfToken: csrfToken,
-//     message: "CSRF TOKEN SEND SUCCESSFULLY.",
-//   });
-// }
-
-// function csrfProtection(
-//   req: RequestWithUser,
-//   res: Response,
-//   next: NextFunction
-// ) {
-//   if (
-//     req.method === "POST" ||
-//     req.method === "PUT" ||
-//     req.method === "DELETE"
-//   ) {
-//     const tokenFromHeader = req.header("X-CSRF-Token");
-//     const tokenFromSession = req.session.csrfToken;
-//     if (!tokenFromHeader || tokenFromHeader !== tokenFromSession) {
-//       if (req.session) {
-//         req.session.destroy(() => res.clearCookie("connect.sid"));
-//       }
-//       return res.status(403).json({
-//         error: "CSRF TOKEN IS NOT SUITABLE",
-//       });
-//     }
-//   }
-//   next();
-// }
-
 function authenticateEmail(email: string) {
   const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!email.match(regex)) {
@@ -94,10 +51,4 @@ function authenticateAccessToken(
   }
 }
 
-export {
-  authenticateAccessToken,
-  authenticateEmail,
-  //   setCsrfToken,
-  //   sendCsrfToken,
-  //   csrfProtection,
-};
+export { authenticateAccessToken, authenticateEmail };

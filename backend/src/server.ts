@@ -53,8 +53,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: ENV.NODE_ENV === "production" ? "none" : "lax",
-      secure: ENV.NODE_ENV === "production",
+      sameSite: "none",
+      secure: true,
       maxAge: 60 * 60 * 1000,
     },
   })

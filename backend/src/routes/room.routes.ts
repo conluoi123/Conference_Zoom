@@ -1,9 +1,5 @@
 import { Router, Express } from "express";
-import {
-  createNewRoom,
-  userJoinRoom,
-  userLeaveRoom,
-} from "../controllers/room.controller";
+import { createNewRoom, userJoinRoom } from "../controllers/room.controller";
 import {
   createRoomMiddleware,
   joinRoomMiddleware,
@@ -20,7 +16,6 @@ const router = Router();
 const roomRoutes = (app: Express) => {
   app.post("/rooms/create", createRoomMiddleware, createNewRoom); // create new meeting room
   app.post("/rooms/:roomId/join", joinRoomMiddleware, userJoinRoom);
-  app.post("/rooms/:roomId/leave", userLeaveRoom);
   app.use("/rooms", router);
 };
 

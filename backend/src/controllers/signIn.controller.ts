@@ -4,6 +4,8 @@ import {
   supportSendOtp,
   generateOtp,
   supportVerifyOtp,
+  createAccessToken,
+  createNewUser,
 } from "../services/signIn.services";
 import { Request, Response } from "express";
 import crypto from "crypto";
@@ -62,19 +64,13 @@ async function verifyEmail(req: Request, res: Response) {
       .digest("hex");
     if (!user) {
       const displayName = email.split("@")[0];
-      const newUser = await User.create({
-        email: email,
-        displayName: displayName,
-        avatar: "", // thiết kế avatar sau
-        provider: "local",
-        // role: "user",
-        createdAt: new Date(Date.now()),
-        lastLoginAt: new Date(Date.now()),
-        refreshToken: {
-          refreshToken: hashRefToken,
-          expiredTime: new Date(Date.now() + 15 * 24 * 3600 * 1000),
-        },
-      });
+      const newUser = await createNewUser(
+        email,
+        "",
+        displayName,
+        "local",
+        hashRefToken
+      );
       user = newUser;
       message = "SIGN UP SUCCESSFULLY!";
     } else {
@@ -92,14 +88,7 @@ async function verifyEmail(req: Request, res: Response) {
       displayName: user.displayName,
     };
 
-    const tokenPayLoad = {
-      id: user._id,
-      email: user.email,
-    };
-
-    const accessToken = jwt.sign(tokenPayLoad, ENV.JWT_SECRET, {
-      expiresIn: "15m",
-    });
+    const accessToken = createAccessToken(user);
     res.cookie("refreshToken", refToken, {
       httpOnly: true,
       secure: true,
@@ -143,8 +132,6 @@ passport.use(
 function DirectGoogle(req: RequestWithUser, res: Response) {
   const state = crypto.randomBytes(16).toString("hex");
   req.session.oauthState = state;
-  // console.log(req.session.oauthState);
-  // console.log(111)
   req.session.save((Error) => {
     if (Error) {
       console.error("Session save error:", Error);
@@ -161,7 +148,6 @@ function DirectGoogle(req: RequestWithUser, res: Response) {
 
     const ggLoginURL = `${ENV.GOOGLE_LOGIN_URL}?${param.toString()}`;
     console.log("Redirect URL:", ggLoginURL);
-    // return res.status(200).json({ redirect_url: ggLoginURL });
     return res.redirect(ggLoginURL);
   });
 }
@@ -173,23 +159,8 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
     if (!codeUser)
       return res.status(400).json({ error: "Missing code redirect_uri" });
     const stateReturn = req.query.state as string;
-    if (req.session) {
-      console.log(req.session.name);
-    }
-    console.log(stateReturn);
-    console.log(req.query.state);
-    console.log("typeof =", typeof stateReturn);
-    console.log("typeof =", typeof req.query.state);
-    console.log("isArray =", Array.isArray(stateReturn));
-    console.log(req.session.oauthState);
     const savedState = req.session.oauthState as string;
-    console.log(savedState);
-    if (!stateReturn) {
-      console.log(1);
-    }
-    if (stateReturn !== savedState) {
-      console.log(2);
-    }
+    console.log(stateReturn, " VÀ ", savedState);
     if (!stateReturn || stateReturn !== savedState) {
       if (req.session) {
         await new Promise((resolve) => req.session.destroy(resolve));
@@ -211,11 +182,7 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       grant_type: "authorization_code",
     });
 
-    const {
-      // access_token: ggAccessToken,
-      id_token: ggIdToken,
-      // refresh_token: ggRefreshToken
-    } = reqGgToken.data;
+    const { id_token: ggIdToken } = reqGgToken.data;
 
     if (!ggIdToken) return res.status(400).json({ error: "Missing id_token" });
     const ggUser = await verifyGoogleToken(ggIdToken);
@@ -233,23 +200,13 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       .update(refToken)
       .digest("hex");
     if (!user) {
-      const newUser = await User.create({
-        email: userData.email,
-        displayName: userData.displayName,
-        avatar: userData.avatar,
-        provider: "google",
-        // role: "user",
-        createdAt: new Date(Date.now()),
-        lastLoginAt: new Date(Date.now()),
-        refreshToken: {
-          refreshToken: hashRefToken,
-          expiredTime: new Date(Date.now() + 15 * 24 * 3600 * 1000),
-        },
-        // ggRefreshToken:  {
-        //     refreshToken: ggRefreshToken ? ggRefreshToken : undefined,
-        //     expiredTime: ggRefreshToken ? new Date(Date.now()+6*30*24*3600*1000) : undefined,
-        // }
-      });
+      const newUser = await createNewUser(
+        userData.email,
+        userData.avatar,
+        userData.displayName,
+        "google",
+        hashRefToken
+      );
       user = newUser;
       message = "SIGN UP SUCCESSFULLY!";
     } else {
@@ -257,24 +214,11 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       user.refreshToken.expiredTime = new Date(
         Date.now() + 15 * 24 * 3600 * 1000
       );
-      // if(ggRefreshToken){
-      //   user.ggRefreshToken.refreshToken = ggRefreshToken;
-      //   user.ggRefreshToken.expiredTime = new Date(Date.now()+6*30*24*3600*1000);
-      // }
       message = "SIGN IN SUCCESSFULLY!";
       await user.save();
     }
 
-    console.log("pass");
-
-    const tokenPayLoad = {
-      id: user._id,
-      email: user.email,
-    };
-
-    const accessToken = jwt.sign(tokenPayLoad, ENV.JWT_SECRET, {
-      expiresIn: "15m",
-    });
+    const accessToken = createAccessToken(user);
 
     res.cookie("refreshToken", refToken, {
       httpOnly: true,
@@ -293,13 +237,7 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       },
     };
     const encodedData = encodeURIComponent(JSON.stringify(data));
-    return res.redirect(`http:://localhost:5173/home?data=${encodedData}`);
-    // return res.status(200).json({
-    //   message,
-    //   access_token: accessToken,
-    //   data,
-    //   // google_access_token: ggAccessToken,
-    // });
+    return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
   } catch (err) {
     console.log(err);
     return res

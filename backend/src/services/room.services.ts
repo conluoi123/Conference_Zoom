@@ -11,8 +11,6 @@ const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
   let permissions;
   if (userType === "host" || userType === "server") {
     permissions = ["allow_join", "allow_mod"];
-  } else if (userType === "no_waiting") {
-    permissions = ["allow_join"];
   } else {
     permissions = ["ask_join"];
   }

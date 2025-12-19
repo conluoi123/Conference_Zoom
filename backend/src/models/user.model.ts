@@ -5,18 +5,18 @@ export interface IUser extends Document {
   displayName: string;
   avatar?: string;
   provider: "local" | "google" | "outlook";
-  // isVerified: boolean;
-  // role: "user" | "admin";
+  isActive: boolean;
   createdAt: Date;
-  lastLoginAt?: Date;
   refreshToken: {
     refreshToken: String;
     expiredTime: Date;
   };
-  // ggRefreshToken: {
-  //   refreshToken?: String,
-  //   expiredTime?: Date,
-  // }
+  accountType: {
+    accType: "free" | "pro" | "enterprise";
+    maxDuration: Number;
+    maxParticipants: Number;
+    expiredAt: Date;
+  };
 }
 
 const userSchema: Schema<IUser> = new Schema({
@@ -30,32 +30,23 @@ const userSchema: Schema<IUser> = new Schema({
     required: true,
     default: "local",
   },
-
-  // isVerified: { type: Boolean, default: false },
-
-  // role: { type: String, enum: ["user", "admin"], default: "user" },
-
+  isActive: { type: Boolean },
   createdAt: { type: Date, default: () => new Date() },
-  lastLoginAt: { type: Date },
   refreshToken: {
     refreshToken: { type: String, required: true },
     expiredTime: { type: Date, required: true },
   },
-  // ggRefreshToken: {
-  //   refreshToken: {
-  //     type: String,
-  //     required: function(this: IUser) {
-  //       return this.provider === "google";
-  //     },
-  //     default: undefined,
-  //   },
-  //   expiredTime: {
-  //       type: Date,
-  //       required: function(this: IUser) {
-  //           return !!this.ggRefreshToken?.refreshToken;
-  //       }
-  //   },
-  // }
+  accountType: {
+    accType: {
+      type: String,
+      enum: ["free", "pro", "enterprise"],
+      required: true,
+      default: "local",
+    },
+    maxDuration: { type: Number },
+    maxParticipants: { type: Number },
+    expiredAt: { type: Date },
+  },
 });
 
 // tạo index để tránh trùng username/email
