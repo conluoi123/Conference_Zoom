@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
-import {MeetingRoom} from "./MeetingRoom.tsx";
+import { MeetingRoom } from "./MeetingRoom.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
-import type { MeetingSettings } from "./PreJoinMeetingPage.tsx";
+import LoadMeeting from "./common/meetings/LoadMeeting.tsx";
 
 export function MeetingPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function MeetingPage() {
   const { roomId: stateRoomId, token, settings } = location.state || {};
   const roomId = stateRoomId || paramRoomId;
   const displayName = user?.displayName || "Guest";
-  const peerId = user?.id || "";
+  const peerId = user?.id;
   const handleToggleChat = () => {
     setIsChatOpen((prev) => !prev);
   };
@@ -29,27 +29,14 @@ export function MeetingPage() {
     navigate("/home");
   };
 
-  if (!roomId || !token) {
-    return (
-      <div className="bg-gray-900 flex items-center justify-center min-h-screen">
-        <div className="text-white text-xl">Đang tải thông tin cuộc họp...</div>
-      </div>
-    );
-  }
-
-  const meetingSettings: MeetingSettings = settings || {
-    micEnabled: true,
-    cameraEnabled: true,
-  };
-
   return (
     <MeetingProvider
       config={{
         meetingId: roomId,
         participantId: peerId,
         name: displayName,
-        micEnabled: meetingSettings.micEnabled,
-        webcamEnabled: meetingSettings.cameraEnabled,
+        micEnabled: settings.allowMic,
+        webcamEnabled: settings.allowCam,
         autoConsume: true,
         debugMode: true,
         multiStream: true,
@@ -61,7 +48,7 @@ export function MeetingPage() {
         onLeaveMeeting={handleLeaveMeeting}
         onToggleChat={handleToggleChat}
         onChatOpen={isChatOpen}
-      />  
+      />
     </MeetingProvider>
   );
 }
