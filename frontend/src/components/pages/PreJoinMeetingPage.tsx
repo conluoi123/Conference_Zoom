@@ -13,8 +13,6 @@ export function PreJoinPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const { roomId, token, displayName: initialDisplayName } = location.state || {};
-
-  // const { getCameras, getMicrophones } = useMediaDevice();
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCam, setSelectedCam] = useState("");
@@ -126,19 +124,31 @@ export function PreJoinPage() {
   };
 
   const handleJoin = () => {
-    const settings: MeetingSettings = {
-      micEnabled: isMicOn,
-      cameraEnabled: isCameraOn,
-    };
-
-    navigate(`/meeting/${roomId}`, {
-      state: {
-        roomId,
-        token,
-        settings,
-      },
+  // --- THÊM ĐOẠN NÀY ---
+  // Dừng tất cả các track của preview để nhả Camera cho VideoSDK
+  if (previewStream) {
+    previewStream.getTracks().forEach((track) => {
+      track.stop();
     });
+    setPreviewStream(null);
+  }
+  // ----------------------
+
+  const settings: MeetingSettings = {
+    micEnabled: isMicOn,
+    cameraEnabled: isCameraOn,
   };
+
+  navigate(`/meeting/${roomId}`, {
+    state: {
+      roomId,
+      token,
+      settings,
+      // Đảm bảo truyền displayName ổn định
+      displayName: displayName || "Guest", 
+    },
+  });
+};
 
   const handleCancel = () => {
     navigate("/home");

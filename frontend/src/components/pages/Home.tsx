@@ -27,17 +27,14 @@ interface JoinMeetingData {
   roomId: string;
   peerId?: string;
 }
-
 interface MeetingResponse {
   roomId: string;
   token: string;
 }
-
 export function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  console.log("User from AuthContext in HomePage:", user);
+  const { user, refreshUser, login } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentDay, setCurrentDay] = useState(new Date());
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -84,26 +81,29 @@ export function HomePage() {
       participants: 8,
     },
   ];
-
+  // khi người dùng load lại trang
+  useEffect(()=> {
+    const token = localStorage.getItem("accessToken");
+    if(!user && token) {
+        console.log("No user");
+        refreshUser();
+    }
+  }, [user, refreshUser]);
   // Handle OAuth redirect
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const dataParam = params.get("data");
-    
     if (dataParam) {
       try {
         const decodedData = decodeURIComponent(dataParam);
         const userData = JSON.parse(decodedData);
         console.log("OAuth login data:", userData);
-        if (userData.accessToken) {
-          localStorage.setItem("accessToken", userData.accessToken);
-        }
-        if (userData.user) {
-          localStorage.setItem("user", JSON.stringify(userData.user));
-          localStorage.setItem("peerId", userData.user.userId);
-          //debug 
-          localStorage.setItem("email", userData.user.email);
-          localStorage.setItem("displayName", userData.user.displayName);
+        if(userData.accessToken && userData.data) {
+            login({
+              id: userData.data.userId,
+              email: userData.data.email,
+              displayName: userData.data.displayName,
+            }, userData.accessToken);
         }
         navigate("/home", { replace: true });
       } catch (error) {
@@ -112,7 +112,7 @@ export function HomePage() {
     }
   }, [location.search, navigate]);
   console.log("OAuth user data:", user);
-  console.log("User in HomePage:", localStorage.getItem("peerId"));
+  //console.log("User in HomePage:", localStorage.getItem("peerId"));
   const handleNewMeeting = async () => {
     try {
       const meetingData: MeetingData = {
@@ -146,7 +146,6 @@ export function HomePage() {
 
   const handleJoinMeeting = async () => {
     const roomId = meetingCode.trim() || extractRoomIdFromLink(meetingLink);
-    
     if (!roomId) {
       alert("Vui lòng nhập mã cuộc họp hoặc link hợp lệ");
       return;
@@ -157,8 +156,6 @@ export function HomePage() {
         roomId: roomId,
         peerId: localStorage.getItem("peerId") || "",
       };
-
-      
       const token = await meetingAPI.joinMeeting(joinData);
 
       if (token) {
@@ -175,6 +172,8 @@ export function HomePage() {
       alert("Không thể tham gia phòng họp. Vui lòng kiểm tra mã phòng.");
     }
   };
+
+  
 
   const extractRoomIdFromLink = (link: string): string => {
     // Extract room ID from meeting link

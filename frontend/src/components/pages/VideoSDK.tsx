@@ -1,22 +1,23 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { MeetingProvider } from "@videosdk.live/react-sdk";
-import {MeetingRoom} from "./MeetingRoom";
+import {MeetingRoom} from "./MeetingRoom.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import type { MeetingSettings } from "./PreJoinMeetingPage.tsx";
-
 
 export function MeetingPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { roomId: paramRoomId } = useParams();
   const { user } = useAuth();
-
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { roomId: stateRoomId, token, settings } = location.state || {};
   const roomId = stateRoomId || paramRoomId;
-
   const displayName = user?.displayName || "Guest";
   const peerId = user?.id || "";
+  const handleToggleChat = () => {
+    setIsChatOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     if (!roomId || !token) {
@@ -57,9 +58,10 @@ export function MeetingPage() {
     >
       <MeetingRoom
         roomId={roomId}
-        token={token}
         onLeaveMeeting={handleLeaveMeeting}
-      />
+        onToggleChat={handleToggleChat}
+        onChatOpen={isChatOpen}
+      />  
     </MeetingProvider>
   );
 }
