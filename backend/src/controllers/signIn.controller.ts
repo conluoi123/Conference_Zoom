@@ -160,7 +160,6 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       return res.status(400).json({ error: "Missing code redirect_uri" });
     const stateReturn = req.query.state as string;
     const savedState = req.session.oauthState as string;
-    console.log(stateReturn, " VÀ ", savedState);
     if (!stateReturn || stateReturn !== savedState) {
       if (req.session) {
         await new Promise((resolve) => req.session.destroy(resolve));

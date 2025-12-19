@@ -1,3 +1,4 @@
+import { ppid } from "process";
 import Chat from "../models/chat.model";
 import { findProgressingSession } from "./session.services";
 
@@ -29,4 +30,12 @@ const insertNewMessage = async (roomId: string, newMessage: newMessage) => {
   await chatObj.save();
 };
 
-export { insertNewMessage };
+const getChat = async (roomId: string) => {
+  const session = await findProgressingSession(roomId);
+  const chat = await Chat.findOne({ sessionId: session.sessionId });
+  if (!chat) {
+    return [];
+  }
+  return chat.chat;
+};
+export { insertNewMessage, getChat };

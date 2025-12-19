@@ -1,10 +1,10 @@
 import { Server, Socket } from "socket.io";
 import Chat from "../../models/chat.model";
-import { insertNewMessage } from "../../services/chat.services";
+import { getChat, insertNewMessage } from "../../services/chat.services";
 import { isHost, updateRoomOnDatabase } from "../../services/room.services";
 
 export const meetingSocketHandler = (io: Server, socket: Socket) => {
-  socket.on("meeting:join", ({ roomId, participantName }) => {
+  socket.on("meeting:join", async ({ roomId, participantName }) => {
     /*
       Khi 1 participant vào phòng sẽ có webhook từ videoSDK trả về dữ liệu participant
       Xong sẽ thiết lập kết nối socketIO với người dùng.
@@ -16,11 +16,14 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     socket
       .to(roomId)
       .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
+    const chat = await getChat(roomId);
+    console.log(chat);
+    socket.emit("meeting:chat-history", chat);
   });
 
   socket.on(
     "meeting:chat",
-    ({ roomId, participantId, participantName, content, createdAt }) => {
+    ({ roomId, participantId, participantName, content }) => {
       console.log(
         `${participantName} vừa chat "${content}" trong phòng họp ${roomId}`
       );
@@ -60,5 +63,9 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
       .to(roomId)
       .emit("meeting:leave", `${participantName} đã rời khỏi phòng họp`);
     socket.leave(roomId);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`Socket ${socket.id} disconnected`);
   });
 };

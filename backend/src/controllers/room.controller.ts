@@ -33,7 +33,7 @@ const userJoinRoom = async (req: Request, res: Response) => {
   const { roomId, peerId } = req.body;
   const room = res.locals.roomInfo;
 
-  let userType = "peer";
+  let userType = "host";
   if (peerId === room.hostId) userType = "host";
 
   const token = generateToken(userType, peerId, roomId);
