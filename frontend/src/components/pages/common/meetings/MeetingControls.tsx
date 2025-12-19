@@ -1,7 +1,8 @@
 import { useMeeting } from "@videosdk.live/react-sdk";
 import { 
-  Mic, MicOff, Camera, VideoOff, PhoneOff, 
-  MessageSquare, Share2, Users, Settings, Plus 
+  Mic, MicOff, Video, VideoOff, PhoneOff, 
+  MessageSquare, Share2, Users, Settings, Plus, 
+  CameraOff
 } from "lucide-react";
 import {
   Tooltip,
@@ -75,7 +76,7 @@ export const MeetingControls = ({
           {/* Camera */}
           <ControlButton 
             onClick={() => toggleWebcam()}
-            icon={localWebcamOn ? Camera : VideoOff}
+            icon={localWebcamOn ? Video : VideoOff}
             label={localWebcamOn ? "Tắt video" : "Bật video"}
             variant={localWebcamOn ? "default" : "danger"}
           />

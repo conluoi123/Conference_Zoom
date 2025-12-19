@@ -5,33 +5,35 @@ import { X, Mic, MicOff, Camera, CameraOff, Video } from "lucide-react";
 export interface MeetingSettings {
   micEnabled: boolean;
   cameraEnabled: boolean;
-  webcamDeviceId: string;
-  micDeviceId: string;
-  displayName: string;
 }
 
 export function PreJoinPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  
-  // Ref để kiểm soát việc gọi API nhiều lần
+
+  // Refs
   const initializingRef = useRef(false);
   const streamRef = useRef<MediaStream | null>(null);
 
+  // Data from previous page
   const { roomId, token, settings, displayName: initialDisplayName } = location.state || {};
 
+  // States
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+  
   const [selectedCam, setSelectedCam] = useState("");
   const [selectedMic, setSelectedMic] = useState("");
+  
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
+  
   const [displayName, setDisplayName] = useState(initialDisplayName || "");
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Helper để stop stream an toàn
+  // Helper: Stop current stream safely
   const stopStream = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -42,13 +44,8 @@ export function PreJoinPage() {
     }
   };
 
-  useEffect(() => {
-    if (!roomId || !token) {
-      navigate("/home");
-    }
-  }, [roomId, token, navigate]);
-
-  const loadDevices = async () => {
+  // 1. Load danh sách thiết bị
+  const loadDevices = useCallback(async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((d) => d.kind === "videoinput");
@@ -57,36 +54,77 @@ export function PreJoinPage() {
       setCameras(videoDevices);
       setMics(audioDevices);
 
-      if (videoDevices.length > 0) setSelectedCam(videoDevices[0].deviceId);
-      if (audioDevices.length > 0) setSelectedMic(audioDevices[0].deviceId);
+      // Trả về danh sách để dùng ngay nếu cần
+      return { videoDevices, audioDevices };
     } catch (error) {
       console.error("Error loading devices:", error);
+      return { videoDevices: [], audioDevices: [] };
     }
-  };
+  }, []);
 
-  // Khởi tạo permission ban đầu
+  // Check valid room info
+  useEffect(() => {
+    if (!roomId || !token) {
+      navigate("/home");
+    }
+  }, [roomId, token, navigate]);
+
+  // 2. Khởi tạo quyền VÀ hiển thị stream ngay lập tức
   useEffect(() => {
     const initializeMedia = async () => {
-      // Ngăn chặn chạy 2 lần liên tiếp
       if (initializingRef.current) return;
       initializingRef.current = true;
 
       try {
         setLoading(true);
-        // Yêu cầu quyền
+        console.log("Requesting permissions...");
+        
+        // Xin quyền
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
         
         setPermissionGranted(true);
-        // Dừng ngay lập tức để giải phóng thiết bị cho bước chọn cam sau này
-        stream.getTracks().forEach((track) => track.stop());
         
-        await loadDevices();
+        // ---------------------------------------------
+        // SỬA ĐỔI QUAN TRỌNG: Gán stream vào video ngay, KHÔNG TẮT
+        // ---------------------------------------------
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        streamRef.current = stream;
+
+        // Lấy device ID thực tế của stream đang chạy
+        const currentVideoTrack = stream.getVideoTracks()[0];
+        const currentAudioTrack = stream.getAudioTracks()[0];
+        const activeCamId = currentVideoTrack.getSettings().deviceId;
+        const activeMicId = currentAudioTrack.getSettings().deviceId;
+
+        // Load danh sách thiết bị
+        const { videoDevices, audioDevices } = await loadDevices();
+
+        // Cập nhật State dropdown khớp với thiết bị đang chạy
+        // Ưu tiên lấy ID từ stream thật, nếu không có thì lấy cái đầu tiên trong list
+        if (activeCamId) {
+            setSelectedCam(activeCamId);
+        } else if (videoDevices.length > 0) {
+            setSelectedCam(videoDevices[0].deviceId);
+        }
+
+        if (activeMicId) {
+            setSelectedMic(activeMicId);
+        } else if (audioDevices.length > 0) {
+            setSelectedMic(audioDevices[0].deviceId);
+        }
+
+        console.log("Media initialized successfully");
+
       } catch (error: any) {
-        console.error("Permission denied:", error);
+        console.error("Permission denied or error:", error);
         setPermissionGranted(false);
+        // Vẫn load list phòng trường hợp user block 1 cái nhưng cho phép cái kia
+        await loadDevices();
       } finally {
         setLoading(false);
         initializingRef.current = false;
@@ -94,50 +132,62 @@ export function PreJoinPage() {
     };
 
     initializeMedia();
-    
-    // Cleanup khi unmount trang PreJoin
+
+    const handleDeviceChange = () => {
+        loadDevices();
+    };
+
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+
     return () => {
       stopStream();
+      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
     };
-  }, []);
+  }, [loadDevices]); 
 
-  // Xử lý Preview Camera khi user thay đổi thiết bị hoặc bật/tắt
+  // 3. Effect xử lý khi NGƯỜI DÙNG TỰ ĐỔI CAM
+  // Chỉ chạy khi selectedCam thay đổi VÀ khác với stream hiện tại
   useEffect(() => {
-    // Nếu chưa có quyền hoặc user tắt cam thì dừng stream
-    if (!permissionGranted || !isCameraOn) {
-      stopStream();
-      return;
+    if (!permissionGranted || !isCameraOn || !selectedCam) {
+        if (!isCameraOn) stopStream(); // Tắt cam nếu user bấm tắt
+        return;
     }
 
-    if (!selectedCam) return;
+    // Nếu stream hiện tại đã đúng là camera user chọn -> Không làm gì cả (tránh chớp tắt)
+    if (streamRef.current) {
+        const currentTrack = streamRef.current.getVideoTracks()[0];
+        if (currentTrack && currentTrack.getSettings().deviceId === selectedCam && currentTrack.readyState === "live") {
+            return; 
+        }
+    }
 
+    // Logic đổi camera
     let isMounted = true;
-
     const startCamera = async () => {
-      stopStream(); // Dừng stream cũ trước
+      stopStream(); // Dừng stream cũ
 
       try {
+        console.log("Switching to camera:", selectedCam);
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: selectedCam } },
-          audio: false,
+          video: { 
+            deviceId: { exact: selectedCam },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
         });
 
         if (!isMounted) {
-          // Nếu component đã unmount trong lúc đang await, dừng stream ngay
           stream.getTracks().forEach(t => t.stop());
           return;
         }
 
-        streamRef.current = stream; // Lưu vào ref để quản lý cleanup
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      } catch (error: any) {
-        console.error("Error accessing camera:", error);
-        // Xử lý lỗi "NotReadableError" (Camera đang bận)
-        if (error.name === "NotReadableError") {
-            alert("Camera đang được sử dụng bởi ứng dụng khác hoặc chưa được giải phóng. Vui lòng thử lại.");
-        }
+      } catch (error) {
+        console.error("Error switching camera:", error);
         setIsCameraOn(false);
       }
     };
@@ -146,33 +196,32 @@ export function PreJoinPage() {
 
     return () => {
       isMounted = false;
-      stopStream();
+      // Không stop stream ở cleanup của effect này để tránh đen màn hình khi re-render nhẹ
     };
   }, [selectedCam, isCameraOn, permissionGranted]);
 
   const handleJoin = () => {
-    // Dừng preview trước khi chuyển trang
     stopStream();
-
     const userSettings: MeetingSettings = {
       micEnabled: isMicOn,
       cameraEnabled: isCameraOn,
-      webcamDeviceId: selectedCam,
-      micDeviceId: selectedMic,
-      displayName: displayName,
     };
 
-    const micState = settings.allowMic && userSettings ? userSettings.micEnabled:settings.allowMic;
-    const camState = settings.allowCam && userSettings ? userSettings.cameraEnabled:settings.allowCam;
+    const micState = settings?.allowMic && userSettings ? userSettings.micEnabled : settings?.allowMic;
+    const camState = settings?.allowCam && userSettings ? userSettings.cameraEnabled : settings?.allowCam;
 
-    settings.allowMic = micState;
-    settings.allowCam = camState
+    if (settings) {
+        settings.allowMic = micState;
+        settings.allowCam = camState;
+    }
 
     navigate(`/meeting/${roomId}`, {
       state: {
         roomId,
         token,
         settings, 
+        selectedCamId: selectedCam,
+        selectedMicId: selectedMic
       },
     });
   };
@@ -214,7 +263,7 @@ export function PreJoinPage() {
         )}
 
         {/* Control Buttons */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 items-center bg-gray-900/90 backdrop-blur-md px-6 py-4 rounded-2xl border border-gray-700 shadow-xl">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4 items-center bg-gray-900/90 backdrop-blur-md px-6 py-4 rounded-2xl border border-gray-700 shadow-xl z-10">
           <div className="flex flex-col items-center gap-2">
             <button
               onClick={() => setIsMicOn(!isMicOn)}
