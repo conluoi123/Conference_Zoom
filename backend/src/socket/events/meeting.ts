@@ -1,12 +1,7 @@
 import { Server, Socket } from "socket.io";
-
-interface Message {
-  id: string;
-  participantId: string;
-  participantName: string;
-  content: string;
-  createdAt: Date;
-}
+import Chat from "../../models/chat.model";
+import { insertNewMessage } from "../../services/chat.services";
+import { isHost, updateRoomOnDatabase } from "../../services/room.services";
 
 export const meetingSocketHandler = (io: Server, socket: Socket) => {
   socket.on("meeting:join", ({ roomId, participantName }) => {
@@ -30,22 +25,25 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
         `${participantName} vừa chat "${content}" trong phòng họp ${roomId}`
       );
 
-      const newMessage: Message = {
-        id: Date.now().toString(), // Ưu tiên ID từ server
+      const newMessage = {
         participantName: participantName,
         participantId: participantId,
         content: content,
-        createdAt: new Date(Date.now()),
+        timestamp: new Date(Date.now()),
       };
 
       io.to(roomId).emit("meeting:chat", newMessage);
 
-      // Còn tạo đối tượng chat lưu trong database
+      insertNewMessage(roomId, newMessage);
     }
   );
 
-  socket.on("meeting:settings", ({ roomId, participantId }) => {
-    /**Cập nhật settings cho phòng họp */
+  socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
+    if (!isHost(roomId, participantId)) {
+      console.log("Truy cập không xác định");
+      socket.disconnect();
+    }
+    updateRoomOnDatabase(roomId, participantId, null, settings, null);
   });
 
   socket.on("meeting:invite", ({ roomId, participantId, email }) => {
@@ -60,7 +58,7 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
      */
     socket
       .to(roomId)
-      .emit("meeting:join", `${participantName} đã rời khỏi phòng họp`);
+      .emit("meeting:leave", `${participantName} đã rời khỏi phòng họp`);
     socket.leave(roomId);
   });
 };

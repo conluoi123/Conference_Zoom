@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import { ENV } from "../configs/env";
+import Room from "../models/room.model";
 
+//===================== VIDEOSDK ========================
 const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
   const API_KEY = ENV.VIDEOSDK_API_KEY;
   const SECRET_KEY = ENV.VIDEOSDK_SECRET_KEY;
@@ -24,7 +26,7 @@ const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
     payload.version = 2;
     payload.roles = ["rtc"];
   }
-  
+
   if (roomId) {
     payload.roomId = roomId;
   }
@@ -94,4 +96,76 @@ const validateRoomOnVideoSDK = async (roomId: string) => {
   }
   return true;
 };
-export { generateToken, createRoomOnVideoSDK, validateRoomOnVideoSDK };
+
+//===================== ROOM REPOSITORY ========================
+const createRoomOnDatabase = async ({
+  roomId,
+  peerId,
+  title = "Cuộc họp mới",
+  meetingType,
+}: {
+  roomId: string;
+  peerId: string;
+  title?: string;
+  meetingType: "schedule" | "instant";
+}) => {
+  const room = await Room.create({
+    roomId,
+    hostId: peerId,
+    title,
+    type: meetingType === "schedule" ? "SCHEDULED" : "INSTANT",
+    createdAt: new Date(),
+  });
+
+  if (!room) {
+    throw new Error("Tạo phòng thất bại");
+  }
+};
+
+const findRoomOnDatabase = async (roomId) => {
+  const room = await Room.findOne({ roomId: roomId });
+  return room;
+};
+
+const updateRoomOnDatabase = async (
+  roomId: string,
+  hostId: string,
+  title: string,
+  settings: {
+    allowJoin: boolean;
+    allowShareScreen: boolean;
+    allowChat: boolean;
+    allowMic: boolean;
+    allowCam: boolean;
+  },
+  invited: string[]
+) => {
+  const update: any = {};
+  if (title != null) update.title = title;
+  if (settings != null) update.settings = settings;
+  if (invited != null) update.title = title;
+  const room = await Room.findOneAndUpdate(
+    { roomId: roomId, hostId: hostId },
+    { $set: update },
+    { new: true }
+  );
+  if (!room) {
+    throw new Error("Lỗi database: Cập nhật phòng thất bại");
+  }
+};
+
+const isHost = async (roomId, participantId: string) => {
+  const room = await Room.findOne({ roomId: roomId, hostId: participantId });
+  if (!room) return false;
+  return true;
+};
+
+export {
+  generateToken,
+  createRoomOnVideoSDK,
+  validateRoomOnVideoSDK,
+  createRoomOnDatabase,
+  findRoomOnDatabase,
+  updateRoomOnDatabase,
+  isHost,
+};

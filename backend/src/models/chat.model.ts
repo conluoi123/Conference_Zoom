@@ -1,26 +1,38 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-//messageId là objectId do mongoDB sinh ra
-
 export interface IChat extends Document {
   sessionId: string;
-  participantId: string;
-  content: string;
-  timestamp: Date;
+  chat: [
+    {
+      participantId: string;
+      participantName: String;
+      content: string;
+      timestamp: Date;
+    }
+  ];
 }
 const chatSchema = new Schema<IChat>({
   sessionId: {
     type: String,
     required: true,
   },
-  participantId: {
-    type: String,
-    required: true,
-  },
-  content: {
-    type: String,
-  },
-  timestamp: { type: Date },
+  chat: [
+    {
+      participantId: {
+        type: String,
+        required: true,
+      },
+      participantName: {
+        type: String,
+        required: true,
+      },
+      content: {
+        type: String,
+        required: true,
+      },
+      timestamp: { type: Date, required: true },
+    },
+  ],
 });
 const Chat = mongoose.model<IChat>("Chat", chatSchema);
 export default Chat;

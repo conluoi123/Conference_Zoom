@@ -7,7 +7,7 @@ export interface ISession extends Document {
   scheduleId: String;
   start: Date;
   end: Date;
-  sessionInvitedUsers: string[];
+  invited: string[];
   status: "waiting" | "active" | "ended";
 }
 
@@ -31,9 +31,9 @@ const sessionSchema = new Schema<ISession>({
   },
 
   start: { type: Date },
-  end: { type: Date },
+  end: { type: Date, default: null },
 
-  sessionInvitedUsers: { type: [String], default: [] },
+  invited: { type: [String], default: [] },
   status: {
     type: String,
     enum: ["waiting", "active", "ended"],

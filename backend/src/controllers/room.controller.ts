@@ -1,6 +1,10 @@
 import Room from "../models/room.model";
 import { Request, Response } from "express";
-import { createRoomOnVideoSDK, generateToken } from "../services/room.services";
+import {
+  createRoomOnDatabase,
+  createRoomOnVideoSDK,
+  generateToken,
+} from "../services/room.services";
 import Session from "../models/session.model";
 
 /*
@@ -16,13 +20,7 @@ const createNewRoom = async (req: Request, res: Response) => {
 
     const roomId = await createRoomOnVideoSDK();
 
-    await Room.create({
-      roomId: roomId, // ID lấy từ VideoSDK
-      hostId: peerId, // Người tạo là Host
-      title: title || "Cuộc họp mới",
-      type: meetingType === "schedule" ? "SCHEDULED" : "INSTANT",
-      createdAt: new Date(),
-    });
+    await createRoomOnDatabase({ roomId, peerId, title, meetingType });
 
     const token = generateToken("host", peerId, roomId);
 
@@ -48,11 +46,6 @@ const createNewRoom = async (req: Request, res: Response) => {
 
 const userJoinRoom = async (req: Request, res: Response) => {
   const { roomId, peerId } = req.body;
-  const roomInfo = res.locals.roomInfo;
-  const sessionInfo = await Session.findOne({
-    sessionId: roomInfo.sessions.at(-1),
-  });
-
   let userType = "no_waiting"; //set lại waiting
 
   // if (peerId === roomInfo.hostId) {
