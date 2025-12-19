@@ -1,0 +1,10 @@
+import { io } from "socket.io-client";
+
+// URL nên đưa vào biến môi trường (Environment Variable)
+const SOCKET_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
+
+export const socket = io(SOCKET_URL, {
+  transports: ["websocket"], // Ép dùng websocket để ổn định với ngrok
+  reconnection: true,
+  autoConnect: false, // Quan trọng: Để mình tự chủ động connect khi cần
+});

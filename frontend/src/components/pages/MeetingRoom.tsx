@@ -190,8 +190,8 @@ export function MeetingRoom({
             isOpen={onChatOpen}
             onClose={onToggleChat}
             roomId={roomId}
-            userName={user?.displayName || "Guest"}
-            userId={user?.id || ""}
+            participantName={user!.displayName}
+            participantId={user!.id}
           />
         </>
       )}
