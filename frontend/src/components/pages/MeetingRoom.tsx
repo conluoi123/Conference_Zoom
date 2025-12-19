@@ -19,8 +19,10 @@ import {
 
 interface MeetingRoomProps {
   roomId: string;
-  onLeaveMeeting: () => void;
   token: string;
+  participantId: string;
+  participantName: string;
+  onLeaveMeeting: () => void;
 }
 
 // Participant Tile Component
@@ -194,9 +196,13 @@ function MeetingControls({
 // Meeting Room Content
 function MeetingRoomContent({
   roomId,
+  participantId,
+  participantName,
   onLeaveMeeting,
 }: {
   roomId: string;
+  participantId: string;
+  participantName: string;
   onLeaveMeeting: () => void;
 }) {
   const [joined, setJoined] = useState<"JOINING" | "JOINED" | null>(null);
@@ -221,18 +227,10 @@ function MeetingRoomContent({
     if (join && joined === null) {
       console.log("🔄 Đang tham gia cuộc họp...");
       // Check permissions before joining
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(() => {
-          console.log("✅ Permissions granted");
           setJoined("JOINING");
           join();
-        })
-        .catch((err) => {
-          console.error("❌ Permission denied:", err);
-          onLeaveMeeting();
-        });
     }
-  }, [join, joined, onLeaveMeeting]);
+  }, [join, joined]);
 
   // useEffect(() => {
   //   return () => {
@@ -287,8 +285,8 @@ function MeetingRoomContent({
             isOpen={isChatOpen}
             onClose={() => setIsChatOpen(false)}
             roomId={roomId}
-            userName="User Name"
-            userId="user-id-123"
+            participantName={participantName}
+            participantId={participantId}
           />
         </>
       ) : joined === "JOINING" ? (
@@ -307,7 +305,7 @@ function MeetingRoomContent({
   );
 }
 
-export function MeetingRoom({ roomId, token, onLeaveMeeting }: MeetingRoomProps) {
+export function MeetingRoom({ roomId, token, participantId, participantName, onLeaveMeeting }: MeetingRoomProps) {
   if (!roomId || !token) {
     return (
       <div className="bg-gray-900 flex items-center justify-center min-h-screen">
@@ -316,5 +314,4 @@ export function MeetingRoom({ roomId, token, onLeaveMeeting }: MeetingRoomProps)
     );
   }
 
-  return <MeetingRoomContent roomId={roomId} onLeaveMeeting={onLeaveMeeting} />;
-}
+  return <MeetingRoomContent roomId={roomId} participantId={participantId} participantName={participantName} onLeaveMeeting={onLeaveMeeting} />};

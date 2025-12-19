@@ -15,8 +15,8 @@ interface MeetingResponse {
   token: string;
 }
 
-// const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
+//const API_BASE_URL = "http://localhost:8080";
 // const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev";
 
 export const meetingAPI = {
@@ -98,7 +98,9 @@ export const meetingAPI = {
 
       const result = await response.json();
 
-      return result;
+      console.log(result.token);
+
+      return result.token;
       // Tại dòng 56 (trong block catch)
     } catch (error) {
       if (error instanceof Error) {

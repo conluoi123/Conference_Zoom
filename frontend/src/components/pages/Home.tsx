@@ -15,6 +15,7 @@ import {
 import {MainLayout} from "../../layout/MainLayout";
 import { useAuth } from "../../context/AuthContext";
 import { meetingAPI } from "../../services/meetingApi";
+import { socket } from "@/services/socket";
 
 interface MeetingData {
   peerId?: string;
@@ -84,6 +85,9 @@ export function HomePage() {
       participants: 8,
     },
   ];
+
+  //socket
+  useEffect(()=>{socket.connect()},[]);
 
   // Handle OAuth redirect
   useEffect(() => {

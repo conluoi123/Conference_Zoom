@@ -58,6 +58,8 @@ export function MeetingPage() {
       <MeetingRoom
         roomId={roomId}
         token={token}
+        participantId={peerId}
+        participantName={displayName}
         onLeaveMeeting={handleLeaveMeeting}
       />
     </MeetingProvider>

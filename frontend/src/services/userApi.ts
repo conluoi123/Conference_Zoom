@@ -3,8 +3,8 @@
 //   displayName: string;
 
 // }
-// const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
+//const API_BASE_URL = "http://localhost:8080";
 // const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev"
 interface LoginData {
   email: string;
@@ -65,10 +65,10 @@ export const logIn = {
       }
 
       const result = await response.json();
-      return result
+      return result;
     } catch (error) {
       console.log("Loi", error);
-      throw error;  // Thêm để propagate error
+      throw error; // Thêm để propagate error
     }
   },
   outsideLogin: async (appName: string) => {
