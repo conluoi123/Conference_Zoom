@@ -12,7 +12,7 @@ import {
   ChevronRight,
   Users,
 } from "lucide-react";
-import {MainLayout} from "../../layout/MainLayout";
+import { MainLayout } from "../../layout/MainLayout";
 import { useAuth } from "../../context/AuthContext";
 import { meetingAPI } from "../../services/meetingApi";
 
@@ -82,11 +82,11 @@ export function HomePage() {
     },
   ];
   // khi người dùng load lại trang
-  useEffect(()=> {
+  useEffect(() => {
     const token = localStorage.getItem("accessToken");
-    if(!user && token) {
-        console.log("No user");
-        refreshUser();
+    if (!user && token) {
+      console.log("No user");
+      refreshUser();
     }
   }, [user, refreshUser]);
   // Handle OAuth redirect
@@ -98,12 +98,15 @@ export function HomePage() {
         const decodedData = decodeURIComponent(dataParam);
         const userData = JSON.parse(decodedData);
         console.log("OAuth login data:", userData);
-        if(userData.accessToken && userData.data) {
-            login({
+        if (userData.accessToken && userData.data) {
+          login(
+            {
               id: userData.data.userId,
               email: userData.data.email,
               displayName: userData.data.displayName,
-            }, userData.accessToken);
+            },
+            userData.accessToken
+          );
         }
         navigate("/home", { replace: true });
       } catch (error) {
@@ -121,25 +124,28 @@ export function HomePage() {
         meetingType: "instant",
         startTime: new Date().toISOString(),
       };
-      console.log("Creating meeting with data:", meetingData.peerId);
-      const response : MeetingResponse = await meetingAPI.createMeeting(meetingData);
-      console.log("Create meeting response:", response);
+      const response: MeetingResponse = await meetingAPI.createMeeting(
+        meetingData
+      );
       if (response.roomId && response.token) {
         navigate(`/meeting/${response.roomId}`, {
           state: {
             token: response.token,
             roomId: response.roomId,
             settings: {
-              micEnabled: true,
-              cameraEnabled: true,
+              allowJoin: false,
+              allowShareScreen: true,
+              allowChat: true,
+              allowMic: true,
+              allowCam: true,
             },
           },
         });
       }
     } catch (error) {
       console.error("Create meeting error:", error);
-      //debug 
-      console.log("User: ", user)
+      //debug
+      console.log("User: ", user);
       alert("Không thể tạo phòng họp. Vui lòng thử lại.");
     }
   };
@@ -156,14 +162,15 @@ export function HomePage() {
         roomId: roomId,
         peerId: localStorage.getItem("peerId") || "",
       };
-      const token = await meetingAPI.joinMeeting(joinData);
+      const room = await meetingAPI.joinMeeting(joinData);
 
-      if (token) {
+      if (room) {
         navigate("/pre-join", {
           state: {
-            token,
+            token: room.token,
             roomId,
             displayName: localStorage.getItem("displayName") || "",
+            settings: room.settings,
           },
         });
       }
@@ -172,8 +179,6 @@ export function HomePage() {
       alert("Không thể tham gia phòng họp. Vui lòng kiểm tra mã phòng.");
     }
   };
-
-  
 
   const extractRoomIdFromLink = (link: string): string => {
     // Extract room ID from meeting link
@@ -302,7 +307,9 @@ export function HomePage() {
                 <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Upload className="w-7 h-7 text-white" />
                 </div>
-                <p className="text-gray-900 font-medium text-sm">Share screen</p>
+                <p className="text-gray-900 font-medium text-sm">
+                  Share screen
+                </p>
               </button>
             </div>
 

@@ -1,7 +1,8 @@
 import { useMeeting } from "@videosdk.live/react-sdk";
 import { 
-  Mic, MicOff, Camera, VideoOff, PhoneOff, 
-  MessageSquare, Share2, Users, Settings, Plus 
+  Mic, MicOff, Video, VideoOff, PhoneOff, 
+  MessageSquare, Share2, Users, Settings, Plus, 
+  CameraOff
 } from "lucide-react";
 import {
   Tooltip,
@@ -14,12 +15,16 @@ interface MeetingControlsProps {
   onLeaveMeeting: () => void;
   onToggleChat: () => void;
   isChatOpen: boolean;
+  onOpenParticipant: () => void; 
+  isOpen: boolean;
 }
 
 export const MeetingControls = ({ 
   onLeaveMeeting, 
   onToggleChat, 
-  isChatOpen 
+  isChatOpen, 
+  onOpenParticipant, 
+  isOpen,
 }: MeetingControlsProps) => {
   const { leave, toggleMic, toggleWebcam, localMicOn, localWebcamOn } = useMeeting();
 
@@ -75,7 +80,7 @@ export const MeetingControls = ({
           {/* Camera */}
           <ControlButton 
             onClick={() => toggleWebcam()}
-            icon={localWebcamOn ? Camera : VideoOff}
+            icon={localWebcamOn ? Video : VideoOff}
             label={localWebcamOn ? "Tắt video" : "Bật video"}
             variant={localWebcamOn ? "default" : "danger"}
           />
@@ -90,7 +95,12 @@ export const MeetingControls = ({
           />
 
           {/* Participants */}
-          <ControlButton icon={Users} label="Người tham gia" />
+          <ControlButton 
+          icon={Users} 
+          label="Người tham gia" 
+          variant={isChatOpen ? "success" : "default"} 
+          onClick={onOpenParticipant}
+          />
         
           {/* Settings */}
           <ControlButton icon={Settings} label="Cài đặt" />

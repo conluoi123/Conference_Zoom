@@ -3,7 +3,7 @@
 // //   displayName: string;
 
 // // }
-// // const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
+const API_BASE_URL = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
 // const API_BASE_URL = "http://localhost:8080";
 // // const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev"
 
@@ -118,9 +118,9 @@ interface OtpData {
 }
 
 export const logIn = {
-  sendOtp: (LoginData: LoginData) => api.post("/auth/sendOTP", LoginData), 
-  verifyOtp: (otpData: OtpData) => api.post("/auth/verifyOTP", otpData), 
-  outsideLogin: (appName:string) => {
-    window.location.href = `http://localhost:8080/auth/${appName}`;
+  sendOtp: (LoginData: LoginData) => api.post("/auth/sendOTP", LoginData),
+  verifyOtp: (otpData: OtpData) => api.post("/auth/verifyOTP", otpData),
+  outsideLogin: (appName: string) => {
+    window.location.href = `${API_BASE_URL}/auth/${appName}`;
   },
-}
+};

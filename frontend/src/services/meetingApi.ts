@@ -15,8 +15,7 @@ interface MeetingResponse {
   token: string;
 }
 
-// const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
 // const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev";
 
 export const meetingAPI = {
@@ -32,7 +31,7 @@ export const meetingAPI = {
           ? { startTime: startTime }
           : {}),
       };
-
+      
       const response = await fetch(`${API_BASE_URL}/rooms/create`, {
         method: "POST",
         headers: {
