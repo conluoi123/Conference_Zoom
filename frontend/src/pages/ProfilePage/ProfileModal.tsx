@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { ProfileSidebar } from './common/ProfileSidebar';
-import { ProfileContent } from './common/ProfileContent';
-import { MeetingsSettings } from './common/MeetingsSettings';
-import { CalendarSettings } from './common/CalendarSettings';
-import { NotificationsSettings } from './common/NotificationsSettings_tmp';
-import { PrivacySettings } from './common/PrivacySettings';
+import { ProfileSidebar } from './ProfileSidebar';
+import { ProfileContent } from '../../components/pages/common/ProfileContent';
+import { MeetingsSettings } from '../../components/pages/common/MeetingsSettings';
+import { CalendarSettings } from '../../components/pages/common/CalendarSettings';
+import { NotificationsSettings } from '../../components/pages/common/NotificationsSettings_tmp';
+import { PrivacySettings } from '../../components/pages/common/PrivacySettings';
 
 export type PageType = 'profile' | 'meetings' | 'calendar' | 'notifications' | 'privacy';
+
 interface ProfileModalProps {
   onClose: () => void;
   chosenPage?: PageType;

@@ -4,16 +4,16 @@ import { FcGoogle } from "react-icons/fc";
 import { PiMicrosoftOutlookLogo } from "react-icons/pi";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AuthLayout } from "../../layout/Layout.tsx";
-import { logIn, type LoginData } from "../../services/userApi.ts";
-
+import { logIn} from "../../services/userApi.ts";
+import { Loading } from "../ui/loading.tsx";
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const initialEmail = location.state?.email || "";
-  
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState("");
-
+  // thêm state loading để tránh việc gửi nhiều yêu cầu 
+  const [isLoading, setIsLoading] = useState(false);
   const regexEmail = (value: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(value);
@@ -37,15 +37,19 @@ export function LoginPage() {
       setError("Vui lòng nhập email hợp lệ");
       return;
     }
-
+    setIsLoading(true);
     try {
-      const loginData: LoginData = { email };
-      await logIn.SendOtp(loginData);
+      const loginData = { email };
+      const res = await logIn.sendOtp(loginData);
+      console.log("OTP sent:", res);
       navigate("/otp", { state: { email } });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      setError(error.message ||"Có lỗi xảy ra. Vui lòng thử lại.");
+    } finally{
+      setIsLoading(false);
     }
+
   };
 
   const handleGoogleLogin = async () => {
@@ -142,10 +146,10 @@ export function LoginPage() {
 
           <button
             onClick={handleEmailLogin}
-            disabled={!email || !!error}
+            disabled={!email || !!error || isLoading}
             className="w-full h-12 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            Tiếp tục với Email
+            {isLoading ? <Loading size="small" /> : "Gửi mã xác thực"}
           </button>
         </div>
 

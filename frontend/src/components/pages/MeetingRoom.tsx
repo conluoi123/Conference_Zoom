@@ -1,305 +1,48 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useMeeting, useParticipant } from "@videosdk.live/react-sdk";
-import { BiLogoZoom } from "react-icons/bi";
+import { useRef, useEffect, useState } from "react";
+import { useMeeting } from "@videosdk.live/react-sdk";
+import { ParticipantTile } from "./common/meetings/ParticipantTile";
+import { MeetingControls } from "./common/meetings/MeetingControls";
+import { MeetingHeader } from "./common/meetings/MeetingHeader";
+import { useMeetingPagination } from "../../hooks/useMeetingPagination";
+import { AnimatePresence, motion } from "framer-motion";
 import ChatPanel from "./common/ChatPanel";
+// Import Shadcn Pagination nếu bạn đã cài
 import {
-  X,
-  Circle,
-  PhoneOff,
-  MessageSquare,
-  Share2,
-  Camera,
-  Mic,
-  Settings,
-  Plus,
-  Users,
-  MicOff,
-  VideoOff,
-  Monitor,
-  StopCircle,
-} from "lucide-react";
-
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
+import { useAuth } from "@/context/AuthContext";
+import LoadMeeting from "./common/meetings/LoadMeeting";
 interface MeetingRoomProps {
   roomId: string;
   onLeaveMeeting: () => void;
-  token: string;
-}
-
-// Participant Tile Component
-const ParticipantTile = React.memo(function ParticipantTile({
-  participantId,
-}: {
-  participantId: string;
-}) {
-  const { webcamStream, webcamOn, micStream, micOn, isLocal, displayName, screenShareStream, screenShareOn } =
-    useParticipant(participantId);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const screenShareRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (videoRef.current && webcamStream) {
-      const mediaStream = new MediaStream();
-      mediaStream.addTrack(webcamStream.track);
-      videoRef.current.srcObject = mediaStream;
-      videoRef.current.play().catch((err) => console.error("Video play error:", err));
-    }
-  }, [webcamStream]);
-
-  useEffect(() => {
-    if (audioRef.current && micStream && micOn) {
-      const mediaStream = new MediaStream();
-      mediaStream.addTrack(micStream.track);
-      audioRef.current.srcObject = mediaStream;
-      audioRef.current.play().catch((err) => console.error("Audio play error:", err));
-    }
-  }, [micStream, micOn]);
-
-  useEffect(() => {
-    if (screenShareRef.current && screenShareStream) {
-      const mediaStream = new MediaStream();
-      mediaStream.addTrack(screenShareStream.track);
-      screenShareRef.current.srcObject = mediaStream;
-      screenShareRef.current.play().catch((err) => console.error("Screen share play error:", err));
-    }
-  }, [screenShareStream]);
-
-  const getInitials = (name?: string) => {
-    if (!name) return "?";
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
-  // If screen sharing, show screen share instead
-  if (screenShareOn && screenShareStream) {
-    return (
-      <div className="relative rounded-2xl overflow-hidden bg-black">
-        <video
-          ref={screenShareRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-contain"
-        />
-        <div className="absolute top-4 left-4 bg-black/70 py-2 px-3 rounded-lg flex items-center gap-2">
-          <Monitor className="w-4 h-4 text-green-500" />
-          <span className="text-white text-sm">
-            {displayName || "Guest"} đang chia sẻ màn hình
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="relative rounded-2xl overflow-hidden"
-      style={{
-        background: webcamOn
-          ? "#000"
-          : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      }}
-    >
-      <audio ref={audioRef} autoPlay playsInline muted={isLocal} controls={false} />
-      {webcamOn && webcamStream ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted={isLocal}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-32 h-32 rounded-full flex bg-purple-600 items-center justify-center text-white text-4xl shadow-2xl font-semibold">
-            {getInitials(displayName)}
-          </div>
-        </div>
-      )}
-
-      <div className="absolute bottom-4 left-4 bg-black/70 py-3 px-3 rounded-lg flex items-center gap-2">
-        {!micOn && <MicOff className="w-3 h-3 text-red-500" />}
-        {!webcamOn && <VideoOff className="w-3 h-3 text-red-500" />}
-        <Circle className="w-3 h-3 text-white" />
-        <span className="text-white text-sm">
-          {displayName || "Guest"} {isLocal && "(Bạn)"}
-        </span>
-      </div>
-    </div>
-  );
-});
-
-// Meeting Controls Component
-function MeetingControls({ 
-  onLeaveMeeting,
-  onToggleChat,
-  isChatOpen
-}: { 
-  onLeaveMeeting: () => void;
   onToggleChat: () => void;
-  isChatOpen: boolean;
-}) {
-  const { 
-    leave, 
-    toggleMic, 
-    toggleWebcam, 
-    toggleScreenShare,
-    startRecording,
-    stopRecording,
-    localMicOn, 
-    localWebcamOn,
-    localScreenShareOn 
-  } = useMeeting();
-
-  const [isRecording, setIsRecording] = useState(false);
-
-  const handleLeave = () => {
-    if (isRecording) {
-      stopRecording();
-    }
-    leave();
-    onLeaveMeeting();
-  };
-
-  const handleScreenShare = () => {
-    toggleScreenShare();
-  };
-
-  const handleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-      setIsRecording(false);
-      console.log("⏹️ Đã dừng ghi hình");
-    } else {
-      startRecording();
-      setIsRecording(true);
-      console.log("🔴 Đã bắt đầu ghi hình");
-    }
-  };
-
-  return (
-    <div className="bg-gray-800 px-6 py-4 rounded-2xl">
-      <div className="mx-auto flex items-center justify-center gap-4">
-        <button
-          onClick={() => toggleMic()}
-          className={`flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors ${
-            !localMicOn ? "bg-red-600" : ""
-          }`}
-        >
-          {localMicOn ? (
-            <Mic className="w-6 h-6 text-white" />
-          ) : (
-            <MicOff className="w-6 h-6 text-white" />
-          )}
-          <span className="text-white text-xs">
-            {localMicOn ? "Tắt tiếng" : "Bật tiếng"}
-          </span>
-        </button>
-
-        <button
-          onClick={() => toggleWebcam()}
-          className={`flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors ${
-            !localWebcamOn ? "bg-red-600" : ""
-          }`}
-        >
-          {localWebcamOn ? (
-            <Camera className="w-6 h-6 text-white" />
-          ) : (
-            <VideoOff className="w-6 h-6 text-white" />
-          )}
-          <span className="text-white text-xs">
-            {localWebcamOn ? "Tắt video" : "Bật video"}
-          </span>
-        </button>
-
-        <button 
-          onClick={handleScreenShare}
-          className={`flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors ${
-            localScreenShareOn ? "bg-green-600" : ""
-          }`}
-        >
-          {localScreenShareOn ? (
-            <StopCircle className="w-6 h-6 text-white" />
-          ) : (
-            <Monitor className="w-6 h-6 text-white" />
-          )}
-          <span className="text-white text-xs">
-            {localScreenShareOn ? "Dừng chia sẻ" : "Chia sẻ màn hình"}
-          </span>
-        </button>
-
-        <button 
-          onClick={handleRecording}
-          className={`flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors ${
-            isRecording ? "bg-red-600 animate-pulse" : ""
-          }`}
-        >
-          <Circle className={`w-6 h-6 ${isRecording ? "text-white fill-white" : "text-white"}`} />
-          <span className="text-white text-xs">
-            {isRecording ? "Dừng ghi" : "Ghi hình"}
-          </span>
-        </button>
-
-        <button 
-          onClick={onToggleChat}
-          className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <MessageSquare className="w-6 h-6 text-white" />
-          <span className="text-white text-xs">Trò chuyện</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors">
-          <Users className="w-6 h-6 text-white" />
-          <span className="text-white text-xs">Người tham gia</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors">
-          <Settings className="w-6 h-6 text-white" />
-          <span className="text-white text-xs">Cài đặt</span>
-        </button>
-
-        <button className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors">
-          <Plus className="w-6 h-6 text-white" />
-          <span className="text-white text-xs">Thêm</span>
-        </button>
-
-        <button
-          onClick={handleLeave}
-          className="flex flex-col items-center gap-1 p-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
-        >
-          <PhoneOff className="w-6 h-6 text-white" />
-          <span className="text-white text-xs">Kết thúc</span>
-        </button>
-      </div>
-    </div>
-  );
+  onChatOpen: boolean;
 }
 
-// Meeting Room Content
-function MeetingRoomContent({
+export function MeetingRoom({
   roomId,
   onLeaveMeeting,
-}: {
-  roomId: string;
-  onLeaveMeeting: () => void;
-}) {
-  const [joined, setJoined] = useState<"JOINING" | "JOINED" | null>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-
-  const { join, leave, participants } = useMeeting({
+  onChatOpen,
+  onToggleChat,
+}: MeetingRoomProps) {
+  const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
+  const { participants, join, localParticipant, meetingId } = useMeeting({
     onMeetingJoined: () => {
-      console.log("✅ Đã tham gia cuộc họp thành công");
       setJoined("JOINED");
     },
-    onMeetingLeft: () => {
-      console.log("👋 Đã rời cuộc họp");
-      onLeaveMeeting();
-    },
+
     onError: (error) => {
-      console.error("❌ Lỗi cuộc họp:", error);
-      onLeaveMeeting();
+      console.error("❌ Lỗi SDK:", error);
+    },
+
+    onMeetingStateChanged: ({ state }) => {
+      console.log(state);
     },
     onRecordingStarted: () => {
       console.log("🔴 Ghi hình đã bắt đầu");
@@ -310,103 +53,159 @@ function MeetingRoomContent({
   });
 
   useEffect(() => {
-    if (join && joined === null) {
-      console.log("🔄 Đang tham gia cuộc họp...");
-      // Check permissions before joining
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(() => {
-          console.log("✅ Permissions granted");
-          setJoined("JOINING");
-          join();
-        })
-        .catch((err) => {
-          console.error("❌ Permission denied:", err);
-          onLeaveMeeting();
-        });
-    }
-  }, [join, joined, onLeaveMeeting]);
+    setJoined("JOINING");
+    const timer = setTimeout(() => {
+      join();
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
 
-  // useEffect(() => {
-  //   return () => {
-  //     if (leave) {
-  //       leave();
-  //     }
-  //   };
-  // }, [leave]);
+  const { user } = useAuth();
+  const participantIds = Array.from(participants.keys());
 
-  const participantIds = [...participants.keys()];
+  const { visible, currentPage, setCurrentPage, totalPages } =
+    useMeetingPagination(participantIds, 4);
+
+  const hiddenCount = participantIds.length - visible.length;
+
+  const getGridClass = (count: number) => {
+    if (count === 0) return "";
+
+    // 1 người: Toàn màn hình
+    if (count === 1) return "grid-cols-1 grid-rows-1";
+
+    // 2 người: Chia đôi dọc hoặc ngang (tùy màn hình, thường là 2 cột trên PC)
+    if (count === 2)
+      return "grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
+
+    // 3-4 người: Chia 2x2
+    if (count <= 4) return "grid-cols-2 grid-rows-2";
+
+    // 5-6 người: Chia 3 cột x 2 hàng
+    if (count <= 6)
+      return "grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
+
+    // 7-9 người: Chia 3x3
+    return "grid-cols-3 grid-rows-3";
+  };
 
   return (
-    <div
-      className="bg-gray-900 flex flex-col min-h-screen"
-      style={{ width: "100vw", height: "100vh" }}
-    >
-      {/* Header */}
-      <header className="bg-gray-800 px-6 py-4 flex items-center justify-between">
-        <div className="bg-blue-600 p-2 rounded-lg">
-          <BiLogoZoom className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-white text-2xl font-semibold">ZUS Workplace</h2>
-          <p className="text-gray-400 text-sm">Room ID: {roomId}</p>
-        </div>
-        <button
-          onClick={onLeaveMeeting}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          <X className="w-6 h-6 text-white" />
-        </button>
-      </header>
-
-      {/* Main Content */}
-      {joined === "JOINED" ? (
+    <div className="bg-gray-950 h-screen w-screen flex flex-col overflow-hidden text-white">
+      <MeetingHeader roomId={roomId} onLeave={onLeaveMeeting} />
+      {joined === "JOINED" && (
         <>
-          {/* Participant Grid */}
-          <div className="flex-1 p-6 grid grid-cols-2 gap-4">
-            {participantIds.map((participantId) => (
-              <ParticipantTile key={participantId} participantId={participantId} />
-            ))}
-          </div>
+          <main className="flex-1 p-4 relative overflow-hidden flex items-center justify-center">
+            {/* Bọc thêm AnimatePresence với mode="wait" để tạo hiệu ứng chuyển trang mượt mà */}
+            <div className="w-full h-full p-2 overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentPage}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className={`grid gap-4 w-full h-full ${getGridClass(
+                    visible.length
+                  )}`}
+                >
+                  {visible.map((id: string) => (
+                    <motion.div
+                      key={id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full h-full"
+                    >
+                      <ParticipantTile participantId={id} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto">
+              <MeetingControls
+                onLeaveMeeting={onLeaveMeeting}
+                onToggleChat={onToggleChat}
+                isChatOpen={onChatOpen}
+              />
+            </div>
+            {totalPages > 1 && (
+              <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 scale-90">
+                <Pagination>
+                  <PaginationContent className="bg-gray-800/50 border border-gray-600 rounded-lg px-3 py-2">
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 1) setCurrentPage(currentPage - 1);
+                        }}
+                        className={
+                          currentPage === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      ></PaginationPrevious>
+                    </PaginationItem>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(page);
+                            }}
+                            className={
+                              page === currentPage
+                                ? "bg-blue-600 text-white"
+                                : "hover:bg-gray-700"
+                            }
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
 
-          {/* Controls */}
-          <MeetingControls 
-            onLeaveMeeting={onLeaveMeeting} 
-            onToggleChat={() => setIsChatOpen(!isChatOpen)}
-            isChatOpen={isChatOpen}
-          />
-
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < totalPages)
+                            setCurrentPage(currentPage + 1);
+                        }}
+                        className={
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      ></PaginationNext>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </main>
           <ChatPanel
-            isOpen={isChatOpen}
-            onClose={() => setIsChatOpen(false)}
+            isOpen={onChatOpen}
+            onClose={onToggleChat}
             roomId={roomId}
-            userName="User Name"
-            userId="user-id-123"
+            participantName={user!.displayName}
+            participantId={user!.id}
           />
         </>
-      ) : joined === "JOINING" ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-            <p className="text-white text-xl">Đang tham gia cuộc họp...</p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-white text-xl">Đang khởi tạo...</p>
-        </div>
+      )}
+      {joined === "JOINING" && (
+        <LoadMeeting/>
       )}
     </div>
   );
 }
 
-export function MeetingRoom({ roomId, token, onLeaveMeeting }: MeetingRoomProps) {
-  if (!roomId || !token) {
-    return (
-      <div className="bg-gray-900 flex items-center justify-center min-h-screen">
-        <div className="text-white text-xl">Đang tải thông tin cuộc họp...</div>
-      </div>
-    );
-  }
-
-  return <MeetingRoomContent roomId={roomId} onLeaveMeeting={onLeaveMeeting} />;
-}
+export default MeetingRoom;

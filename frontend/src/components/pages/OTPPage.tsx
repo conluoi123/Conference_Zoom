@@ -5,18 +5,20 @@ import { MdOutlineMailOutline } from "react-icons/md";
 import { FaArrowLeft } from "react-icons/fa6";
 import { BiLogoZoom } from "react-icons/bi";
 import { useAuth } from "../../context/AuthContext";
-import { logIn, type OtpData } from "../../services/userApi";
-
+import { logIn } from "../../services/userApi";
+import {Loading} from "../ui/loading.tsx";
 export function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "";
-
+  const {login} = useAuth();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const input = useRef<(HTMLInputElement | null)[]>([]);
   const [timer, setTimer] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
+  // hiệu ứng loading 
+  const [isLoading, setIsLoading] = useState(false);
 
   // Timer countdown
   useEffect(() => {
@@ -63,14 +65,23 @@ export function OTPPage() {
       setError("Vui lòng nhập đầy đủ mã OTP");
       return;
     }
-
+    setIsLoading(true);
     try {
-      const otpData: OtpData = { email, otp: otpCode };
+      const otpData =  { email, otp: otpCode };
       const res = await logIn.verifyOtp(otpData);
       console.log("OTP verification response:", res);
-      // Demo: Accept 123456
+      if(res.accessToken && res.data) {
+        
+      }
       if (otpCode === "123456" || res) {
         // Use AuthContext login
+        if(res.data && res.accessToken) {
+          login({
+            id: res.data.userId,
+            email: res.data.email,
+            displayName: res.data.displayName,
+          }, res.accessToken)
+        }
         localStorage.setItem("peerId", res.data.userId);
         localStorage.setItem("email", res.data.email);
         localStorage.setItem("displayName", res.data.displayName);
@@ -86,12 +97,14 @@ export function OTPPage() {
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
+    } finally{
+      setIsLoading(false);
     }
   };
   // gửi lại OTP khi nhấn nút 
   const handleResend = async () => {
     try {
-      await logIn.SendOtp({ email });
+      await logIn.sendOtp({ email });
       console.log("Resending OTP to:", email);
       setOtp(["", "", "", "", "", ""]);
       input.current[0]?.focus();
@@ -190,9 +203,9 @@ export function OTPPage() {
             )}
 
             {/* Demo Hint */}
-            <p className="text-xs text-gray-500 text-center mb-6">
+            {/* <p className="text-xs text-gray-500 text-center mb-6">
               Demo: Sử dụng mã <span className="font-bold text-blue-600">123456</span>
-            </p>
+            </p> */}
 
             {/* Verify Button */}
             <button
@@ -204,7 +217,7 @@ export function OTPPage() {
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              Xác thực
+              {isLoading ? <Loading size="small" />: "Xác thực OTP"}
             </button>
 
             {/* Resend Link */}
