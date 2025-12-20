@@ -13,6 +13,8 @@ export function PreJoinPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const { roomId, token, displayName: initialDisplayName } = location.state || {};
+
+  // const { getCameras, getMicrophones } = useMediaDevice();
   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
   const [selectedCam, setSelectedCam] = useState("");
@@ -105,50 +107,38 @@ export function PreJoinPage() {
     };
   }, [selectedCam, isCameraOn, permissionGranted]);
 
-  const handleRetryPermission = async () => {
-    try {
-      setLoading(true);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      setPermissionGranted(true);
-      stream.getTracks().forEach((track) => track.stop());
-      await loadDevices();
-    } catch (error) {
-      console.error("Still no permission:", error);
-      alert("Vui lòng cấp quyền trong trình duyệt");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleRetryPermission = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const stream = await navigator.mediaDevices.getUserMedia({
+  //       video: true,
+  //       audio: true,
+  //     });
+  //     setPermissionGranted(true);
+  //     stream.getTracks().forEach((track) => track.stop());
+  //     await loadDevices();
+  //   } catch (error) {
+  //     console.error("Still no permission:", error);
+  //     alert("Vui lòng cấp quyền trong trình duyệt");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleJoin = () => {
-  // --- THÊM ĐOẠN NÀY ---
-  // Dừng tất cả các track của preview để nhả Camera cho VideoSDK
-  if (previewStream) {
-    previewStream.getTracks().forEach((track) => {
-      track.stop();
+    const settings: MeetingSettings = {
+      micEnabled: isMicOn,
+      cameraEnabled: isCameraOn,
+    };
+
+    navigate(`/meeting/${roomId}`, {
+      state: {
+        roomId,
+        token,
+        settings,
+      },
     });
-    setPreviewStream(null);
-  }
-  // ----------------------
-
-  const settings: MeetingSettings = {
-    micEnabled: isMicOn,
-    cameraEnabled: isCameraOn,
   };
-
-  navigate(`/meeting/${roomId}`, {
-    state: {
-      roomId,
-      token,
-      settings,
-      // Đảm bảo truyền displayName ổn định
-      displayName: displayName || "Guest", 
-    },
-  });
-};
 
   const handleCancel = () => {
     navigate("/home");
@@ -162,24 +152,24 @@ export function PreJoinPage() {
     );
   }
 
-  if (!permissionGranted) {
-    return (
-      <div className="min-w-screen min-h-screen flex bg-gray-900 justify-center items-center">
-        <div className="text-center">
-          <h2 className="text-white text-2xl mb-4">Cần quyền truy cập</h2>
-          <p className="text-gray-400 mb-6">
-            Vui lòng cấp quyền camera và microphone để tiếp tục
-          </p>
-          <button
-            onClick={handleRetryPermission}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Thử lại
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // if (!permissionGranted) {
+  //   return (
+  //     <div className="min-w-screen min-h-screen flex bg-gray-900 justify-center items-center">
+  //       <div className="text-center">
+  //         <h2 className="text-white text-2xl mb-4">Cần quyền truy cập</h2>
+  //         <p className="text-gray-400 mb-6">
+  //           Vui lòng cấp quyền camera và microphone để tiếp tục
+  //         </p>
+  //         <button
+  //           // onClick={handleRetryPermission}
+  //           className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+  //         >
+  //           Thử lại
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-w-screen min-h-screen flex bg-gray-900 justify-center items-center overflow-hidden p-4">

@@ -27,19 +27,19 @@ export function MeetingRoom({ roomId, onLeaveMeeting, onChatOpen, onToggleChat }
     console.error("LỖI SDK THỰC TẾ:", data.message, data.code);
   },
   });
-  console.log("Có cái dái", participants)
-  const joinedCall = useRef(false);
+  // console.log("Có cái dái", participants)
+  // const joinedCall = useRef(false);
   
-  // chạy một lần khi trang load
-  useEffect(()=> {
-    if(joinedCall.current === false){
-      join();
-      joinedCall.current = true
-      console.log("Join phòng thành công \n");
-    }
+  // // chạy một lần khi trang load
+  // useEffect(()=> {
+  //   if(joinedCall.current === false){
+  //     join();
+  //     joinedCall.current = true
+  //     console.log("Join phòng thành công \n");
+  //   }
     
 
-  }, [join]); 
+  // }, [join]); 
   const {user} = useAuth();
   const participantIds = Array.from(participants.keys());
 
