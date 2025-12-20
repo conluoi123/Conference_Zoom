@@ -16,7 +16,7 @@ interface MeetingResponse {
 }
 
 // const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://phonotypical-abram-drowsier.ngrok-free.dev";
 // const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev";
 
 export const meetingAPI = {

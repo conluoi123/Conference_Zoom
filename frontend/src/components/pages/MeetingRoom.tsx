@@ -15,6 +15,8 @@ import {
   Users,
   MicOff,
   VideoOff,
+  Monitor,
+  StopCircle,
 } from "lucide-react";
 
 interface MeetingRoomProps {
@@ -29,10 +31,11 @@ const ParticipantTile = React.memo(function ParticipantTile({
 }: {
   participantId: string;
 }) {
-  const { webcamStream, webcamOn, micStream, micOn, isLocal, displayName } =
+  const { webcamStream, webcamOn, micStream, micOn, isLocal, displayName, screenShareStream, screenShareOn } =
     useParticipant(participantId);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const screenShareRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (videoRef.current && webcamStream) {
@@ -52,6 +55,15 @@ const ParticipantTile = React.memo(function ParticipantTile({
     }
   }, [micStream, micOn]);
 
+  useEffect(() => {
+    if (screenShareRef.current && screenShareStream) {
+      const mediaStream = new MediaStream();
+      mediaStream.addTrack(screenShareStream.track);
+      screenShareRef.current.srcObject = mediaStream;
+      screenShareRef.current.play().catch((err) => console.error("Screen share play error:", err));
+    }
+  }, [screenShareStream]);
+
   const getInitials = (name?: string) => {
     if (!name) return "?";
     const parts = name.split(" ");
@@ -60,6 +72,26 @@ const ParticipantTile = React.memo(function ParticipantTile({
     }
     return name.substring(0, 2).toUpperCase();
   };
+
+  // If screen sharing, show screen share instead
+  if (screenShareOn && screenShareStream) {
+    return (
+      <div className="relative rounded-2xl overflow-hidden bg-black">
+        <video
+          ref={screenShareRef}
+          autoPlay
+          playsInline
+          className="w-full h-full object-contain"
+        />
+        <div className="absolute top-4 left-4 bg-black/70 py-2 px-3 rounded-lg flex items-center gap-2">
+          <Monitor className="w-4 h-4 text-green-500" />
+          <span className="text-white text-sm">
+            {displayName || "Guest"} đang chia sẻ màn hình
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -109,11 +141,42 @@ function MeetingControls({
   onToggleChat: () => void;
   isChatOpen: boolean;
 }) {
-  const { leave, toggleMic, toggleWebcam, localMicOn, localWebcamOn } = useMeeting();
+  const { 
+    leave, 
+    toggleMic, 
+    toggleWebcam, 
+    toggleScreenShare,
+    startRecording,
+    stopRecording,
+    localMicOn, 
+    localWebcamOn,
+    localScreenShareOn 
+  } = useMeeting();
+
+  const [isRecording, setIsRecording] = useState(false);
 
   const handleLeave = () => {
+    if (isRecording) {
+      stopRecording();
+    }
     leave();
     onLeaveMeeting();
+  };
+
+  const handleScreenShare = () => {
+    toggleScreenShare();
+  };
+
+  const handleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+      setIsRecording(false);
+      console.log("⏹️ Đã dừng ghi hình");
+    } else {
+      startRecording();
+      setIsRecording(true);
+      console.log("🔴 Đã bắt đầu ghi hình");
+    }
   };
 
   return (
@@ -151,9 +214,32 @@ function MeetingControls({
           </span>
         </button>
 
-        <button className="flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors">
-          <Share2 className="w-6 h-6 text-white" />
-          <span className="text-white text-xs">Chia sẻ</span>
+        <button 
+          onClick={handleScreenShare}
+          className={`flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors ${
+            localScreenShareOn ? "bg-green-600" : ""
+          }`}
+        >
+          {localScreenShareOn ? (
+            <StopCircle className="w-6 h-6 text-white" />
+          ) : (
+            <Monitor className="w-6 h-6 text-white" />
+          )}
+          <span className="text-white text-xs">
+            {localScreenShareOn ? "Dừng chia sẻ" : "Chia sẻ màn hình"}
+          </span>
+        </button>
+
+        <button 
+          onClick={handleRecording}
+          className={`flex flex-col items-center gap-1 p-3 hover:bg-gray-700 rounded-lg transition-colors ${
+            isRecording ? "bg-red-600 animate-pulse" : ""
+          }`}
+        >
+          <Circle className={`w-6 h-6 ${isRecording ? "text-white fill-white" : "text-white"}`} />
+          <span className="text-white text-xs">
+            {isRecording ? "Dừng ghi" : "Ghi hình"}
+          </span>
         </button>
 
         <button 
@@ -214,6 +300,12 @@ function MeetingRoomContent({
     onError: (error) => {
       console.error("❌ Lỗi cuộc họp:", error);
       onLeaveMeeting();
+    },
+    onRecordingStarted: () => {
+      console.log("🔴 Ghi hình đã bắt đầu");
+    },
+    onRecordingStopped: () => {
+      console.log("⏹️ Ghi hình đã dừng");
     },
   });
 
