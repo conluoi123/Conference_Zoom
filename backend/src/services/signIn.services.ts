@@ -246,6 +246,7 @@ function createAccessToken(user) {
   const tokenPayLoad = {
     id: user._id,
     email: user.email,
+    displayName: user.displayName,
   };
   const accessToken = jwt.sign(tokenPayLoad, ENV.JWT_SECRET, {
     expiresIn: "15m",

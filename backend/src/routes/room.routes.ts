@@ -4,6 +4,7 @@ import {
   createRoomMiddleware,
   joinRoomMiddleware,
 } from "../middlewares/room.middleware";
+import { authenticateAccessToken } from "../middlewares/jwt.middleware";
 
 /*
   Tạo phòng
@@ -14,8 +15,18 @@ import {
 
 const router = Router();
 const roomRoutes = (app: Express) => {
-  app.post("/rooms/create", createRoomMiddleware, createNewRoom); // create new meeting room
-  app.post("/rooms/:roomId/join", joinRoomMiddleware, userJoinRoom);
+  app.post(
+    "/rooms/create",
+    authenticateAccessToken,
+    createRoomMiddleware,
+    createNewRoom
+  ); // create new meeting room
+  app.post(
+    "/rooms/:roomId/join",
+    authenticateAccessToken,
+    joinRoomMiddleware,
+    userJoinRoom
+  );
   app.use("/rooms", router);
 };
 

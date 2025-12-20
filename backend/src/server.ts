@@ -9,6 +9,8 @@ import { Server } from "socket.io";
 //middlewares
 import cors from "cors";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
+
 
 //configs
 import { ENV } from "./configs/env";
@@ -23,10 +25,19 @@ import {
   verifyOtpRouter,
 } from "./routes/signIn.routes";
 import { socketHandler } from "./socket/socketHandler";
+import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
+import logoutRouter from "./routes/logout.routes";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
-
+app.use(
+  cors({
+    origin: ENV.FRONTEND_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  })
+);
+app.use(cookieParser());
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
@@ -41,7 +52,7 @@ const io = new Server(server, {
 socketHandler(io);
 
 //middlewares
-app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -67,6 +78,8 @@ outlookSignInRouter(app);
 
 userRoutes(app);
 roomRoutes(app);
+refreshTokenRouter(app);
+logoutRouter(app);
 webHook(app);
 
 const startServer = async () => {
