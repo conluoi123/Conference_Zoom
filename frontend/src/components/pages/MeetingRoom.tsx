@@ -51,6 +51,7 @@ export function MeetingRoom({
       console.log(state);
     },
 
+
     onParticipantJoined : (participant) => {
       if(participant.id === localParticipant?.id){
         // tránh thông báo khi người vào là chính mình 
@@ -67,6 +68,13 @@ export function MeetingRoom({
       toast.error(`${participant.displayName} đã rời đi`, {
         duration: 3000,
       });
+
+    onRecordingStarted: () => {
+      console.log("🔴 Ghi hình đã bắt đầu");
+    },
+    onRecordingStopped: () => {
+      console.log("⏹️ Ghi hình đã dừng");
+
     },
   });
   const handleCopy = () => {

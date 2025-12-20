@@ -2,7 +2,7 @@ import { useMeeting } from "@videosdk.live/react-sdk";
 import { 
   Mic, MicOff, Video, VideoOff, PhoneOff, 
   MessageSquare, Share2, Users, Settings, Plus, 
-  CameraOff
+  CameraOff, Monitor, MonitorStop,
 } from "lucide-react";
 import {
   Tooltip,
@@ -26,7 +26,7 @@ export const MeetingControls = ({
   onOpenParticipant, 
   isOpen,
 }: MeetingControlsProps) => {
-  const { leave, toggleMic, toggleWebcam, localMicOn, localWebcamOn } = useMeeting();
+  const { leave, toggleMic, toggleWebcam, toggleScreenShare, localScreenShareOn, localMicOn, localWebcamOn } = useMeeting();
 
   const handleLeave = () => {
     leave();
@@ -86,6 +86,15 @@ export const MeetingControls = ({
           />
 
           <ControlButton icon={Share2} label="Chia sẻ" />
+
+          {/* Screen Share */}
+          <ControlButton 
+            onClick={() => toggleScreenShare()}
+            icon={localScreenShareOn ? MonitorStop : Monitor}
+            label={localScreenShareOn ? "Dừng chia sẻ màn hình" : "Chia sẻ màn hình"}
+            variant={localScreenShareOn ? "success" : "default"}
+          />
+
 
           <ControlButton 
             onClick={onToggleChat}
