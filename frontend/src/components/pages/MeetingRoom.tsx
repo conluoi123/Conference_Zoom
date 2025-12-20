@@ -68,7 +68,7 @@ export function MeetingRoom({
       toast.error(`${participant.displayName} đã rời đi`, {
         duration: 3000,
       });
-
+    },
     onRecordingStarted: () => {
       console.log("🔴 Ghi hình đã bắt đầu");
     },
