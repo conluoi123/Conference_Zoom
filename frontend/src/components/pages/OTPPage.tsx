@@ -67,27 +67,21 @@ export function OTPPage() {
     }
     setIsLoading(true);
     try {
-      const otpData =  { email, otp: otpCode };
+      const otpData = { email, otp: otpCode };
       const res = await logIn.verifyOtp(otpData);
       console.log("OTP verification response:", res);
-      if(res.accessToken && res.data) {
-        
-      }
-      if (otpCode === "123456" || res) {
+      if (res) {
         // Use AuthContext login
-        if(res.data && res.accessToken) {
-          login({
-            id: res.data.userId,
-            email: res.data.email,
-            displayName: res.data.displayName,
-          }, res.accessToken)
+        if (res.data.data && res.data.accessToken) {
+          login(
+            {
+              id: res.data.data.userId,
+              email: res.data.data.email,
+              displayName: res.data.data.displayName,
+            },
+            res.data.accessToken
+          );
         }
-        localStorage.setItem("peerId", res.data.userId);
-        localStorage.setItem("email", res.data.email);
-        localStorage.setItem("displayName", res.data.displayName);
-        localStorage.setItem("accessToken", res.accessToken);
-        console.log("Đăng nhập thành công với OTP:", otpCode);
-        console.log("peerId:", localStorage.getItem("peerId"));
         navigate("/home");
       } else {
         setError("Mã OTP không đúng, vui lòng thử lại");
@@ -97,7 +91,7 @@ export function OTPPage() {
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("Có lỗi xảy ra. Vui lòng thử lại.");
-    } finally{
+    } finally {
       setIsLoading(false);
     }
   };
