@@ -29,6 +29,7 @@ interface JoinMeetingData {
 }
 interface MeetingResponse {
   roomId: string;
+  hostId: string;
   token: string;
 }
 export function HomePage() {
@@ -117,7 +118,7 @@ export function HomePage() {
         meetingType: "instant",
         startTime: new Date().toISOString(),
       };
-      const response: MeetingResponse = await meetingAPI.createMeeting(
+      const response : MeetingResponse = await meetingAPI.createMeeting(
         meetingData
       );
       if (response.roomId && response.token) {
@@ -125,6 +126,7 @@ export function HomePage() {
           state: {
             token: response.token,
             roomId: response.roomId,
+            hostId: response.hostId,
             displayName: user?.displayName || "",
             settings: {
               allowJoin: false,
@@ -163,6 +165,7 @@ export function HomePage() {
           state: {
             token: room.token,
             roomId,
+            hostId: room.hostId,
             displayName: user?.displayName || "",
             settings: room.settings,
           },

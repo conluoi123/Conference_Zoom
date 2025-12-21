@@ -26,9 +26,9 @@ export const meetingAPI = {
 
       const response = await api.post("/rooms/create", requestBody);
 
-      const { roomId, token } = response.data;
+      const { roomId, token, hostId } = response.data;
 
-      return { roomId, token };
+      return { roomId, token, hostId };
     } catch (error: any) {
       if (error.response) {
         console.error("Lỗi BE:", error.response.data);
