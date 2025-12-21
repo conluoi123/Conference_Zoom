@@ -77,8 +77,7 @@ export function MeetingPage() {
   const { 
     token, 
     roomId: stateRoomId, 
-    micEnabled, 
-    webcamEnabled, 
+    settings,
     displayName: stateName 
   } = meetingData;
 
@@ -99,22 +98,22 @@ export function MeetingPage() {
     return <LoadMeeting />; 
   }
 
+  console.log("hehehehehe");
+
   return (
     <MeetingProvider
       config={{
         meetingId: roomId,
         participantId: user?.id || `guest`,
         name: finalDisplayName,
-        micEnabled: micEnabled ?? true,
-        webcamEnabled: webcamEnabled ?? true,
-        // QUAN TRỌNG: Truyền ID thiết bị đã chọn từ PreJoin vào đây
+        micEnabled: settings.allowMic,
+        webcamEnabled: settings.allowCam,
         autoConsume: true,
         debugMode: true,
         multiStream: true,
       }}
-      // sửa phần token này thành 
-      // token = {isHot ?  allow_join_token : ask_join_token}
       token={token}
+      joinWithoutUserInteraction={settings.allowJoin}
     >
       <MeetingRoom
         roomId={roomId}

@@ -10,10 +10,6 @@ interface JoinMeetingData {
   peerId?: string;
 }
 
-interface MeetingResponse {
-  roomId: string;
-  token: string;
-}
 import api from "./service";
 
 export const meetingAPI = {

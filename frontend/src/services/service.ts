@@ -14,9 +14,8 @@ export const setAccessToken = (accessToken: string) => {
 };
 
 export const getAccessToken = () => token;
-// const API_BASE_URL = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
-// const API_BASE_URL = "https://biserial-subattenuate-arie.ngrok-free.dev";
-const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

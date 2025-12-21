@@ -367,7 +367,7 @@ export function PreJoinPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCam, setSelectedCam] = useState("");
   const [selectedMic, setSelectedMic] = useState("");
-  const { roomId, token, displayName: initialName } = location.state || {};
+  const { roomId, token, displayName: initialName, settings } = location.state || {};
   const [displayName, setDisplayName] = useState(initialName || "");
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -436,13 +436,22 @@ export function PreJoinPage() {
   }, []);
 
   const handleJoin = () => {
+
+    const micState = settings.allowMic ? isMicOn : settings.allowMic;
+    const camState = settings.allowCam ? isCameraOn : settings.allowCam;
+
+    settings.allowMic = micState;
+    settings.allowCam = camState;
+
     const meetingSession = {
-      roomId, token, displayName,
-      micEnabled: isMicOn,
-      webcamEnabled: isCameraOn,
-      selectedCam, selectedMic
+      roomId,
+      token,
+      displayName,
+      settings,
     };
+    
     sessionStorage.setItem(`meeting_${roomId}`, JSON.stringify(meetingSession));
+
     console.log(meetingSession.token)
     stopStream();
     navigate(`/meeting/${roomId}`, { state: meetingSession });

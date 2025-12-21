@@ -39,6 +39,7 @@ export function MeetingRoom({
   const [joinedRequest, setJoinRequests] = useState<any[]>([]);
   // thêm 2 method để nhận biết có người vào, người ra
   const { participants, join, localParticipant, meetingId } = useMeeting({
+
     // duyệt người vào phòng - chức năng của host 
     onEntryRequested : (data) => {
       const {participantId, name, allow, deny} = data; 
@@ -74,13 +75,7 @@ export function MeetingRoom({
           </div>
         </div>
       ), {duration: Infinity, position:"top-center"});
-
     },
-
-
-
-
-
 
     onMeetingJoined: () => {
       setJoined("JOINED");
@@ -121,6 +116,16 @@ export function MeetingRoom({
 
     },
   });
+
+  const handleJoin = () => {
+    const timer = setTimeout(() => {
+      join();
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
+  }
+
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Đã sao chép liên kết cuộc họp");
@@ -129,12 +134,7 @@ export function MeetingRoom({
 
   useEffect(() => {
     setJoined("JOINING");
-    const timer = setTimeout(() => {
-      join();
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-    };
+    handleJoin();
   }, []);
 
   const { user } = useAuth();

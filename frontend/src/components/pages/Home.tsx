@@ -125,6 +125,7 @@ export function HomePage() {
           state: {
             token: response.token,
             roomId: response.roomId,
+            displayName: user?.displayName || "",
             settings: {
               allowJoin: false,
               allowShareScreen: true,
