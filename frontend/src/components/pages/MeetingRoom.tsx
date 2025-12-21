@@ -36,8 +36,52 @@ export function MeetingRoom({
   const [showWelcome, setShowWelcome] = useState(false);
   const [isParticipantOpen, setIsParticipantOpen] = useState(false);
   const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
+  const [joinedRequest, setJoinRequests] = useState<any[]>([]);
   // thêm 2 method để nhận biết có người vào, người ra
   const { participants, join, localParticipant, meetingId } = useMeeting({
+    // duyệt người vào phòng - chức năng của host 
+    onEntryRequested : (data) => {
+      const {participantId, name, allow, deny} = data; 
+      // hiển thị thông báo duyệt 
+      setJoinRequests((prev)=> [...prev, data]);
+      toast.custom((t)=> (
+        <div className="bg-gray-800 border border-gray-700 p-4 rounded-xl shadow-2xl flex items-center gap-4 text-white min-w-[300px]">
+          <div className="flex-1">
+            <p className="font-bold">{name}</p>
+            <p className="text-xs text-gray-400">Muốn tham gia cuộc họp</p>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => { 
+                allow(); // Duyệt qua SDK
+                setJoinRequests((prev) => prev.filter(req => req.participantId !== participantId));
+                toast.dismiss(t); 
+              }}
+              className="bg-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700"
+            >
+              Chấp nhận
+            </button>
+            <button 
+              onClick={() => { 
+                deny(); // Từ chối qua SDK
+                setJoinRequests((prev) => prev.filter(req => req.participantId !== participantId));
+                toast.dismiss(t); 
+              }}
+              className="bg-gray-700 px-3 py-1.5 rounded-lg text-xs hover:bg-gray-600"
+            >
+              Từ chối
+            </button>
+          </div>
+        </div>
+      ), {duration: Infinity, position:"top-center"});
+
+    },
+
+
+
+
+
+
     onMeetingJoined: () => {
       setJoined("JOINED");
       setTimeout (()=> setShowWelcome(true), 100);
@@ -267,7 +311,10 @@ export function MeetingRoom({
                 />
               )}
               {isParticipantOpen && (
-                <ParticipantPanel onClose={() => setIsParticipantOpen(false)} />
+                <ParticipantPanel 
+                joinedRequest={joinedRequest}
+                setJoinRequests={setJoinRequests}
+                onClose={() => setIsParticipantOpen(false)} />
               )}
             </AnimatePresence>
           </main>

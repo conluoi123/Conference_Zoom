@@ -361,17 +361,14 @@ export function PreJoinPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { requestPermission, getCameras, getMicrophones } = useMediaDevice();
-  
   const [devices, setDevices] = useState<{ m: any[], c: any[] }>({ m: [], c: [] });
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [loading, setLoading] = useState(true);
   const [selectedCam, setSelectedCam] = useState("");
   const [selectedMic, setSelectedMic] = useState("");
-  
   const { roomId, token, displayName: initialName } = location.state || {};
   const [displayName, setDisplayName] = useState(initialName || "");
-
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 

@@ -112,6 +112,8 @@ export function MeetingPage() {
         debugMode: true,
         multiStream: true,
       }}
+      // sửa phần token này thành 
+      // token = {isHot ?  allow_join_token : ask_join_token}
       token={token}
     >
       <MeetingRoom

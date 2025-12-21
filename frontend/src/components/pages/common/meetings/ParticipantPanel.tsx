@@ -1,17 +1,34 @@
 import { useMeeting } from "@videosdk.live/react-sdk";
-import { X, Mic, MicOff, Video, VideoOff, MoreVertical } from "lucide-react";
+import { X, Mic, MicOff, Video, VideoOff, MoreVertical, Check } from "lucide-react";
 import { motion } from "framer-motion";
 
+interface JoinRequest {
+  participantId: string; 
+  name: string; 
+  deny: () => void; 
+  allow : () => void; 
+}
 interface ParticipantPanelProps {
   onClose: () => void;
+  joinedRequest : JoinRequest[]; 
+  setJoinRequests: React.Dispatch<React.SetStateAction<JoinRequest[]>>; // hàm cập nhật state
 }
 
-export function ParticipantPanel({ onClose }: ParticipantPanelProps) {
+export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests }: ParticipantPanelProps) {
   // Lấy danh sách participants từ VideoSDK
   const { participants, localParticipant } = useMeeting();
-
   // Chuyển Map thành mảng để dễ render
   const allParticipants = Array.from(participants.values());
+  // xử lí phần request join 
+  const handleAction = (id:string, action : 'allow' | 'deny') => {
+    const request = joinedRequest.find(req => req.participantId===id); 
+    if(request) {
+      if(action ==='allow') request.allow();
+      else {request.deny()};
+      //xử lí xong thì pop ra khỏi hàng đợi
+      setJoinRequests(prev => prev.filter(req => req.participantId !== id));
+    }
+  }
 
   return (
     <motion.div
@@ -40,6 +57,36 @@ export function ParticipantPanel({ onClose }: ParticipantPanelProps) {
 
       {/* Participant List */}
       <div className="flex-1 overflow-y-auto px-2">
+        {joinedRequest.length >0 &&(
+          <div className="mb-4 bg-blue-600/5 border-b border-blue-600/20">
+            <p className="text-[11px] font-bold px-4 py-2">
+              Đang chờ duyệt {joinedRequest.length}
+            </p>
+            {joinedRequest.map((req)=> (
+              <div key={req.participantId} className="flex items-center gap-3 px-4 py-3 bg-blue-600/10">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
+                  {req.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="flex-1 text-sm font-medium truncate text-white">{req.name}</span>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleAction(req.participantId, 'allow')}
+                    className="p-1.5 bg-blue-600 hover:bg-blue-500 rounded-md text-white transition-colors"
+                  >
+                    <Check size={14} />
+                  </button>
+                  <button 
+                    onClick={() => handleAction(req.participantId, 'deny')}
+                    className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded-md text-white transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+          </div>
+        )}
         <p className="text-xs font-medium text-gray-400 px-3 py-2 uppercase tracking-wider">Trong cuộc họp</p>
         
         {allParticipants.map((participant) => {
