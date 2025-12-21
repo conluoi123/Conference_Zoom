@@ -49,9 +49,6 @@ const userSchema: Schema<IUser> = new Schema({
   },
 });
 
-// tạo index để tránh trùng username/email
-userSchema.index({ email: 1 }, { unique: true });
-
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default User;

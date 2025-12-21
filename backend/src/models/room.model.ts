@@ -36,7 +36,10 @@ const roomSchema = new Schema<IRoom>({
     allowCam: { type: Boolean, default: true },
   },
 
-  invited: [{ type: String, default: [] }],
+  invited: {
+    type: [String],
+    default: [],
+  },
 
   createdAt: { type: Date, default: Date.now },
   lastUsedAt: { type: Date, default: null },

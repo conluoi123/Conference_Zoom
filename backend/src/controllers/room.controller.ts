@@ -4,6 +4,7 @@ import {
   createRoomOnDatabase,
   createRoomOnVideoSDK,
   generateToken,
+  isInvitedForRoom,
 } from "../services/room.services";
 
 const createNewRoom = async (req: Request, res: Response) => {
@@ -16,7 +17,7 @@ const createNewRoom = async (req: Request, res: Response) => {
 
     const token = generateToken("host", peerId, roomId);
 
-    return res.status(200).json({ roomId, token });
+    return res.status(200).json({ roomId, hostId: peerId, token });
   } catch (error: any) {
     console.error("Tạo phòng:", error.message);
 
@@ -33,12 +34,19 @@ const userJoinRoom = async (req: Request, res: Response) => {
   const { roomId, peerId } = req.body;
   const room = res.locals.roomInfo;
 
-  let userType = "host";
+  let userType = "peer";
   if (peerId === room.hostId) userType = "host";
+  if (await isInvitedForRoom(roomId, peerId)) {
+    userType = "invitee";
+  }
+
+  console.log(userType);
 
   const token = generateToken(userType, peerId, roomId);
 
-  return res.status(200).json({ settings: room.settings, token: token });
+  return res
+    .status(200)
+    .json({ hostId: room.hostId, settings: room.settings, token: token });
 };
 
 export { createNewRoom, userJoinRoom };
