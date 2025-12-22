@@ -60,6 +60,9 @@ const createRoomOnVideoSDK = async () => {
           "recording-started",
           "recording-stopped",
           "recording-failed",
+          "transcription-started",
+          "transcription-stopped",
+          "transcription-failed",
         ],
       },
     }),
@@ -159,9 +162,9 @@ const isHost = async (roomId, participantId: string) => {
   return true;
 };
 
-const isInvitedForRoom = async (roomId, participantId: string) => {
+const isInvitedForRoom = async (roomId, peerId: string) => {
   const [user, room] = await Promise.all([
-    User.findOne({ _id: participantId }),
+    User.findOne({ _id: peerId }),
     Room.findOne({ roomId: roomId }),
   ]);
   if (!user) {

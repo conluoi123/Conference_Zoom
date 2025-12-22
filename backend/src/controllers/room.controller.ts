@@ -6,6 +6,8 @@ import {
   generateToken,
   isInvitedForRoom,
 } from "../services/room.services";
+import { isInvitedForSession } from "../services/session.services";
+import { isDueSchedule, latestSchedule } from "../services/schedule.services";
 
 const createNewRoom = async (req: Request, res: Response) => {
   try {
@@ -31,22 +33,33 @@ const createNewRoom = async (req: Request, res: Response) => {
 };
 
 const userJoinRoom = async (req: Request, res: Response) => {
-  const { roomId, peerId } = req.body;
-  const room = res.locals.roomInfo;
+  try {
+    const { roomId, peerId } = req.body;
+    const room = res.locals.roomInfo;
 
-  let userType = "peer";
-  if (peerId === room.hostId) userType = "host";
-  if (await isInvitedForRoom(roomId, peerId)) {
-    userType = "invitee";
+    if (room.type === "SCHEDULED") {
+      const schedule = await latestSchedule(roomId);
+      if (!isDueSchedule(schedule))
+        return res.status(403).json("Chưa đến thời gian vào phòng họp");
+    }
+
+    let userType = "peer";
+    if (peerId === room.hostId) userType = "host";
+    if (
+      (await isInvitedForRoom(roomId, peerId)) ||
+      (await isInvitedForSession(roomId, peerId))
+    ) {
+      userType = "invitee";
+    }
+
+    const token = generateToken(userType, peerId, roomId);
+
+    return res
+      .status(200)
+      .json({ hostId: room.hostId, settings: room.settings, token: token });
+  } catch (error) {
+    return res.status(500).json(error);
   }
-  //con invitee cho session nua
-  console.log(userType);
-
-  const token = generateToken(userType, peerId, roomId);
-
-  return res
-    .status(200)
-    .json({ hostId: room.hostId, settings: room.settings, token: token });
 };
 
 export { createNewRoom, userJoinRoom };

@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
 import Session from "../models/session.model";
+import { endSession, startSession } from "../services/session.services";
+import { onParticipantJoined } from "../services/participant.services";
 
 const videoSdkWebhook = async (req: Request, res: Response) => {
   try {
@@ -13,28 +15,18 @@ const videoSdkWebhook = async (req: Request, res: Response) => {
     switch (webhookType) {
       case "session-started": {
         const { sessionId, meetingId, start } = data;
-        await Session.create({
-          roomId: meetingId,
-          sessionId: sessionId,
-          start: new Date(start),
-          end: null,
-          invitedUsers: [],
-        });
+        await startSession(meetingId, sessionId, start);
         break;
       }
 
       case "session-ended": {
         const { sessionId, meetingId, end } = data;
-        await Session.updateOne(
-          {
-            roomId: meetingId,
-            sessionId: sessionId,
-          },
-          {
-            end: new Date(end),
-          }
-        );
+        await endSession(meetingId, sessionId, end);
         break;
+      }
+
+      case "participant-joined": {
+        onParticipantJoined(data);
       }
     }
     // BẮT BUỘC: Trả về 200 OK ngay lập tức
