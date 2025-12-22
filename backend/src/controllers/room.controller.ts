@@ -39,7 +39,7 @@ const userJoinRoom = async (req: Request, res: Response) => {
   if (await isInvitedForRoom(roomId, peerId)) {
     userType = "invitee";
   }
-
+  //con invitee cho session nua
   console.log(userType);
 
   const token = generateToken(userType, peerId, roomId);
