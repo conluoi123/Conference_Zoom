@@ -2,7 +2,7 @@ import { useMeeting } from "@videosdk.live/react-sdk";
 import { 
   Mic, MicOff, Video, VideoOff, PhoneOff, 
   MessageSquare, Share2, Users, Settings, Plus, 
-  CameraOff, Monitor, MonitorStop,
+  CameraOff, Monitor, MonitorStop, Image, Subtitles,
 } from "lucide-react";
 import {
   Tooltip,
@@ -11,12 +11,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useState } from "react";
+
 interface MeetingControlsProps {
   onLeaveMeeting: () => void;
   onToggleChat: () => void;
   isChatOpen: boolean;
   onOpenParticipant: () => void; 
   isOpen: boolean;
+  onToggleBackground: () => void;
+  isBackgroundOpen: boolean;
 }
 
 export const MeetingControls = ({ 
@@ -25,12 +35,26 @@ export const MeetingControls = ({
   isChatOpen, 
   onOpenParticipant, 
   isOpen,
+  onToggleBackground,
+  isBackgroundOpen
 }: MeetingControlsProps) => {
   const { leave, toggleMic, toggleWebcam, toggleScreenShare, localScreenShareOn, localMicOn, localWebcamOn } = useMeeting();
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const handleLeave = () => {
     leave();
     onLeaveMeeting();
+  };
+
+  const handleBackgroundClick = () => {
+    console.log("Background click");
+    onToggleBackground();
+    setShowMoreMenu(false);
+  };
+
+  const handleSubtitleClick = () => {
+    console.log("Suptitle click");
+    setShowMoreMenu(false);
   };
 
   const ControlButton = ({ 
@@ -95,7 +119,7 @@ export const MeetingControls = ({
             variant={localScreenShareOn ? "success" : "default"}
           />
 
-
+          {/* Chat Panel */}
           <ControlButton 
             onClick={onToggleChat}
             icon={MessageSquare}
@@ -115,8 +139,36 @@ export const MeetingControls = ({
           <ControlButton icon={Settings} label="Cài đặt" />
 
           {/* More Actions */}
-          <ControlButton icon={Plus} label="Thêm" />
-
+          <DropdownMenu open={showMoreMenu} onOpenChange={setShowMoreMenu}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex flex-col items-center gap-1 p-3 rounded-xl transition-all hover:scale-105 w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-gray-700 text-white"
+              >
+                <Plus className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                <span className="sr-only">Thêm</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              side="top" 
+              align="center"
+              className="bg-black-800/40 backdrop-blur-md border border-white/10 shadow-2xl hover:bg-white/10 text-white mb-2"
+            >
+              <DropdownMenuItem 
+                onClick={handleBackgroundClick}
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-700"
+              >
+                <Image className="w-4 h-4" />
+                <span>Chỉnh background</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleSubtitleClick}
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-700"
+              >
+                <Subtitles className="w-4 h-4" />
+                <span>Phụ đề</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* Leave Button */}
           <ControlButton 
             onClick={handleLeave}

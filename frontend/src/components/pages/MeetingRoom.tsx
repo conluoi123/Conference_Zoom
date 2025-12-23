@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useMeeting } from "@videosdk.live/react-sdk";
+import { createCameraVideoTrack, useMeeting } from "@videosdk.live/react-sdk";
 import { ParticipantTile } from "./common/meetings/ParticipantTile";
 import { MeetingControls } from "./common/meetings/MeetingControls";
 import { MeetingHeader } from "./common/meetings/MeetingHeader";
@@ -9,6 +9,8 @@ import ChatPanel from "./common/ChatPanel";
 import { Copy, X } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { ParticipantPanel } from "./common/meetings/ParticipantPanel";
+import { BackgroundPanel } from "./common/meetings/BackgroundPanel";
+import { VirtualBackgroundProcessor } from "@videosdk.live/videosdk-media-processor-web";
 // Import Shadcn Pagination nếu bạn đã cài
 import {
   Pagination,
@@ -40,10 +42,15 @@ export const MeetingRoom = React.memo(
     const navigate = useNavigate();
     const [showWelcome, setShowWelcome] = useState(false);
     const [isParticipantOpen, setIsParticipantOpen] = useState(false);
+    const [isBackgroundOpen, setIsBackgroundOpen] = useState(false);
     const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
     const [joinedRequest, setJoinRequests] = useState<any[]>([]);
+    // Option chọn background của người dùng
+    const [bgConfig, setBgConfig] = useState<{type: 'none' | 'blur' | 'image', url?: string}>({type: 'none'});
+    const processorRef = useRef<VirtualBackgroundProcessor | null>(null);
+    const originalStreamRef = useRef<MediaStream | null>(null); // Lưu stream gốc để switch back
     // thêm 2 method để nhận biết có người vào, người ra
-    const { participants, join, localParticipant, leave } = useMeeting({
+    const { participants, join, localParticipant, leave, changeWebcam } = useMeeting({
       // duyệt người vào phòng - chức năng của host
       onEntryRequested: (data) => {
         const { participantId, name, allow, deny } = data;
@@ -161,10 +168,80 @@ export const MeetingRoom = React.memo(
     const toggleParticipantPanel = () => {
       setIsParticipantOpen(!isParticipantOpen);
       if (onChatOpen) onToggleChat(); // đóng nếu chat mở
+      if (isBackgroundOpen) setIsBackgroundOpen(false);
     };
     const toggleChatPanel = () => {
       onToggleChat();
-      if (isParticipantOpen) setIsParticipantOpen(!isParticipantOpen);
+      if (isParticipantOpen) setIsParticipantOpen(false);
+      if (isBackgroundOpen) setIsBackgroundOpen(false)
+    };
+    const toggleBackgroundPanel = () => {
+      setIsBackgroundOpen(!isBackgroundOpen);
+      if (onChatOpen) onToggleChat();
+      if (isParticipantOpen) setIsParticipantOpen(false);
+    };
+
+    useEffect(() => {
+      const initProcessor = async () => {
+        if (joined === "JOINED" && !processorRef.current) {
+          const processor = new VirtualBackgroundProcessor();
+          await processor.init();
+          processorRef.current = processor;
+          console.log("✅ Processor Ready");
+        }
+      };
+
+      initProcessor();
+
+      return () => {
+        if (processorRef.current) {
+          processorRef.current.stop(); 
+          processorRef.current = null;
+        }
+      };
+    }, [joined]);
+
+    // 2. Logic điều khiển Background
+    useEffect(() => {
+      const updateBackground = async () => {
+        if (!localParticipant || !processorRef.current || joined !== "JOINED") return;
+
+        try {
+          if (bgConfig.type === "none") {
+            // TẮT: Dừng processor và trả về track gốc
+            processorRef.current.stop();
+            const stream = await createCameraVideoTrack({
+              optimizationMode: "motion",
+              encoderConfig: "h1080p_w1920p",
+            });
+            changeWebcam(stream);
+          } else {
+            // BẬT hoặc CẬP NHẬT
+            const config = {
+              type: bgConfig.type,
+              imageUrl: bgConfig.url,
+            };
+
+            // Quan trọng: Nếu processor đang chạy, chỉ cần updateConfig để mượt hơn
+            // Nếu chưa chạy (vừa bật từ none), thì mới gọi start()
+            const stream = await createCameraVideoTrack({
+              optimizationMode: "motion",
+              encoderConfig: "h1080p_w1920p"
+            });
+            const processedStream = await processorRef.current.start(stream, config);
+            changeWebcam(processedStream);
+          }
+        } catch (error) {
+          console.error("❌ BG Error:", error);
+        }
+      };
+
+      updateBackground();
+    }, [bgConfig, localParticipant, joined]);
+    const handleSelectBackground = (type: 'none' | 'blur' | 'image', imageUrl?: string) => {
+      console.log("Selected background:", type, imageUrl);
+      setBgConfig({ type, url: imageUrl });
+      setIsBackgroundOpen(false);
     };
 
     const getGridClass = (count: number) => {
@@ -263,6 +340,8 @@ export const MeetingRoom = React.memo(
                     isChatOpen={onChatOpen}
                     isOpen={isParticipantOpen}
                     onOpenParticipant={toggleParticipantPanel}
+                    isBackgroundOpen={isBackgroundOpen}
+                    onToggleBackground={toggleBackgroundPanel}
                   />
                 </div>
                 {totalPages > 1 && (
@@ -341,6 +420,13 @@ export const MeetingRoom = React.memo(
                     joinedRequest={joinedRequest}
                     setJoinRequests={setJoinRequests}
                     onClose={() => setIsParticipantOpen(false)}
+                  />
+                )}
+                {isBackgroundOpen && (
+                  <BackgroundPanel
+                    isOpen={isBackgroundOpen}
+                    onClose={() => setIsBackgroundOpen(false)}
+                    onSelectBackground={handleSelectBackground}
                   />
                 )}
               </AnimatePresence>
