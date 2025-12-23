@@ -1,5 +1,14 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { setAccessToken, getAccessToken } from "@/services/service";
+import { setLogoutHandler } from "@/services/service";
+import api from "@/services/service";
 
 interface User {
   id: string;
@@ -25,62 +34,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadUser = () => {
+    const initAuth = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const email = localStorage.getItem('email');
-        const displayName = localStorage.getItem('displayName');
-        const peerId = localStorage.getItem('peerId');
-
-        if (token && email && displayName && peerId) {
-          setUser({
-            id: peerId,
-            email,
-            displayName,
-          });
-        }
-      } catch (error) {
-        console.error('Error loading user from localStorage:', error);
+        await refreshUser();
+      } catch (err) {
+        console.log("Không có phiên đăng nhập cũ");
       } finally {
         setIsLoading(false);
       }
     };
-
-    loadUser();
+    initAuth();
+  }, []);
+  useEffect(() => {
+    setLogoutHandler(() => {
+      logout();
+    });
   }, []);
 
   const login = (userData: User, token: string) => {
-    localStorage.setItem('accessToken', token);
-    localStorage.setItem('email', userData.email);
-    localStorage.setItem('displayName', userData.displayName);
-    localStorage.setItem('peerId', userData.id);
     setUser(userData);
+    setAccessToken(token);
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('email');
-    localStorage.removeItem('displayName');
-    localStorage.removeItem('peerId');
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Xoa cookie khong thanh cong", error);
+      return;
+    }
     setUser(null);
-    navigate('/login');
+    navigate("/login");
   };
 
   const updateUser = (userData: Partial<User>) => {
     if (!user) return;
     const updatedUser = { ...user, ...userData };
-    if (userData.email) localStorage.setItem('email', userData.email);
-    if (userData.displayName) localStorage.setItem('displayName', userData.displayName);
     setUser(updatedUser);
   };
 
-  const refreshUser = () => {
-    const user = localStorage.getItem('user');
-    if (user) {
-      setUser(JSON.parse(user));
+  const refreshUser = async () => {
+    try {
+      const res = await api.get("/auth/me");
+
+      const { userId, email, displayName } = res.data.data;
+      const token = getAccessToken();
+
+      if (!token) throw new Error("No access token");
+
+      setUser({
+        id: userId,
+        email,
+        displayName,
+      });
+    } catch (err) {
+      console.log("refresh user failed");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -97,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

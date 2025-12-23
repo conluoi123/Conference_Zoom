@@ -10,13 +10,7 @@ interface JoinMeetingData {
   peerId?: string;
 }
 
-interface MeetingResponse {
-  roomId: string;
-  token: string;
-}
-
-const API_BASE_URL = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
-// const API_BASE_URL = "https://israel-ramose-premeditatingly.ngrok-free.dev";
+import api from "./service";
 
 export const meetingAPI = {
   createMeeting: async (meetingData?: MeetingData) => {
@@ -24,45 +18,25 @@ export const meetingAPI = {
       const { peerId, title, meetingType, startTime } = meetingData || {};
 
       const requestBody = {
-        peerId: peerId,
+        peerId,
         title: title || "Cuộc họp mới",
-        meetingType: meetingType || "instant", // 'instant' or 'scheduled'
-        ...(meetingType === "scheduled" && startTime
-          ? { startTime: startTime }
-          : {}),
+        meetingType: meetingType || "instant",
+        ...(meetingType === "scheduled" && startTime ? { startTime } : {}),
       };
-      
-      const response = await fetch(`${API_BASE_URL}/rooms/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
-        );
+      const response = await api.post("/rooms/create", requestBody);
+
+      const { roomId, token, hostId } = response.data;
+
+      return { roomId, token, hostId };
+    } catch (error: any) {
+      if (error.response) {
+        console.error("Lỗi BE:", error.response.data);
+        throw new Error(error.response.data.message || "Tạo phòng thất bại");
       }
 
-      const result = await response.json();
-
-      const { roomId, token } = result;
-
-      // Response từ backend: { success: true, data: { roomId, token, meeting } }
-      return { roomId, token };
-    } catch (error) {
-      if (error instanceof Error) {
-        // Lúc này TypeScript đã biết đây là Error, bạn có thể gọi .message
-        console.error("Lỗi:", error.message);
-        throw error;
-      } else {
-        console.error("Lỗi lạ:", error);
-        throw new Error("Đã xảy ra lỗi không xác định khi tạo phòng họp");
-      }
+      console.error("Lỗi hệ thống:", error.message);
+      throw error;
     }
   },
 
@@ -70,49 +44,33 @@ export const meetingAPI = {
     try {
       const { roomId, peerId } = joinData;
 
-      const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/join`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-        },
-        body: JSON.stringify({
-          roomId,
-          peerId: peerId,
-        }),
-      });
+      const requestBody = {
+        peerId,
+        roomId,
+      };
 
-      if (!response.ok) {
-        if (response.status === 404) {
+      const response = await api.post(`/rooms/${roomId}/join`, requestBody);
+
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        if (error.response.status === 404) {
           return {
             success: false,
             error: "Không tìm thấy phòng họp",
           };
         }
-        const errorText = await response.text();
+
         throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
+          error.response.data?.message || "Tham gia phòng họp thất bại"
         );
       }
 
-      const result = await response.json();
-
-      return result;
-      // Tại dòng 56 (trong block catch)
-    } catch (error) {
-      if (error instanceof Error) {
-        // Lúc này TypeScript đã biết đây là Error, bạn có thể gọi .message
-        console.error("Lỗi:", error.message);
-        throw error;
-      } else {
-        console.error("Lỗi lạ:", error);
-        throw new Error("Đã xảy ra lỗi không xác định khi tham gia phòng họp");
-      }
+      throw new Error("Không thể kết nối đến server");
     }
   },
 };
 
-// Export all APIs
 export default {
   meeting: meetingAPI,
 };

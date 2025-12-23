@@ -53,14 +53,14 @@
 //   );
 // }
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { MeetingProvider } from "@videosdk.live/react-sdk";
+import { MeetingProvider, useMeeting } from "@videosdk.live/react-sdk";
 import { MeetingRoom } from "./MeetingRoom.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import LoadMeeting from "./common/meetings/LoadMeeting.tsx";
 
-export function MeetingPage() {
+export const MeetingPage = React.memo(() => {
   const navigate = useNavigate();
   const { roomId: paramRoomId } = useParams();
   const location = useLocation();
@@ -77,8 +77,8 @@ export function MeetingPage() {
   const { 
     token, 
     roomId: stateRoomId, 
-    micEnabled, 
-    webcamEnabled, 
+    hostId,
+    settings,
     displayName: stateName 
   } = meetingData;
 
@@ -93,35 +93,35 @@ export function MeetingPage() {
     }
   }, [roomId, token, navigate]);
 
-  // 3. CHỐT CHẶN: Nếu không có token hoặc roomId, không render Provider
-  // Điều này ngăn chặn lỗi 401 bắn ra từ API infra/v1/meetings/init-config
   if (!token || !roomId) {
     return <LoadMeeting />; 
   }
 
   return (
     <MeetingProvider
+      key={Date.now().toString()}
       config={{
         meetingId: roomId,
         participantId: user?.id || `guest`,
         name: finalDisplayName,
-        micEnabled: micEnabled ?? true,
-        webcamEnabled: webcamEnabled ?? true,
-        // QUAN TRỌNG: Truyền ID thiết bị đã chọn từ PreJoin vào đây
+        micEnabled: settings.allowMic,
+        webcamEnabled: settings.allowCam,
         autoConsume: true,
         debugMode: true,
         multiStream: true,
       }}
-      // sửa phần token này thành 
-      // token = {isHot ?  allow_join_token : ask_join_token}
       token={token}
+      joinWithoutUserInteraction={settings.allowJoin}
+      reinitialiseMeetingOnConfigChange={true}
     >
+      
       <MeetingRoom
         roomId={roomId}
+        isHost={hostId === user?.id}
         onLeaveMeeting={() => navigate("/home")}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         onChatOpen={isChatOpen}
       />
     </MeetingProvider>
   );
-}
+})

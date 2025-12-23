@@ -22,13 +22,13 @@
 //   // States
 //   const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
 //   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-  
+
 //   const [selectedCam, setSelectedCam] = useState("");
 //   const [selectedMic, setSelectedMic] = useState("");
-  
+
 //   const [isMicOn, setIsMicOn] = useState(true);
 //   const [isCameraOn, setIsCameraOn] = useState(true);
-  
+
 //   const [displayName, setDisplayName] = useState(initialDisplayName || "");
 //   const [permissionGranted, setPermissionGranted] = useState(false);
 //   const [loading, setLoading] = useState(true);
@@ -78,15 +78,15 @@
 //       try {
 //         setLoading(true);
 //         console.log("Requesting permissions...");
-        
+
 //         // Xin quyền
 //         const stream = await navigator.mediaDevices.getUserMedia({
 //           video: true,
 //           audio: true,
 //         });
-        
+
 //         setPermissionGranted(true);
-        
+
 //         // ---------------------------------------------
 //         // SỬA ĐỔI QUAN TRỌNG: Gán stream vào video ngay, KHÔNG TẮT
 //         // ---------------------------------------------
@@ -143,7 +143,7 @@
 //       stopStream();
 //       navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange);
 //     };
-//   }, [loadDevices]); 
+//   }, [loadDevices]);
 
 //   // 3. Effect xử lý khi NGƯỜI DÙNG TỰ ĐỔI CAM
 //   // Chỉ chạy khi selectedCam thay đổi VÀ khác với stream hiện tại
@@ -157,7 +157,7 @@
 //     if (streamRef.current) {
 //         const currentTrack = streamRef.current.getVideoTracks()[0];
 //         if (currentTrack && currentTrack.getSettings().deviceId === selectedCam && currentTrack.readyState === "live") {
-//             return; 
+//             return;
 //         }
 //     }
 
@@ -169,7 +169,7 @@
 //       try {
 //         console.log("Switching to camera:", selectedCam);
 //         const stream = await navigator.mediaDevices.getUserMedia({
-//           video: { 
+//           video: {
 //             deviceId: { exact: selectedCam },
 //             width: { ideal: 1280 },
 //             height: { ideal: 720 }
@@ -219,7 +219,7 @@
 //       state: {
 //         roomId,
 //         token,
-//         settings, 
+//         settings,
 //         selectedCamId: selectedCam,
 //         selectedMicId: selectedMic
 //       },
@@ -255,8 +255,8 @@
 //           <div className="w-full max-w-4xl h-[60vh] flex flex-col items-center justify-center bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-700">
 //             <div className="text-white text-xl mb-4">Camera đang tắt</div>
 //             <div className="text-gray-400">
-//               {permissionGranted 
-//                 ? "Bật camera để xem trước hình ảnh" 
+//               {permissionGranted
+//                 ? "Bật camera để xem trước hình ảnh"
 //                 : "Không có quyền truy cập camera"}
 //             </div>
 //           </div>
@@ -361,13 +361,22 @@ export function PreJoinPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { requestPermission, getCameras, getMicrophones } = useMediaDevice();
-  const [devices, setDevices] = useState<{ m: any[], c: any[] }>({ m: [], c: [] });
+  const [devices, setDevices] = useState<{ m: any[]; c: any[] }>({
+    m: [],
+    c: [],
+  });
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [loading, setLoading] = useState(true);
   const [selectedCam, setSelectedCam] = useState("");
   const [selectedMic, setSelectedMic] = useState("");
-  const { roomId, token, displayName: initialName } = location.state || {};
+  const {
+    roomId,
+    token,
+    hostId,
+    displayName: initialName,
+    settings,
+  } = location.state || {};
   const [displayName, setDisplayName] = useState(initialName || "");
   const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -386,9 +395,9 @@ export function PreJoinPage() {
     try {
       const p = await requestPermission(Constants.permission.AUDIO_AND_VIDEO);
       const [cams, mics] = await Promise.all([getCameras(), getMicrophones()]);
-      
+
       setDevices({ c: cams, m: mics });
-      
+
       if (cams.length > 0) setSelectedCam(cams[0].deviceId);
       if (mics.length > 0) setSelectedMic(mics[0].deviceId);
 
@@ -414,7 +423,7 @@ export function PreJoinPage() {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { deviceId: { exact: selectedCam } },
-            audio: false, 
+            audio: false,
           });
           streamRef.current = stream;
           if (videoRef.current) videoRef.current.srcObject = stream;
@@ -436,39 +445,76 @@ export function PreJoinPage() {
   }, []);
 
   const handleJoin = () => {
+    const micState = settings.allowMic ? isMicOn : settings.allowMic;
+    const camState = settings.allowCam ? isCameraOn : settings.allowCam;
+
+    settings.allowMic = micState;
+    settings.allowCam = camState;
+
     const meetingSession = {
-      roomId, token, displayName,
-      micEnabled: isMicOn,
-      webcamEnabled: isCameraOn,
-      selectedCam, selectedMic
+      roomId,
+      token,
+      hostId,
+      displayName,
+      settings,
     };
+
     sessionStorage.setItem(`meeting_${roomId}`, JSON.stringify(meetingSession));
-    console.log(meetingSession.token)
+
     stopStream();
     navigate(`/meeting/${roomId}`, { state: meetingSession });
   };
 
-  if (loading) return <div className="h-screen bg-gray-900 flex items-center justify-center text-white">Đang chuẩn bị...</div>;
+  if (loading)
+    return (
+      <div className="h-screen bg-gray-900 flex items-center justify-center text-white">
+        Đang chuẩn bị...
+      </div>
+    );
 
   return (
     <div className="h-screen bg-gray-900 flex items-center justify-center p-6 gap-10">
       {/* CỘT TRÁI: PREVIEW */}
       <div className="relative w-full max-w-2xl bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center border border-gray-700">
         {isCameraOn ? (
-          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover scale-x-[-1]"
+          />
         ) : (
           <div className="text-gray-400 text-center">
             <CameraOff className="w-16 h-16 mx-auto mb-2 opacity-50" />
             <p>Camera đang tắt</p>
           </div>
         )}
-        
+
         <div className="absolute bottom-4 flex gap-4">
-          <button onClick={() => setIsMicOn(!isMicOn)} className={`p-4 rounded-full ${isMicOn ? 'bg-gray-800' : 'bg-red-600'}`}>
-            {isMicOn ? <Mic className="text-white"/> : <MicOff className="text-white"/>}
+          <button
+            onClick={() => setIsMicOn(!isMicOn)}
+            className={`p-4 rounded-full ${
+              isMicOn ? "bg-gray-800" : "bg-red-600"
+            }`}
+          >
+            {isMicOn ? (
+              <Mic className="text-white" />
+            ) : (
+              <MicOff className="text-white" />
+            )}
           </button>
-          <button onClick={() => setIsCameraOn(!isCameraOn)} className={`p-4 rounded-full ${isCameraOn ? 'bg-gray-800' : 'bg-red-600'}`}>
-            {isCameraOn ? <Camera className="text-white"/> : <CameraOff className="text-white"/>}
+          <button
+            onClick={() => setIsCameraOn(!isCameraOn)}
+            className={`p-4 rounded-full ${
+              isCameraOn ? "bg-gray-800" : "bg-red-600"
+            }`}
+          >
+            {isCameraOn ? (
+              <Camera className="text-white" />
+            ) : (
+              <CameraOff className="text-white" />
+            )}
           </button>
         </div>
       </div>
@@ -476,17 +522,32 @@ export function PreJoinPage() {
       {/* CỘT PHẢI: SETTINGS */}
       <div className="w-96 flex flex-col gap-6 text-white">
         <h1 className="text-2xl font-bold">Sẵn sàng tham gia?</h1>
-        <input 
-          type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Tên của bạn" className="bg-gray-800 border border-gray-700 p-3 rounded-lg outline-none"
+        <input
+          type="text"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Tên của bạn"
+          className="bg-gray-800 border border-gray-700 p-3 rounded-lg outline-none"
         />
         <div className="flex flex-col gap-2">
           <label className="text-sm text-gray-400">Chọn Camera</label>
-          <select value={selectedCam} onChange={(e) => setSelectedCam(e.target.value)} className="bg-gray-800 p-2 rounded border border-gray-700">
-            {devices.c.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || "Camera"}</option>)}
+          <select
+            value={selectedCam}
+            onChange={(e) => setSelectedCam(e.target.value)}
+            className="bg-gray-800 p-2 rounded border border-gray-700"
+          >
+            {devices.c.map((d) => (
+              <option key={d.deviceId} value={d.deviceId}>
+                {d.label || "Camera"}
+              </option>
+            ))}
           </select>
         </div>
-        <button onClick={handleJoin} disabled={!displayName.trim()} className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 py-3 rounded-xl font-bold">
+        <button
+          onClick={handleJoin}
+          disabled={!displayName.trim()}
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 py-3 rounded-xl font-bold"
+        >
           Tham gia ngay
         </button>
       </div>

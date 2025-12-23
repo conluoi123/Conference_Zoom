@@ -29,12 +29,13 @@ interface JoinMeetingData {
 }
 interface MeetingResponse {
   roomId: string;
+  hostId: string;
   token: string;
 }
 export function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, refreshUser, login } = useAuth();
+  const { user, login } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentDay, setCurrentDay] = useState(new Date());
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -81,14 +82,6 @@ export function HomePage() {
       participants: 8,
     },
   ];
-  // khi người dùng load lại trang
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!user && token) {
-      console.log("No user");
-      refreshUser();
-    }
-  }, [user, refreshUser]);
   // Handle OAuth redirect
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -98,12 +91,12 @@ export function HomePage() {
         const decodedData = decodeURIComponent(dataParam);
         const userData = JSON.parse(decodedData);
         console.log("OAuth login data:", userData);
-        if (userData.accessToken && userData.data) {
+        if (userData.accessToken && userData.user) {
           login(
             {
-              id: userData.data.userId,
-              email: userData.data.email,
-              displayName: userData.data.displayName,
+              id: userData.user.userId,
+              email: userData.user.email,
+              displayName: userData.user.displayName,
             },
             userData.accessToken
           );
@@ -115,16 +108,17 @@ export function HomePage() {
     }
   }, [location.search, navigate]);
   console.log("OAuth user data:", user);
-  //console.log("User in HomePage:", localStorage.getItem("peerId"));
+
   const handleNewMeeting = async () => {
+    if (!user) return;
     try {
       const meetingData: MeetingData = {
-        peerId: localStorage.getItem("peerId") || "",
+        peerId: user?.id || "",
         title: "Cuộc họp mới",
         meetingType: "instant",
         startTime: new Date().toISOString(),
       };
-      const response: MeetingResponse = await meetingAPI.createMeeting(
+      const response : MeetingResponse = await meetingAPI.createMeeting(
         meetingData
       );
       if (response.roomId && response.token) {
@@ -132,6 +126,8 @@ export function HomePage() {
           state: {
             token: response.token,
             roomId: response.roomId,
+            hostId: response.hostId,
+            displayName: user?.displayName || "",
             settings: {
               allowJoin: false,
               allowShareScreen: true,
@@ -160,7 +156,7 @@ export function HomePage() {
     try {
       const joinData: JoinMeetingData = {
         roomId: roomId,
-        peerId: localStorage.getItem("peerId") || "",
+        peerId: user?.id || "",
       };
       const room = await meetingAPI.joinMeeting(joinData);
 
@@ -169,7 +165,8 @@ export function HomePage() {
           state: {
             token: room.token,
             roomId,
-            displayName: localStorage.getItem("displayName") || "",
+            hostId: room.hostId,
+            displayName: user?.displayName || "",
             settings: room.settings,
           },
         });

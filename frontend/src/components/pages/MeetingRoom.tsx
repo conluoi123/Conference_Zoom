@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMeeting } from "@videosdk.live/react-sdk";
 import { ParticipantTile } from "./common/meetings/ParticipantTile";
 import { MeetingControls } from "./common/meetings/MeetingControls";
@@ -20,8 +20,10 @@ import {
 } from "../ui/pagination";
 import { useAuth } from "@/context/AuthContext";
 import LoadMeeting from "./common/meetings/LoadMeeting";
+import { useNavigate } from "react-router-dom";
 interface MeetingRoomProps {
   roomId: string;
+  isHost: boolean;
   onLeaveMeeting: () => void;
   onToggleChat: () => void;
   onChatOpen: boolean;
@@ -509,8 +511,7 @@ export function MeetingRoom({
                               {page}
                             </PaginationLink>
                           </PaginationItem>
-                        )
-                      )}
+                        ))}
 
                       <PaginationItem>
                         <PaginationNext
