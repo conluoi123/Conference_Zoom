@@ -13,8 +13,6 @@ const participantSchema = new Schema<IParticipant>({
   participantId: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
   },
   sessionId: {
     type: String,
