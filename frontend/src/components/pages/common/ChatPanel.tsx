@@ -52,15 +52,16 @@ export default function ChatPanel({
       setMessages((prev) => [...prev, newMessage]);
     };
 
-
     const onChatHistoryReceived = (datas: any[]) => {
       if (!Array.isArray(datas)) return;
-      
+
       // Map toàn bộ mảng dữ liệu sang format chuẩn
       const formattedMessages = datas.map(formatMessage);
       setMessages((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
-        const uniqueNewMessages = formattedMessages.filter((m) => !existingIds.has(m.id));
+        const uniqueNewMessages = formattedMessages.filter(
+          (m) => !existingIds.has(m.id)
+        );
         return [...prev, ...uniqueNewMessages];
       });
     };
@@ -143,11 +144,11 @@ export default function ChatPanel({
   return (
     <>
       <motion.div
-        initial= {{x:"100%"}}
-        animate= {{x:0}}
-        exit = {{x:"100%"}}
-        transition = {{type:"spring", damping:25, stiffness:200}}
-        className="h-full w-96 bg-gray-800 shadow-2xl flex flex-col border-l border-gray-700"   
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="h-full w-96 bg-gray-800 shadow-2xl flex flex-col border-l border-gray-700"
       >
         {/* Header */}
         <div className="bg-gray-900 px-6 py-4 flex items-center justify-between border-b border-gray-700 shadow-sm">
