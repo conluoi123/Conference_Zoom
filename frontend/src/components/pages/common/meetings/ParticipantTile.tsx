@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useParticipant } from "@videosdk.live/react-sdk";
 import { MicOff, Monitor } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export const ParticipantTile = React.memo(({ participantId }: { participantId: string }) => {
   const { 
@@ -89,20 +90,19 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   const showScreenShare = screenShareOn && screenShareStream;
   const showWebcam = !showScreenShare && webcamOn && webcamStream;
   const showAvatar = !showScreenShare && !showWebcam;
-
+  const { user } = useAuth();
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-800 aspect-video ring-1 ring-white/10">
-      
       {/* Audio luôn phát (ẩn) */}
       <audio ref={audioRef} autoPlay playsInline controls={false} />
 
       {/* 1. SCREEN SHARE (Ưu tiên cao nhất) */}
       {showScreenShare && (
         <>
-          <video 
-            ref={screenShareRef} 
-            autoPlay 
-            playsInline 
+          <video
+            ref={screenShareRef}
+            autoPlay
+            playsInline
             className="w-full h-full object-contain bg-black"
           />
           <div className="absolute top-4 left-4 flex items-center gap-2 bg-green-600 px-3 py-2 rounded-lg shadow-lg">
@@ -116,10 +116,10 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
 
       {/* 2. WEBCAM */}
       {showWebcam && (
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
           muted={true}
           className="w-full h-full object-cover transform scale-x-[-1]"
         />
@@ -128,12 +128,22 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
       {/* 3. AVATAR (fallback) */}
       {showAvatar && (
         <div className="flex items-center justify-center h-full bg-gradient-to-br from-indigo-500 to-purple-600">
-          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white">
-            {displayName?.charAt(0).toUpperCase() || "?"}
-          </div>
+          {user?.avatar ? (
+            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white">
+              <img
+                src={user.avatar}
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white">
+              {displayName?.charAt(0).toUpperCase() || "?"}
+            </div>
+          )}
         </div>
       )}
-      
+
       {/* Label tên và trạng thái mic */}
       <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-lg backdrop-blur-sm z-10">
         {!micOn && <MicOff className="w-4 h-4 text-red-500" />}

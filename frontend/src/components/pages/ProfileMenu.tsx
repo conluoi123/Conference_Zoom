@@ -1,5 +1,5 @@
-import { User, UserPlus, Settings, LogOut } from 'lucide-react';
-import {useAuth} from '../../context/AuthContext';
+import { User, UserPlus, Settings, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ProfileDropdown({ onOpenProfile }: { onOpenProfile: () => void }) {
+export function ProfileDropdown({
+  onOpenProfile,
+}: {
+  onOpenProfile: () => void;
+}) {
   const { user, logout } = useAuth();
 
   const displayName = user?.displayName || "User";
@@ -36,7 +40,19 @@ export function ProfileDropdown({ onOpenProfile }: { onOpenProfile: () => void }
         <button className="flex items-center gap-3 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
             <span className="text-white text-sm font-semibold">
-              {getInitials(displayName)}
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-blue-600 flex items-center justify-center">
+                    {getInitials(displayName)}
+                  </div>
+                )}
+              </div>
             </span>
           </div>
 

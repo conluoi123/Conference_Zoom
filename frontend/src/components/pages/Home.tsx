@@ -97,6 +97,7 @@ export function HomePage() {
               id: userData.user.userId,
               email: userData.user.email,
               displayName: userData.user.displayName,
+              avatar: userData.user.avatar,
             },
             userData.accessToken
           );
