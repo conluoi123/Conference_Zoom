@@ -1,5 +1,10 @@
 import { Router, Express } from "express";
-import { createNewRoom, userJoinRoom } from "../controllers/room.controller";
+import {
+  createNewRoom,
+  getRoomScheduleByInvitedUser,
+  userJoinRoom,
+  getInvietedUsersBySchedule,
+} from "../controllers/room.controller";
 import {
   createRoomMiddleware,
   joinRoomMiddleware,
@@ -15,6 +20,12 @@ import { authenticateAccessToken } from "../middlewares/jwt.middleware";
 
 const router = Router();
 const roomRoutes = (app: Express) => {
+  app.post(
+    "/rooms/schedule/invited-users",
+    authenticateAccessToken,
+    getInvietedUsersBySchedule
+  );
+  app.get("/rooms/schedule", authenticateAccessToken, getRoomScheduleByInvitedUser);
   app.post(
     "/rooms/create",
     authenticateAccessToken,

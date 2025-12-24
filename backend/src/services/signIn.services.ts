@@ -196,6 +196,7 @@ async function outlookLogInCallback(req: Request, res: Response) {
       userId: user._id,
       email: user.email,
       displayName: user.displayName,
+      avatar: user.avatar
     },
   };
   const encodedData = encodeURIComponent(JSON.stringify(data));

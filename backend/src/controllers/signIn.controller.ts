@@ -86,6 +86,7 @@ async function verifyEmail(req: Request, res: Response) {
       userId: user._id,
       email: user.email,
       displayName: user.displayName,
+      avatar: user.avatar,
     };
 
     const accessToken = createAccessToken(user);
@@ -233,8 +234,10 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
         userId: user._id,
         email: user.email,
         displayName: user.displayName,
+        avatar: user.avatar,
       },
     };
+    
     const encodedData = encodeURIComponent(JSON.stringify(data));
     return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
   } catch (err) {

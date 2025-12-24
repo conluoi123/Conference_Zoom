@@ -4,6 +4,8 @@ import {
   createRoomOnDatabase,
   createRoomOnVideoSDK,
   generateToken,
+  getRoomShedule,
+  getRoomSheduleInvited
 } from "../services/room.services";
 
 const createNewRoom = async (req: Request, res: Response) => {
@@ -41,4 +43,39 @@ const userJoinRoom = async (req: Request, res: Response) => {
   return res.status(200).json({ settings: room.settings, token: token });
 };
 
-export { createNewRoom, userJoinRoom };
+const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => { 
+  try {
+    const { userId } = req.query;
+    if(!userId){
+      return res.status(400).json({message: "userId is not found"});
+    }
+    const roomIds = await getRoomShedule(userId as string, "roomId");
+    const hostIds = await getRoomShedule(userId as string, "hostId");
+    const startTimes = await getRoomShedule(userId as string, "startTime");
+    return res.status(200).json({ roomIds, hostIds, startTimes });
+  } catch (error) {
+    console.error("getRoomScheduleByInvitedUser error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+const getInvietedUsersBySchedule = async (req: Request, res: Response) => { 
+  try {
+    const {roomId, hostId, startTime} = req.body;
+    if(!roomId || !hostId || !startTime){
+      return res.status(400).json({message: "Missing required fields"});
+    }
+    const invitedUsers = await getRoomSheduleInvited(roomId, hostId, startTime);
+    return res.status(200).json({ invitedUsers });
+  } catch (error) {
+    console.error("getInvietedUsersBySchedule error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+export {
+  createNewRoom,
+  userJoinRoom,
+  getRoomScheduleByInvitedUser,
+  getInvietedUsersBySchedule,
+};

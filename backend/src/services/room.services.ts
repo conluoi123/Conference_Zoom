@@ -158,6 +158,24 @@ const isHost = async (roomId, participantId: string) => {
   return true;
 };
 
+const getRoomShedule = async (userId: string, col: string) => {
+  const roomSchedule = await Room.find({
+    hostId: { $ne: userId },
+    type: "SCHEDULED",
+    invited: { $in: userId },
+  }).select(col);
+  return roomSchedule;
+}
+
+const getRoomSheduleInvited = async (roomId: string, hostId: string, startTime: Date) => {
+  const invitedUser = await Room.find({
+    hostId: hostId,
+    roomId: roomId,
+    startTime: startTime,
+  }).select("invited");
+  return invitedUser;
+};
+
 export {
   generateToken,
   createRoomOnVideoSDK,
@@ -166,4 +184,6 @@ export {
   findRoomOnDatabase,
   updateRoomOnDatabase,
   isHost,
+  getRoomShedule,
+  getRoomSheduleInvited,
 };

@@ -27,7 +27,7 @@ import {
 import { socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
-
+import { supportProfileRouter } from "./routes/supportProfile.routes";
 const PORT = ENV.PORT || 8080;
 const app = express();
 app.use(
@@ -81,6 +81,7 @@ roomRoutes(app);
 refreshTokenRouter(app);
 logoutRouter(app);
 webHook(app);
+supportProfileRouter(app);
 
 const startServer = async () => {
   try {

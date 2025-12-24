@@ -9,7 +9,7 @@ import User from "../models/user.model";
 async function refreshAccessToken(req: RequestWithUser, res: Response) {
   try {
     const refreshToken = req.cookies.refreshToken;
-    console.log(refreshToken);
+    // console.log(`loi la reff ${refreshToken}`);
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token is wrong" });
     }
@@ -22,7 +22,7 @@ async function refreshAccessToken(req: RequestWithUser, res: Response) {
     const user = await User.findOne({
       "refreshToken.refreshToken": hashRefreshToken,
     });
-    console.log(user)
+    console.log(` loi la ${user}`)
     if (!user) {
       return res
         .status(401)

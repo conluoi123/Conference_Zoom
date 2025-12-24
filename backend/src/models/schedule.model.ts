@@ -7,6 +7,7 @@ export interface ISchedule extends Document {
   roomId: string;
   title: String;
   startTime: Date;
+  endTime: Date;
   duration: Number;
 }
 
@@ -21,6 +22,7 @@ const scheduleSchema = new Schema<ISchedule>({
   },
   title: { type: String },
   startTime: { type: Date },
+  endTime: { type: Date, default: null },
   duration: { type: Number },
 });
 const Schedule = mongoose.model<ISchedule>("Schedule", scheduleSchema);
