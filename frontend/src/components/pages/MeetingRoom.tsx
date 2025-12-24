@@ -49,7 +49,6 @@ export function MeetingRoom({
 
   const [bgConfig, setBgConfig] = useState<{type: 'none' | 'blur' | 'image', url?: string}>({type: 'none'});
   const processorRef = useRef<VirtualBackgroundProcessor | null>(null);
-  const originalStreamRef = useRef<MediaStream | null>(null); // Lưu stream gốc để switch back
   // thêm 2 method để nhận biết có người vào, người ra
   const { participants, join, localParticipant, meetingId, changeWebcam } = useMeeting({
     // duyệt người vào phòng - chức năng của host
