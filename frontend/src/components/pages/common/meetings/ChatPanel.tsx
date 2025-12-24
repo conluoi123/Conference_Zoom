@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Send } from "lucide-react";
 import { socket } from "../../../../services/socket"; // Import singleton socket
 import { AnimatePresence, motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 interface Message {
   id: string; // Bắt buộc phải có ID duy nhất để làm key
   participantId: string;
@@ -140,7 +141,7 @@ export default function ChatPanel({
   };
 
   // if (!isOpen) return null;
-
+  const { user } = useAuth();
   return (
     <>
       <motion.div
@@ -194,7 +195,15 @@ export default function ChatPanel({
                         : "bg-gradient-to-br from-purple-500 to-purple-600"
                     }`}
                   >
-                    {getInitials(message.participantName)}
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      getInitials(message.participantName)
+                    )}
                   </div>
 
                   {/* Message Content & Info */}

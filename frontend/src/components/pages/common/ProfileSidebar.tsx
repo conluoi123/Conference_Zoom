@@ -1,5 +1,10 @@
-import { User, Video, Calendar, Bell, Shield } from 'lucide-react';
-export type PageType = 'profile' | 'meetings' | 'calendar' | 'notifications' | 'privacy';
+import { User, Video, Calendar, Bell, Shield } from "lucide-react";
+export type PageType =
+  | "profile"
+  | "meetings"
+  | "calendar"
+  | "notifications"
+  | "privacy";
 
 interface ProfileSidebarProps {
   currentPage: PageType;
@@ -11,28 +16,45 @@ interface MenuItem {
   label: string;
   icon: React.ReactNode;
 }
-
-export function ProfileSidebar({ currentPage, onPageChange }: ProfileSidebarProps) {
+import { useAuth } from "@/context/AuthContext";
+export function ProfileSidebar({
+  currentPage,
+  onPageChange,
+}: ProfileSidebarProps) {
   const accountItems: MenuItem[] = [
-    { id: 'profile', label: 'Hồ sơ', icon: <User size={18} /> },
+    { id: "profile", label: "Hồ sơ", icon: <User size={18} /> },
   ];
-
+  const { user } = useAuth();
+  console.log(user?.avatar);
   const settingsItems: MenuItem[] = [
-    { id: 'meetings', label: 'Cuộc họp', icon: <Video size={18} /> },
-    { id: 'calendar', label: 'Lịch', icon: <Calendar size={18} /> },
-    { id: 'notifications', label: 'Thông báo', icon: <Bell size={18} /> },
-    { id: 'privacy', label: 'Quyền riêng tư', icon: <Shield size={18} /> },
+    { id: "meetings", label: "Cuộc họp", icon: <Video size={18} /> },
+    { id: "calendar", label: "Lịch", icon: <Calendar size={18} /> },
+    { id: "notifications", label: "Thông báo", icon: <Bell size={18} /> },
+    { id: "privacy", label: "Quyền riêng tư", icon: <Shield size={18} /> },
   ];
 
   return (
     <aside className="w-80 bg-gray-50 border-r border-gray-200 p-6">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center">
-          <User size={32} className="text-white" />
+        <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-blue-600 flex items-center justify-center">
+              <User size={24} className="text-white" />
+            </div>
+          )}
         </div>
-        <div>
-          <h3 className="text-gray-900">Nguyễn Khôi</h3>
-          <p className="text-sm text-gray-500">nguyen.khoi@zus.com</p>
+
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-gray-900 truncate">
+            {user?.displayName}
+          </h3>
+          <p className="text-xs text-gray-500 break-all">{user?.email}</p>
         </div>
       </div>
 
@@ -45,8 +67,8 @@ export function ProfileSidebar({ currentPage, onPageChange }: ProfileSidebarProp
               onClick={() => onPageChange(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 currentPage === item.id
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {item.icon}
@@ -65,8 +87,8 @@ export function ProfileSidebar({ currentPage, onPageChange }: ProfileSidebarProp
               onClick={() => onPageChange(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
                 currentPage === item.id
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {item.icon}

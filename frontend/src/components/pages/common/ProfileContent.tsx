@@ -1,28 +1,125 @@
-import { useState } from 'react';
-import { Upload } from 'lucide-react';
+import { useRef, useEffect, useState } from "react";
+import { Upload } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  profileAPI,
+  type RequestProfileData,
+  type AccountType,
+  type UpdateProfileData,
+} from "@/services/profileApi";
+const profileImage =
+  "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZSUyMGltYWdlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60";
 
-const profileImage = 'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZSUyMGltYWdlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60';
-
+interface ProfileData {
+  displayName: string;
+  email: string;
+  avatar: string;
+  accountType: AccountType;
+}
 export function ProfileContent() {
-  const [formData, setFormData] = useState({
-    fullName: 'Nguyễn Khôi',
-    email: 'nguyen.khoi@zus.com',
-    phone: '+84 123 456 789',
-    position: 'Product Manager',
-    department: 'Product Team',
-    address: '',
+  const { user, logout, updateUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  if (!user) {
+    logout();
+  }
+  // setAvatar(user?.avatar || "");
+  const [formData, setFormData] = useState<ProfileData>({
+    displayName: "",
+    email: "",
+    avatar: user?.avatar || "",
+    accountType: {
+      accType: "",
+      maxDuration: 0,
+      maxParticipants: 0,
+      expiredAt: new Date(),
+    } as AccountType,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        logout();
+        return;
+      }
+      console.log(user);
+      try {
+        const requestProfileData: RequestProfileData = {
+          userId: user.id || "",
+        };
+        console.log(requestProfileData);
+        const profile = await profileAPI.getUserProfile(requestProfileData);
+
+        if (!profile) return;
+        console.log(profile);
+        setFormData({
+          displayName: profile.displayName ?? "",
+          email: profile.email,
+          avatar: profile.avatar,
+          accountType: profile.accountType,
+        });
+        console.log(formData.accountType.maxDuration);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+    const updateProfileData: UpdateProfileData = {
+      userId: user?.id || "",
+      displayName: formData.displayName,
+      avatar: formData.avatar,
+      accountType: formData.accountType,
+    };
+    await profileAPI.updateUserProfile(updateProfileData);
+  };
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) {
+        alert("Chưa chọn file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File quá lớn");
+        return;
+      }
+      setIsLoading(true);
+      const signature = await profileAPI.getSignature();
+
+      const formDataBody = new FormData();
+      formDataBody.append("file", file);
+      formDataBody.append("api_key", signature.apiKey);
+      formDataBody.append("timestamp", signature.timestamp);
+      formDataBody.append("signature", signature.signature);
+      formDataBody.append("folder", "avatars");
+
+      const data = await profileAPI.uploadFile(
+        formDataBody,
+        signature.cloudName
+      );
+      console.log(data);
+
+      const url = await profileAPI.saveAvatar(user?.id || "", data.public_id);
+      updateUser({ avatar: url });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSave = () => {
-    console.log('Saving profile:', formData);
-    alert('Đã lưu thông tin thành công!');
+    console.log("Saving profile:", formData);
+    alert("Đã lưu thông tin thành công!");
   };
 
   return (
@@ -35,17 +132,47 @@ export function ProfileContent() {
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <h3 className="text-gray-900 mb-4">Ảnh đại diện</h3>
         <div className="flex items-center gap-4">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
-            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+          <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 relative">
+            <img
+              src={user?.avatar ? user.avatar : profileImage}
+              alt="Profile"
+              className={`w-full h-full object-cover transition-opacity ${
+                isLoading ? "opacity-50" : "opacity-100"
+              }`}
+            />
+
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
           </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            ref={fileInputRef}
+            onChange={handleUploadImage}
+          />
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2">
+            <button
+              disabled={isLoading}
+              onClick={() => fileInputRef.current?.click()}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 text-white
+                ${
+                  isLoading
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+            >
               <Upload size={16} />
-              Tải ảnh lên
+              {isLoading ? "Đang tải..." : "Tải ảnh lên"}
             </button>
-            <button className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg">
+
+            {/* <button className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg">
               Xóa ảnh
-            </button>
+            </button> */}
           </div>
         </div>
         <p className="text-sm text-gray-500 mt-3">
@@ -57,11 +184,13 @@ export function ProfileContent() {
         <h3 className="text-gray-900 mb-4">Thông tin cá nhân</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-700 mb-2">Họ và tên</label>
+            <label className="block text-sm text-gray-700 mb-2">
+              Tên hiển thị
+            </label>
             <input
               type="text"
-              name="fullName"
-              value={formData.fullName}
+              name="displayName"
+              value={formData.displayName}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
@@ -80,49 +209,59 @@ export function ProfileContent() {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-2">Số điện thoại</label>
+              <label className="block text-sm text-gray-700 mb-2">
+                Loại tài khoản
+              </label>
               <input
                 type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                name="accType"
+                value={formData.accountType.accType}
+                // onChange={handleChange}
+                readOnly
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-200 text-gray-500 cursor-not-allowed"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-2">Vị trí công việc</label>
+              <label className="block text-sm text-gray-700 mb-2">
+                Thời lượng tối đa khi tạo cuộc họp
+              </label>
               <input
                 type="text"
-                name="position"
-                value={formData.position}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                name="maxDuration"
+                value={formData.accountType.maxDuration?.toString() || ""}
+                readOnly
+                // onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-200 text-gray-500 cursor-not-allowed"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-2">Phòng ban</label>
+              <label className="block text-sm text-gray-700 mb-2">
+                Số người tham gia tối đa khi tạo cuộc họp
+              </label>
               <input
                 type="text"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                name="maxParticipants"
+                value={formData.accountType.maxParticipants?.toString() || ""}
+                // onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-200 text-gray-500 cursor-not-allowed"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-2">Địa chỉ</label>
+            <label className="block text-sm text-gray-700 mb-2">
+              Ngày hết hạn
+            </label>
             <input
               type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Nhập địa chỉ của bạn"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              name="expiredAt"
+              value={formData.accountType.expiredAt?.toString() || ""}
+              // onChange={handleChange}
+              readOnly
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-200 text-gray-500 cursor-not-allowed"
             />
           </div>
 
@@ -130,7 +269,7 @@ export function ProfileContent() {
             <button className="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg">
               Hủy
             </button>
-            <button 
+            <button
               onClick={handleSave}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
             >

@@ -16,6 +16,7 @@ export const logIn = {
   sendOtp: (LoginData: LoginData) => api.post("/auth/sendOTP", LoginData),
   verifyOtp: (otpData: OtpData) => api.post("/auth/verifyOTP", otpData),
   outsideLogin: (appName: string) => {
+    console.log(`${API_BASE_URL}`);
     window.location.href = `${API_BASE_URL}/auth/${appName}`;
   },
 };
