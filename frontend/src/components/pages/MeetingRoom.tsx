@@ -679,6 +679,7 @@ export function MeetingRoom({
                   roomId={roomId}
                   participantName={user!.displayName}
                   participantId={user!.id}
+                  avatar={user?.avatar || ""}
                 />
               )}
               {isParticipantOpen && (
