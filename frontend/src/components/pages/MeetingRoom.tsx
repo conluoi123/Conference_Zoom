@@ -242,6 +242,7 @@ export function MeetingRoom({
 
           // Quan trọng: Nếu processor đang chạy, chỉ cần updateConfig để mượt hơn
           // Nếu chưa chạy (vừa bật từ none), thì mới gọi start()
+          processorRef.current.stop();
           const stream = await createCameraVideoTrack({
             optimizationMode: "motion",
             encoderConfig: "h1080p_w1920p",
@@ -251,6 +252,7 @@ export function MeetingRoom({
             config
           );
           changeWebcam(processedStream);
+          // await processorRef.current.updateProcessorConfig(config);
         }
       } catch (error) {
         console.error("❌ BG Error:", error);
