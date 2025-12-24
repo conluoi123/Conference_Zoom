@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Video,
   Plus,
@@ -15,7 +15,6 @@ import {
 import { MainLayout } from "../../layout/MainLayout";
 import { useAuth } from "../../context/AuthContext";
 import { meetingAPI } from "../../services/meetingApi";
-
 interface MeetingData {
   peerId?: string;
   title?: string;
@@ -118,7 +117,7 @@ export function HomePage() {
         meetingType: "instant",
         startTime: new Date().toISOString(),
       };
-      const response : MeetingResponse = await meetingAPI.createMeeting(
+      const response: MeetingResponse = await meetingAPI.createMeeting(
         meetingData
       );
       if (response.roomId && response.token) {
@@ -294,10 +293,12 @@ export function HomePage() {
               </button>
 
               <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
-                <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Calendar className="w-7 h-7 text-white" />
-                </div>
-                <p className="text-gray-900 font-medium text-sm">Schedule</p>
+                <Link to="/schedule">
+                  <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Calendar className="w-7 h-7 text-white" />
+                  </div>
+                  <p className="text-gray-900 font-medium text-sm">Schedule</p>
+                </Link>
               </button>
 
               <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">

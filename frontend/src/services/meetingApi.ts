@@ -68,7 +68,7 @@ export const meetingAPI = {
 
       throw new Error("Không thể kết nối đến server");
     }
-  },
+},
 };
 
 export default {

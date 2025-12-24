@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useParticipant } from "@videosdk.live/react-sdk";
 import { MicOff, Monitor } from "lucide-react";
-
+// SCREEN SHARE 
 export const ParticipantTile = React.memo(({ participantId }: { participantId: string }) => {
   const { 
     webcamStream, 
@@ -21,7 +21,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   // 1. Xử lý Video Stream
   useEffect(() => {
     const videoElement = videoRef.current;
-
+    
     if (videoElement) {
       if (webcamOn && webcamStream) {
         // Tạo MediaStream mới từ track của VideoSDK

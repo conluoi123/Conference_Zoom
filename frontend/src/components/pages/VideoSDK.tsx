@@ -118,6 +118,7 @@ export const MeetingPage = React.memo(() => {
       <MeetingRoom
         roomId={roomId}
         isHost={hostId === user?.id}
+        hostId = {hostId}
         onLeaveMeeting={() => navigate("/home")}
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         onChatOpen={isChatOpen}

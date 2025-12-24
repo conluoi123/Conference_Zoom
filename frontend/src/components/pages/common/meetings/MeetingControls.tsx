@@ -13,7 +13,7 @@ import {
   CameraOff,
   Monitor,
   MonitorStop,
-  MonitorPlay
+  MonitorPlay,
 } from "lucide-react";
 import {
   Tooltip,
@@ -36,6 +36,9 @@ interface MeetingControlsProps {
   isOpen: boolean;
   onTogglePip: () => void;
   isPipActive: boolean;
+  onOpenSettings: () => void;
+  isSettingOpen: boolean;
+  isHost: boolean;
 }
 
 export const MeetingControls = ({
@@ -46,6 +49,10 @@ export const MeetingControls = ({
   isOpen,
   onTogglePip,
   isPipActive,
+  // chỉnh sửa lại logic chỉ Host mới có nút cài đặt
+  onOpenSettings,
+  isSettingOpen,
+  isHost,
 }: MeetingControlsProps) => {
   const {
     leave,
@@ -133,7 +140,15 @@ export const MeetingControls = ({
           />
 
           {/* Settings */}
-          <ControlButton icon={Settings} label="Cài đặt" />
+          {/* Chỉ host mới thấy nút này */}
+          {isHost && (
+            <ControlButton
+              icon={Settings}
+              label="Cài đặt"
+              onClick={onOpenSettings}
+              variant={isSettingOpen ? "success" : "default"}
+            ></ControlButton>
+          )}
 
           {/* More Actions */}
           <DropdownMenu>
@@ -169,11 +184,12 @@ export const MeetingControls = ({
                   {localScreenShareOn ? "Dừng chia sẻ" : "Chia sẻ màn hình"}
                 </span>
               </DropdownMenuItem>
-
-              <DropdownMenuItem className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer border-t border-gray-800 mt-1">
-                <Settings className="w-4 h-4" />
-                <span className="text-sm">Cài đặt</span>
-              </DropdownMenuItem>
+              {isHost && (
+                <DropdownMenuItem className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer border-t border-gray-800 mt-1">
+                  <Settings className="w-4 h-4" />
+                  <span className="text-sm">Cài đặt</span>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
           {/* Leave Button */}
