@@ -66,7 +66,7 @@ async function verifyEmail(req: Request, res: Response) {
       const displayName = email.split("@")[0];
       const newUser = await createNewUser(
         email,
-        "",
+        "https://res.cloudinary.com/dz9xfcbey/image/upload/f_auto,q_auto,w_400,h_400,c_fill,g_center/avatars/cb9trd7wuoebrlbdhjqj",
         displayName,
         "local",
         hashRefToken
@@ -202,7 +202,10 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
     if (!user) {
       const newUser = await createNewUser(
         userData.email,
-        userData.avatar,
+        userData.avatar
+          ? userData.avatar
+          : "https://res.cloudinary.com/dz9xfcbey/image/upload/f_auto,q_auto,w_400,h_400,c_fill,g_center/avatars/cb9trd7wuoebrlbdhjqj",
+
         userData.displayName,
         "google",
         hashRefToken

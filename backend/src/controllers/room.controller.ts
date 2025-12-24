@@ -60,6 +60,7 @@ const userJoinRoom = async (req: Request, res: Response) => {
       .status(200)
       .json({ hostId: room.hostId, settings: room.settings, token: token });
   } catch (error) {
+    console.log(error)
     return res.status(500).json(error);
   }
 };
@@ -82,11 +83,11 @@ const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => {
 
 const getInvietedUsersBySchedule = async (req: Request, res: Response) => { 
   try {
-    const {roomId, hostId, startTime} = req.body;
-    if(!roomId || !hostId || !startTime){
+    const {roomId, hostId} = req.body;
+    if(!roomId || !hostId){
       return res.status(400).json({message: "Missing required fields"});
     }
-    const invitedUsers = await getRoomSheduleInvited(roomId, hostId, startTime);
+    const invitedUsers = await getRoomSheduleInvited(roomId, hostId);
     return res.status(200).json({ invitedUsers });
   } catch (error) {
     console.error("getInvietedUsersBySchedule error:", error);

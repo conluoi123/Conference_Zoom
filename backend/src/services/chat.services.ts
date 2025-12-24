@@ -3,6 +3,7 @@ import Chat from "../models/chat.model";
 import { findProgressingSession } from "./session.services";
 
 interface newMessage {
+  avatar: string;
   participantId: string;
   participantName: string;
   content: string;

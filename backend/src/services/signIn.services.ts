@@ -161,7 +161,8 @@ async function outlookLogIn(accessToken, refreshToken, profile, done) {
     } else {
       const newUser = await createNewUser(
         email,
-        avatar,
+        avatar ? avatar :
+          "https://res.cloudinary.com/dz9xfcbey/image/upload/f_auto,q_auto,w_400,h_400,c_fill,g_center/avatars/cb9trd7wuoebrlbdhjqj",
         profile.displayName,
         "outlook",
         "refTokenTemp"
@@ -196,7 +197,7 @@ async function outlookLogInCallback(req: Request, res: Response) {
       userId: user._id,
       email: user.email,
       displayName: user.displayName,
-      avatar: user.avatar
+      avatar: user.avatar,
     },
   };
   const encodedData = encodeURIComponent(JSON.stringify(data));

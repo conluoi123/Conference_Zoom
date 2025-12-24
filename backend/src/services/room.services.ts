@@ -51,7 +51,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",
@@ -188,11 +188,10 @@ const getRoomShedule = async (userId: string, col: string) => {
   return roomSchedule;
 }
 
-const getRoomSheduleInvited = async (roomId: string, hostId: string, startTime: Date) => {
+const getRoomSheduleInvited = async (roomId: string, hostId: string) => {
   const invitedUser = await Room.find({
     hostId: hostId,
     roomId: roomId,
-    startTime: startTime,
   }).select("invited");
   return invitedUser;
 };

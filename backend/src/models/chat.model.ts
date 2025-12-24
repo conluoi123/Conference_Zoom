@@ -4,6 +4,7 @@ export interface IChat extends Document {
   sessionId: string;
   chat: [
     {
+      avatar: string;
       participantId: string;
       participantName: String;
       content: string;
@@ -18,6 +19,10 @@ const chatSchema = new Schema<IChat>({
   },
   chat: [
     {
+      avatar: {
+        type: String,
+        required: true,
+      },
       participantId: {
         type: String,
         required: true,
