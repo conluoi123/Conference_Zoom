@@ -22,7 +22,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   // 1. Xử lý Video Stream
   useEffect(() => {
     const videoElement = videoRef.current;
-
+    
     if (videoElement) {
       if (webcamOn && webcamStream) {
         // Tạo MediaStream mới từ track của VideoSDK

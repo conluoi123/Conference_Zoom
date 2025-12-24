@@ -40,6 +40,9 @@ interface MeetingControlsProps {
   isBackgroundOpen: boolean;
   onTogglePip: () => void;
   isPipActive: boolean;
+  onOpenSettings: () => void;
+  isSettingOpen: boolean;
+  isHost: boolean;
 }
 
 export const MeetingControls = ({
@@ -50,6 +53,10 @@ export const MeetingControls = ({
   isOpen,
   onTogglePip,
   isPipActive,
+  // chỉnh sửa lại logic chỉ Host mới có nút cài đặt
+  onOpenSettings,
+  isSettingOpen,
+  isHost,
   onToggleBackground,
   isBackgroundOpen
 }: MeetingControlsProps) => {
@@ -150,7 +157,15 @@ export const MeetingControls = ({
           />
 
           {/* Settings */}
-          <ControlButton icon={Settings} label="Cài đặt" />
+          {/* Chỉ host mới thấy nút này */}
+          {isHost && (
+            <ControlButton
+              icon={Settings}
+              label="Cài đặt"
+              onClick={onOpenSettings}
+              variant={isSettingOpen ? "success" : "default"}
+            ></ControlButton>
+          )}
 
           {/* More Actions */}
           <DropdownMenu>
