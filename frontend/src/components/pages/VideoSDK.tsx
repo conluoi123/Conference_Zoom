@@ -109,6 +109,7 @@ export const MeetingPage = React.memo(() => {
         autoConsume: true,
         debugMode: true,
         multiStream: true,
+        maxResolution: "hd",
       }}
       token={token}
       joinWithoutUserInteraction={settings.allowJoin}

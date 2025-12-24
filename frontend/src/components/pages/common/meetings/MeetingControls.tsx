@@ -14,6 +14,8 @@ import {
   Monitor,
   MonitorStop,
   MonitorPlay,
+  Image,
+  Subtitles
 } from "lucide-react";
 import {
   Tooltip,
@@ -34,6 +36,8 @@ interface MeetingControlsProps {
   isChatOpen: boolean;
   onOpenParticipant: () => void;
   isOpen: boolean;
+  onToggleBackground: () => void;
+  isBackgroundOpen: boolean;
   onTogglePip: () => void;
   isPipActive: boolean;
   onOpenSettings: () => void;
@@ -53,6 +57,8 @@ export const MeetingControls = ({
   onOpenSettings,
   isSettingOpen,
   isHost,
+  onToggleBackground,
+  isBackgroundOpen
 }: MeetingControlsProps) => {
   const {
     leave,
@@ -67,6 +73,17 @@ export const MeetingControls = ({
   const handleLeave = () => {
     leave();
     onLeaveMeeting();
+  };
+
+  const handleBackgroundClick = () => {
+    console.log("Background click");
+    onToggleBackground();
+    // setShowMoreMenu(false);
+  };
+
+  const handleSubtitleClick = () => {
+    console.log("Suptitle click");
+    // setShowMoreMenu(false);
   };
 
   const ControlButton = ({
@@ -184,12 +201,25 @@ export const MeetingControls = ({
                   {localScreenShareOn ? "Dừng chia sẻ" : "Chia sẻ màn hình"}
                 </span>
               </DropdownMenuItem>
-              {isHost && (
-                <DropdownMenuItem className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer border-t border-gray-800 mt-1">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-sm">Cài đặt</span>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem 
+                onClick={handleBackgroundClick}
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-700"
+              >
+                <Image className="w-4 h-4" />
+                <span>Chỉnh background</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleSubtitleClick}
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-700"
+              >
+                <Subtitles className="w-4 h-4" />
+                <span>Phụ đề</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer border-t border-gray-800 mt-1">
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">Cài đặt</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           {/* Leave Button */}
