@@ -12,9 +12,10 @@ interface ParticipantPanelProps {
   onClose: () => void;
   joinedRequest : JoinRequest[]; 
   setJoinRequests: React.Dispatch<React.SetStateAction<JoinRequest[]>>; // hàm cập nhật state
+  hostId: string;
 }
 
-export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests }: ParticipantPanelProps) {
+export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, hostId }: ParticipantPanelProps) {
   // Lấy danh sách participants từ VideoSDK
   const { participants, localParticipant } = useMeeting();
   // Chuyển Map thành mảng để dễ render
@@ -111,7 +112,7 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests }: Pa
                   {participant.id === localParticipant?.id && <span className="text-gray-500 ml-1">(Bạn)</span>}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {participant.id === localParticipant?.id ? "Người tổ chức" : "Cộng tác viên"}
+                  {participant.id === hostId ? "Người tổ chức" : "Cộng tác viên"}
                 </p>
               </div>
 

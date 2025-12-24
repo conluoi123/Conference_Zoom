@@ -1,7 +1,7 @@
 // src/components/ChatPanel.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { X, Send } from "lucide-react";
-import { socket } from "../../../services/socket"; // Import singleton socket
+import { socket } from "../../../../services/socket"; // Import singleton socket
 import { AnimatePresence, motion } from "framer-motion";
 interface Message {
   id: string; // Bắt buộc phải có ID duy nhất để làm key
@@ -82,7 +82,7 @@ export default function ChatPanel({
     socket.on("connect", onConnect);
     socket.on("meeting:chat", onMessageReceived);
     socket.on("meeting:chat-history", onChatHistoryReceived); // Lắng nghe lịch sử
-
+    
     // CLEANUP
     return () => {
       socket.off("connect", onConnect);

@@ -9,3 +9,23 @@ export const socket = io(SOCKET_URL, {
   reconnection: true,
   autoConnect: false, // Quan trọng: Để mình tự chủ động connect khi cần
 });
+
+/*
+  roomId: ID phòng họp 
+  participantId: ID của bạn 
+  email: đc người được mời thông qua email
+*/
+export const inviteByEmail = (roomId: string, participantId: string, email:string) => {
+  socket.emit("meeting:invite", {roomId, participantId, email}); 
+}; 
+
+/*
+  roomId: ID phòng họp 
+  participantId: ID của bạn 
+  settings: settings mới 
+*/
+
+export const updateMeetingSettings = (roomId: string, participantId: string, settings: any) => {
+  socket.emit("meeting:settings", {roomId, participantId, settings});
+}; 
+

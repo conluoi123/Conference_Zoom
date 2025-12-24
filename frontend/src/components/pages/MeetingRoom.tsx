@@ -1,17 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createCameraVideoTrack, useMeeting } from "@videosdk.live/react-sdk";
-import { ParticipantTile } from "./common/meetings/ParticipantTile";
+import { ParticipantTile } from "./common/meetings/ParticipantTitle";
 import { MeetingControls } from "./common/meetings/MeetingControls";
 import { MeetingHeader } from "./common/meetings/MeetingHeader";
 import { useMeetingPagination } from "../../hooks/useMeetingPagination";
 import { AnimatePresence, motion } from "framer-motion";
-import ChatPanel from "./common/ChatPanel";
-import { Copy, X, MonitorPlay } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import ChatPanel from "./common/meetings/ChatPanel";
 import { ParticipantPanel } from "./common/meetings/ParticipantPanel";
 import { BackgroundPanel } from "./common/meetings/BackgroundPanel";
 import { VirtualBackgroundProcessor } from "@videosdk.live/videosdk-media-processor-web";
 // Import Shadcn Pagination nếu bạn đã cài
+import { Copy, X, MonitorPlay, UserPlus, Settings } from "lucide-react";
+import { toast } from "sonner";
 import {
   Pagination,
   PaginationContent,
@@ -22,21 +22,26 @@ import {
 } from "../ui/pagination";
 import { useAuth } from "@/context/AuthContext";
 import LoadMeeting from "./common/meetings/LoadMeeting";
-import { useNavigate } from "react-router-dom";
+import InviteModal from "./common/meetings/InviteModal";
+import { updateMeetingSettings } from "@/services/socket";
+import { SettingsPanel } from "./common/meetings/SettingPanel";
 interface MeetingRoomProps {
   roomId: string;
   isHost: boolean;
   onLeaveMeeting: () => void;
   onToggleChat: () => void;
   onChatOpen: boolean;
+  hostId: string;
 }
-
 export function MeetingRoom({
   roomId,
+  isHost,
   onLeaveMeeting,
   onChatOpen,
   onToggleChat,
+  hostId,
 }: MeetingRoomProps) {
+  console.log("Host id là: ", hostId);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isParticipantOpen, setIsParticipantOpen] = useState(false);
   const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
@@ -47,14 +52,30 @@ export function MeetingRoom({
 
   const [isBackgroundOpen, setIsBackgroundOpen] = useState(false);
 
-  const [bgConfig, setBgConfig] = useState<{type: 'none' | 'blur' | 'image', url?: string}>({type: 'none'});
+  const [bgConfig, setBgConfig] = useState<{
+    type: "none" | "blur" | "image";
+    url?: string;
+  }>({ type: "none" });
   const processorRef = useRef<VirtualBackgroundProcessor | null>(null);
   // thêm 2 method để nhận biết có người vào, người ra
-  const { participants, join, localParticipant, meetingId, changeWebcam } = useMeeting({
+  // ===================================== CÁC SỰ KIỆN TRONG PHÒNG ==========================================\\
+  const {
+    participants,
+    join,
+    localParticipant,
+    meetingId,
+    presenterId,
+    muteMic,
+    disableWebcam,
+    changeWebcam
+  } = useMeeting({
+    // ======================================== ĐĂNG KÝ CÁC EVENT LISTENER =============================== \\
     // duyệt người vào phòng - chức năng của host
     onEntryRequested: (data) => {
+      // =================================== HOST DUYỆT/TỪ CHỐI GUEST ================================\\
       const { participantId, name, allow, deny } = data;
       // hiển thị thông báo duyệt
+
       setJoinRequests((prev) => [...prev, data]);
       toast.custom(
         (t) => (
@@ -67,6 +88,7 @@ export function MeetingRoom({
               <button
                 onClick={() => {
                   allow(); // Duyệt qua SDK
+                  console.log("Chấp nhận vào rrooom");
                   setJoinRequests((prev) =>
                     prev.filter((req) => req.participantId !== participantId)
                   );
@@ -79,6 +101,7 @@ export function MeetingRoom({
               <button
                 onClick={() => {
                   deny(); // Từ chối qua SDK
+                  console.log("Đang gửi lệnh từ chối cho:", participantId);
                   setJoinRequests((prev) =>
                     prev.filter((req) => req.participantId !== participantId)
                   );
@@ -91,9 +114,19 @@ export function MeetingRoom({
             </div>
           </div>
         ),
-        { duration: Infinity, position: "top-center" }
+        { duration: 3000, position: "top-center" }
       );
     },
+    // bắt gói trả về
+    onEntryResponded: (...args: any[]) => {
+      const decision = args[1];
+      console.log("Phản hồi nhận được là: ", decision);
+      if (decision === "denied") {
+        toast.error("Yêu cầu tham gia cuộc họp bị từ chối");
+        onLeaveMeeting();
+      }
+    },
+    // ============================= JOINED THÀNH CÔNG =============================\\
     onMeetingJoined: () => {
       setJoined("JOINED");
       setTimeout(() => setShowWelcome(true), 100);
@@ -101,6 +134,7 @@ export function MeetingRoom({
 
     onError: (error) => {
       console.error("❌ Lỗi SDK:", error);
+      toast.error(`Mã lỗi: ${error.code} | Nội dung: ${error.message}`);
     },
 
     onMeetingStateChanged: ({ state }) => {
@@ -117,7 +151,7 @@ export function MeetingRoom({
         duration: 3000,
       });
     },
-
+    // ============================= RỜI ĐI =============================\\
     onParticipantLeft: (participant) => {
       toast.error(`${participant.displayName} đã rời đi`, {
         duration: 3000,
@@ -147,86 +181,93 @@ export function MeetingRoom({
 
   const { user } = useAuth();
   const participantIds = Array.from(participants.keys());
+  const { visible, currentPage, setCurrentPage, totalPages } =
+    useMeetingPagination(participantIds, 4);
+  // ==================================== XỬ LÍ CHO PARTICIPANT VÀ CHAT ============================\\
+  const toggleParticipantPanel = () => {
+    setIsParticipantOpen(!isParticipantOpen);
+    if (onChatOpen) onToggleChat(); // đóng nếu chat mở
+  };
+  const toggleChatPanel = () => {
+    onToggleChat();
+    if (isParticipantOpen) setIsParticipantOpen(!isParticipantOpen);
+  };
+  const toggleBackgroundPanel = () => {
+    setIsBackgroundOpen(!isBackgroundOpen);
+    if (onChatOpen) onToggleChat();
+    if (isParticipantOpen) setIsParticipantOpen(false);
+  };
 
-  const { visible, currentPage, setCurrentPage, totalPages } = useMeetingPagination(participantIds, 4);
+  useEffect(() => {
+    const initProcessor = async () => {
+      if (joined === "JOINED" && !processorRef.current) {
+        const processor = new VirtualBackgroundProcessor();
+        await processor.init();
+        processorRef.current = processor;
+        console.log("✅ Processor Ready");
+      }
+    };
 
-  // ======================== HÌNH TRONG HÌNH ===============================
-  // const togglePipMode = async () => {
-  //   // nếu đang ở trong pip thì thoát ra
-  //   console.log("Hình trong hình");
-  //   if (document.pictureInPictureElement) {
-  //     await document.exitPictureInPicture();
-  //     return;
-  //   }
-  //   // kiểm tra trình duyệt có hỗ trợ cho việc này ko
-  //   if ("pictureInPictureEnabled" in document) {
-  //     try {
-  //       console.log("Debug 1");
-  //       // tạo canvas để vẽ lưới
-  //       const source = document.createElement("canvas");
-  //       source.width = 568;
-  //       source.height = 320;
-  //       const ctx = source.getContext("2d");
-  //       // tạo video element làm cầu nối cho pip
-  //       const pipVideo = document.createElement("video");
-  //       pipVideo.autoplay = true;
-  //       // lấy stream từ canvas
-  //       pipVideo.srcObject = source.captureStream();
-  //       pipWinDowRef.current = pipVideo;
-  //       console.log("debug 2", pipVideo.srcObject);
-  //       // hàm vẽ liên tục các thẻ video có hiện trên canvas
-  //       const drawCanvas = () => {
-  //         const videos = document.querySelectorAll("video");
-  //         if (!ctx) return;
+    initProcessor();
 
-  //         // tô nền đen
-  //         ctx.fillStyle = "#000"
-  //         ctx.fillRect(0, 0, source.width, source.height);
-  //         const count = videos.length;
-  //         const rows = count > 2 ? 2 : 1;
-  //         const cols = count > 1 ? 2 : 1;
+    return () => {
+      if (processorRef.current) {
+        processorRef.current.stop();
+        processorRef.current = null;
+      }
+    };
+  }, [joined]);
 
-  //         videos.forEach((v, i) => {
-  //           if (i < 4) { // Giới hạn 4 người để PiP không quá lag
-  //             const r = Math.floor(i / cols);
-  //             const c = i % cols;
-  //             ctx.drawImage(
-  //               v,
-  //               c * (source.width / cols),
-  //               r * (source.height / rows),
-  //               source.width / cols,
-  //               source.height / rows
-  //             );
-  //           }
-  //         });
-  //         if (document.pictureInPictureElement || isPipActive) {
-  //           console.log("Debug 2");
-  //           requestAnimationFrame(drawCanvas);
-  //         }
-  //       }
+  // 2. Logic điều khiển Background
+  useEffect(() => {
+    const updateBackground = async () => {
+      if (!localParticipant || !processorRef.current || joined !== "JOINED")
+        return;
 
-  //       // lắng nghe sự kiện trình duyệt để cập nhật UI
-  //       pipVideo.addEventListener("enterpictureinpicture", () => {
-  //         setIsPipActive(true);
-  //         console.log("debug hình trong hình");
-  //         requestAnimationFrame(drawCanvas);
-  //       });
-  //       pipVideo.addEventListener("leavepictureinpicture", () => {
-  //         setIsPipActive(false);
-  //         pipWinDowRef.current = null;
-  //       })
-  //       // Kích hoạt PiP
-  //       pipVideo.onloadedmetadata = () => {
-  //         pipVideo.requestPictureInPicture();
-  //       };
-  //       await pipVideo.play();
-  //     } catch (err) {
-  //       console.error("PiP Error:", err);
-  //     }
-  //   } else {
-  //     toast.error("Trình duyệt của bạn không hỗ trợ chế độ này");
-  //   }
-  // }
+      try {
+        if (bgConfig.type === "none") {
+          // TẮT: Dừng processor và trả về track gốc
+          processorRef.current.stop();
+          const stream = await createCameraVideoTrack({
+            optimizationMode: "motion",
+            encoderConfig: "h1080p_w1920p",
+          });
+          changeWebcam(stream);
+        } else {
+          // BẬT hoặc CẬP NHẬT
+          const config = {
+            type: bgConfig.type,
+            imageUrl: bgConfig.url,
+          };
+
+          // Quan trọng: Nếu processor đang chạy, chỉ cần updateConfig để mượt hơn
+          // Nếu chưa chạy (vừa bật từ none), thì mới gọi start()
+          const stream = await createCameraVideoTrack({
+            optimizationMode: "motion",
+            encoderConfig: "h1080p_w1920p",
+          });
+          const processedStream = await processorRef.current.start(
+            stream,
+            config
+          );
+          changeWebcam(processedStream);
+        }
+      } catch (error) {
+        console.error("❌ BG Error:", error);
+      }
+    };
+
+    updateBackground();
+  }, [bgConfig, localParticipant, joined]);
+  const handleSelectBackground = (
+    type: "none" | "blur" | "image",
+    imageUrl?: string
+  ) => {
+    console.log("Selected background:", type, imageUrl);
+    setBgConfig({ type, url: imageUrl });
+    setIsBackgroundOpen(false);
+  };
+  // ====================================== HÌNH TRONG HÌNH ===============================\\
   const togglePipMode = async () => {
     console.log("Toggle PiP");
 
@@ -253,8 +294,8 @@ export function MeetingRoom({
       // ===== 2. Tạo video cầu nối PiP =====
       const pipVideo = document.createElement("video");
       pipVideo.autoplay = true;
-      pipVideo.muted = true; 
-      pipVideo.playsInline = true; 
+      pipVideo.muted = true;
+      pipVideo.playsInline = true;
       pipVideo.srcObject = source.captureStream(30);
 
       pipWinDowRef.current = pipVideo;
@@ -325,118 +366,92 @@ export function MeetingRoom({
       console.error("PiP Error:", err);
     }
   };
+  // ======================================= BỐ CỤC KHI CÓ NG SHARE ===========================\\
+  const isSomeOneShare = presenterId !== null;
+  const sideBarParticipants = participantIds.filter((id) => id !== presenterId);
+  // ======================================= BỐ CỤC TRONG PHÒNG HỌP =========================\\
+  const getGridClass = (count: number) => {
+    if (count === 0) return "";
 
-    const toggleParticipantPanel = () => {
-      setIsParticipantOpen(!isParticipantOpen);
-      if (onChatOpen) onToggleChat(); // đóng nếu chat mở
-      if (isBackgroundOpen) setIsBackgroundOpen(false);
-    };
-    const toggleChatPanel = () => {
-      onToggleChat();
-      if (isParticipantOpen) setIsParticipantOpen(false);
-      if (isBackgroundOpen) setIsBackgroundOpen(false)
-    };
-    const toggleBackgroundPanel = () => {
-      setIsBackgroundOpen(!isBackgroundOpen);
-      if (onChatOpen) onToggleChat();
-      if (isParticipantOpen) setIsParticipantOpen(false);
-    };
+    // 1 người: Toàn màn hình
+    if (count === 1) return "grid-cols-1 grid-rows-1";
 
-    useEffect(() => {
-      const initProcessor = async () => {
-        if (joined === "JOINED" && !processorRef.current) {
-          const processor = new VirtualBackgroundProcessor();
-          await processor.init();
-          processorRef.current = processor;
-          console.log("✅ Processor Ready");
-        }
-      };
+    // 2 người: Chia đôi dọc hoặc ngang (tùy màn hình, thường là 2 cột trên PC)
+    if (count === 2)
+      return "grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
 
-      initProcessor();
+    // 3-4 người: Chia 2x2
+    if (count <= 4) return "grid-cols-2 grid-rows-2";
 
-      return () => {
-        if (processorRef.current) {
-          processorRef.current.stop(); 
-          processorRef.current = null;
-        }
-      };
-    }, [joined]);
+    // 5-6 người: Chia 3 cột x 2 hàng
+    if (count <= 6)
+      return "grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
 
-    // 2. Logic điều khiển Background
-    useEffect(() => {
-      const updateBackground = async () => {
-        if (!localParticipant || !processorRef.current || joined !== "JOINED") return;
+    // 7-9 người: Chia 3x3
+    return "grid-cols-3 grid-rows-3";
+  };
+  // ====================================== MỜI NGƯỜI KHÁC VÀO PHÒNG QUA EMAIL =========================//
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [isInViteModalOpen, setIsInviteModalOpen] = useState(false);
+  // ======================================= XỬ LÍ SETTINGS ========================================\\
+  const [roomSettings, setRoomSettings] = useState({
+    allowMic: true,
+    allowWebcam: true,
+    allowChat: true,
+  });
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
+  const handleToggleSettings = () => {
+    setIsSettingOpen(!isSettingOpen);
+    if (onChatOpen) onToggleChat();
+    if (isParticipantOpen) setIsParticipantOpen(false);
+  };
+  console.log("ID người tgia là", user?.id);
+  // cặp {key,value} để khỏi viết cho ba nút -> gộp lại thành một nút
+  const onUpdateSettings = (key: string, value: boolean) => {
+    if (!isHost) return;
+    const newSettings = { ...roomSettings, [key]: value };
+    updateMeetingSettings(roomId, user?.id!, newSettings);
+    setRoomSettings(newSettings);
+  };
+  /* Sự kiện lắng nghe Socket khi BE hoàn thành */
+  // useEffect(() => {
+  //   if (!socket) return;
 
-        try {
-          if (bgConfig.type === "none") {
-            // TẮT: Dừng processor và trả về track gốc
-            processorRef.current.stop();
-            const stream = await createCameraVideoTrack({
-              optimizationMode: "motion",
-              encoderConfig: "h1080p_w1920p",
-            });
-            changeWebcam(stream);
-          } else {
-            // BẬT hoặc CẬP NHẬT
-            const config = {
-              type: bgConfig.type,
-              imageUrl: bgConfig.url,
-            };
+  //   // Lắng nghe sự kiện cài đặt từ BE
+  //   socket.on("meeting:settings_updated", (newSettings: any) => {
+  //     setRoomSettings(newSettings);
 
-            // Quan trọng: Nếu processor đang chạy, chỉ cần updateConfig để mượt hơn
-            // Nếu chưa chạy (vừa bật từ none), thì mới gọi start()
-            const stream = await createCameraVideoTrack({
-              optimizationMode: "motion",
-              encoderConfig: "h1080p_w1920p"
-            });
-            const processedStream = await processorRef.current.start(stream, config);
-            changeWebcam(processedStream);
-          }
-        } catch (error) {
-          console.error("❌ BG Error:", error);
-        }
-      };
+  //     // THỰC THI QUA VIDEOSDK:
+  //     // Nếu Host tắt quyền Mic, tự động tắt Mic của chính mình
+  //     if (newSettings.allowMic === false) {
+  //       muteMic();
+  //       toast.warning("Host đã tắt Micro của toàn phòng");
+  //     }
 
-      updateBackground();
-    }, [bgConfig, localParticipant, joined]);
-    const handleSelectBackground = (type: 'none' | 'blur' | 'image', imageUrl?: string) => {
-      console.log("Selected background:", type, imageUrl);
-      setBgConfig({ type, url: imageUrl });
-      setIsBackgroundOpen(false);
-    };
-    const getGridClass = (count: number) => {
-      if (count === 0) return "";
+  //     // Nếu Host tắt quyền Camera, tự động tắt Camera của chính mình
+  //     if (newSettings.allowWebcam === false) {
+  //       disableWebcam();
+  //       toast.warning("Host đã tắt Camera của toàn phòng");
+  //     }
+  //   });
 
-      // 1 người: Toàn màn hình
-      if (count === 1) return "grid-cols-1 grid-rows-1";
-
-      // 2 người: Chia đôi dọc hoặc ngang (tùy màn hình, thường là 2 cột trên PC)
-      if (count === 2)
-        return "grid-cols-1 md:grid-cols-2 grid-rows-2 md:grid-rows-1";
-
-      // 3-4 người: Chia 2x2
-      if (count <= 4) return "grid-cols-2 grid-rows-2";
-
-      // 5-6 người: Chia 3 cột x 2 hàng
-      if (count <= 6)
-        return "grid-cols-2 md:grid-cols-3 grid-rows-3 md:grid-rows-2";
-
-      // 7-9 người: Chia 3x3
-      return "grid-cols-3 grid-rows-3";
-    };
-
+  //   return () => {
+  //     socket.off("meeting:settings_updated");
+  //   };
+  // }, [muteMic, disableWebcam]);
+  //=========================================== RETURN =========================================
   return (
     <div className="bg-gray-950 h-screen w-screen flex flex-col overflow-hidden text-white">
       {/* Header */}
       <MeetingHeader roomId={roomId} onLeave={onLeaveMeeting} />
-      {/* Màn hình khi JOINDE thành công */}
+      {/* Màn hình khi JOINED thành công */}
       {joined === "JOINED" && (
         <>
           <main className="flex-1 flex flex-row overflow-hidden relative">
             {/* Bọc thêm AnimatePresence với mode="wait" để tạo hiệu ứng chuyển trang mượt mà */}
             <div className="flex-1 flex relative flex-col justify-center items-center p-4 overflow-hidden transition-all duration-100">
               <AnimatePresence mode="wait">
-                {/* Chế độ hình trong hình */}
+                {/* HÌNH TRONG HÌNH */}
                 {isPipActive ? (
                   <motion.div
                     key="pip-placeholder"
@@ -471,42 +486,68 @@ export function MeetingRoom({
                   </motion.div>
                 ) : (
                   <motion.div
-                    key="video-grid"
+                    key={isSomeOneShare ? "presenting" : "grid"}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="w-full h-full p-2 overflow-hidden flex flex-col"
                   >
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={currentPage}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className={`grid gap-4 w-full h-full ${getGridClass(
-                          visible.length
-                        )}`}
-                      >
-                        {visible.map((id: string) => (
-                          <motion.div
-                            key={id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full h-full"
-                          >
-                            <ParticipantTile participantId={id} />
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    </AnimatePresence>
+                    {isSomeOneShare ? (
+                      // Bố cục khi có người share màn hình
+                      <div className="flex flex-1 flex-row w-full h-full gap-4 overflow-hidden">
+                        {/* Vùng hiển thị screen */}
+                        <div className="flex-[3] lg:flex-[4] relative bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center border border-white/5">
+                          {presenterId && (
+                            <ParticipantTile participantId={presenterId} />
+                          )}
+                        </div>
+                        {/* Vùng hiển thị những người khác */}
+                        <div className="flex-1 overflow-y-auto pr-1 min-w-[200px] max-w-[320px] scrollbar-hide grid grid-cols-1 conten-start">
+                          {participantIds.map((id) => (
+                            <div
+                              key={id}
+                              className="aspect-video w-full shrink-0"
+                            >
+                              <ParticipantTile participantId={id} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      // Bố cục khi ko có share
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentPage}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className={`grid gap-4 w-full h-full ${getGridClass(
+                            visible.length
+                          )}`}
+                        >
+                          {visible.map((id: string) => (
+                            <motion.div
+                              key={id}
+                              layout
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.3 }}
+                              className="w-full h-full"
+                            >
+                              {/* SCREEN SHARE */}
+                              <ParticipantTile participantId={id} />
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      </AnimatePresence>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
               <AnimatePresence>
+                {/* SHOW PHẦN CHỜ (THÊM PHẦN MỜI NGƯỜI KHÁC NỮA) */}
                 {showWelcome && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -522,6 +563,19 @@ export function MeetingRoom({
                         <X size={20} />
                       </button>
                     </div>
+                    <InviteModal
+                      open={isInViteModalOpen}
+                      onOpenChange={setIsInviteModalOpen}
+                      roomId={meetingId}
+                      currentUserId={user?.id}
+                    />
+                    <button
+                      onClick={() => setIsInviteModalOpen(true)}
+                      className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-medium hover:bg-blue-700 transition-all mb-4"
+                    >
+                      <UserPlus size={20} />
+                      <span>Thêm người khác</span>
+                    </button>
                     <p className="text-sm text-gray-600 mb-4">
                       Chia sẻ đường liên kết này với những người bạn muốn tham
                       gia
@@ -538,6 +592,7 @@ export function MeetingRoom({
                   </motion.div>
                 )}
               </AnimatePresence>
+              {/* THANH MEETING CONTROL (NÊN THÊM HIỆU ỨNG RÊ CHUỘT VÀO THÌ HIỆN) */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto">
                 <MeetingControls
                   onLeaveMeeting={onLeaveMeeting}
@@ -547,8 +602,11 @@ export function MeetingRoom({
                   onOpenParticipant={toggleParticipantPanel}
                   onTogglePip={togglePipMode}
                   isPipActive={isPipActive}
+                  isHost={isHost}
                   isBackgroundOpen={isBackgroundOpen}
                   onToggleBackground={toggleBackgroundPanel}
+                  isSettingOpen={isSettingOpen}
+                  onOpenSettings={handleToggleSettings}
                 />
               </div>
               {totalPages > 1 && (
@@ -588,7 +646,8 @@ export function MeetingRoom({
                               {page}
                             </PaginationLink>
                           </PaginationItem>
-                        ))}
+                        )
+                      )}
 
                       <PaginationItem>
                         <PaginationNext
@@ -625,6 +684,16 @@ export function MeetingRoom({
                   joinedRequest={joinedRequest}
                   setJoinRequests={setJoinRequests}
                   onClose={() => setIsParticipantOpen(false)}
+                  hostId={hostId}
+                />
+              )}
+
+              {isSettingOpen && isHost && (
+                <SettingsPanel
+                  isOpen={isSettingOpen}
+                  onClose={() => setIsSettingOpen(false)}
+                  roomSettings={roomSettings}
+                  onUpdateSettings={onUpdateSettings}
                 />
               )}
               {isBackgroundOpen && (
@@ -633,11 +702,12 @@ export function MeetingRoom({
                     onClose={() => setIsBackgroundOpen(false)}
                     onSelectBackground={handleSelectBackground}
                   />
-              )}
+                )}
             </AnimatePresence>
           </main>
         </>
       )}
+      {/* TRONG QUÁ TÌNH JOIN VÀO PHÒNG */}
       {joined === "JOINING" && <LoadMeeting />}
     </div>
   );
