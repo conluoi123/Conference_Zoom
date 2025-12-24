@@ -2,6 +2,7 @@ import { Server, Socket } from "socket.io";
 import Chat from "../../models/chat.model";
 import { getChat, insertNewMessage } from "../../services/chat.services";
 import { isHost, updateRoomOnDatabase } from "../../services/room.services";
+import { addInvitee } from "../../services/session.services";
 
 export const meetingSocketHandler = (io: Server, socket: Socket) => {
   socket.on("meeting:join", async ({ roomId, participantName }) => {
@@ -50,9 +51,12 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
   });
 
   socket.on("meeting:invite", ({ roomId, participantId, email }) => {
-    /**
-     * Tạo lời mời và thông báo đến người dùng
-     */
+    if (!isHost(roomId, participantId)) {
+      console.log("Truy cập không xác định");
+      socket.disconnect();
+    }
+    addInvitee(roomId, email);
+    socket.to(email).emit("notification:invitation", roomId);
   });
 
   socket.on("meeting:leave", ({ roomId, participantName }) => {

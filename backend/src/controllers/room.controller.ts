@@ -5,8 +5,11 @@ import {
   createRoomOnVideoSDK,
   generateToken,
   getRoomShedule,
-  getRoomSheduleInvited
+  getRoomSheduleInvited,
+  isInvitedForRoom,
 } from "../services/room.services";
+import { isInvitedForSession } from "../services/session.services";
+import { isDueSchedule, latestSchedule } from "../services/schedule.services";
 
 const createNewRoom = async (req: Request, res: Response) => {
   try {
@@ -18,7 +21,7 @@ const createNewRoom = async (req: Request, res: Response) => {
 
     const token = generateToken("host", peerId, roomId);
 
-    return res.status(200).json({ roomId, token });
+    return res.status(200).json({ roomId, hostId: peerId, token });
   } catch (error: any) {
     console.error("Tạo phòng:", error.message);
 
@@ -32,15 +35,33 @@ const createNewRoom = async (req: Request, res: Response) => {
 };
 
 const userJoinRoom = async (req: Request, res: Response) => {
-  const { roomId, peerId } = req.body;
-  const room = res.locals.roomInfo;
+  try {
+    const { roomId, peerId } = req.body;
+    const room = res.locals.roomInfo;
 
-  let userType = "host";
-  if (peerId === room.hostId) userType = "host";
+    if (room.type === "SCHEDULED") {
+      const schedule = await latestSchedule(roomId);
+      if (!isDueSchedule(schedule))
+        return res.status(403).json("Chưa đến thời gian vào phòng họp");
+    }
 
-  const token = generateToken(userType, peerId, roomId);
+    let userType = "peer";
+    if (peerId === room.hostId) userType = "host";
+    if (
+      (await isInvitedForRoom(roomId, peerId)) ||
+      (await isInvitedForSession(roomId, peerId))
+    ) {
+      userType = "invitee";
+    }
 
-  return res.status(200).json({ settings: room.settings, token: token });
+    const token = generateToken(userType, peerId, roomId);
+
+    return res
+      .status(200)
+      .json({ hostId: room.hostId, settings: room.settings, token: token });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
 };
 
 const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => { 

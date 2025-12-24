@@ -11,7 +11,6 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
-
 //configs
 import { ENV } from "./configs/env";
 import { connectDB } from "./configs/db";
@@ -30,6 +29,7 @@ import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
 const PORT = ENV.PORT || 8080;
 const app = express();
+
 app.use(
   cors({
     origin: ENV.FRONTEND_URL,
@@ -37,6 +37,7 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
+
 app.use(cookieParser());
 const server = createServer(app);
 const io = new Server(server, {

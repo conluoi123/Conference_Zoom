@@ -1,26 +1,20 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IParticipant extends Document {
-  participantsId: String;
+  participantId: String;
   sessionId: String;
-  userId: String;
   displayName: String;
   role: "host" | "co-host" | "participant";
   joinTime: Date;
   leaveTime: Date;
 }
+
 const participantSchema = new Schema<IParticipant>({
-  participantsId: {
+  participantId: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
   },
   sessionId: {
-    type: String,
-    required: true,
-  },
-  userId: {
     type: String,
     required: true,
   },

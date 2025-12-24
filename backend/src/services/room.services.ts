@@ -1,18 +1,19 @@
 import jwt from "jsonwebtoken";
 import { ENV } from "../configs/env";
 import Room from "../models/room.model";
+import User from "../models/user.model";
 
 //===================== VIDEOSDK ========================
 const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
   const API_KEY = ENV.VIDEOSDK_API_KEY;
   const SECRET_KEY = ENV.VIDEOSDK_SECRET_KEY;
-  const options: jwt.SignOptions = { expiresIn: "5m", algorithm: "HS256" };
+  const options: jwt.SignOptions = { expiresIn: "60m", algorithm: "HS256" };
 
-  let permissions;
+  let permissions = ["ask_join"];
   if (userType === "host" || userType === "server") {
     permissions = ["allow_join", "allow_mod"];
-  } else {
-    permissions = ["ask_join"];
+  } else if (userType === "invitee") {
+    permissions = ["allow_join"];
   }
 
   let payload: any = {
@@ -50,7 +51,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
+        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",
@@ -59,6 +60,9 @@ const createRoomOnVideoSDK = async () => {
           "recording-started",
           "recording-stopped",
           "recording-failed",
+          "transcription-started",
+          "transcription-stopped",
+          "transcription-failed",
         ],
       },
     }),
@@ -158,6 +162,23 @@ const isHost = async (roomId, participantId: string) => {
   return true;
 };
 
+const isInvitedForRoom = async (roomId, peerId: string) => {
+  const [user, room] = await Promise.all([
+    User.findOne({ _id: peerId }),
+    Room.findOne({ roomId: roomId }),
+  ]);
+  if (!user) {
+    throw new Error("Phát hiện truy cập bất thường");
+  }
+  if (!room) {
+    throw new Error("Phòng họp không tồn tại");
+  }
+
+  if (room.invited.includes(user.email)) return true;
+
+  return false;
+};
+
 const getRoomShedule = async (userId: string, col: string) => {
   const roomSchedule = await Room.find({
     hostId: { $ne: userId },
@@ -184,6 +205,7 @@ export {
   findRoomOnDatabase,
   updateRoomOnDatabase,
   isHost,
+  isInvitedForRoom,
   getRoomShedule,
   getRoomSheduleInvited,
 };
