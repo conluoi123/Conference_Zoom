@@ -24,12 +24,13 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
 
   socket.on(
     "meeting:chat",
-    ({ roomId, participantId, participantName, content }) => {
+    ({ roomId, participantId, participantName, content, avatar }) => {
       console.log(
         `${participantName} vừa chat "${content}" trong phòng họp ${roomId}`
       );
 
       const newMessage = {
+        avatar: avatar,
         participantName: participantName,
         participantId: participantId,
         content: content,

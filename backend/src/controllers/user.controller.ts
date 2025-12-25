@@ -12,6 +12,7 @@ const getUser = async (req: RequestWithUser, res: Response) => {
       userId: user._id,
       email: user.email,
       displayName: user.displayName,
+      avatar: user.avatar,
     };
     console.log(data);
     return res.status(200).json({data})
@@ -23,15 +24,15 @@ const getUser = async (req: RequestWithUser, res: Response) => {
 
 const getUserInfo = (req: Request, res: Response) => {
   const userInfo = res.locals.userInfo;
-  res.status(200).json(userInfo);
+  return res.status(200).json(userInfo);
 };
 
 const updateUserInfo = async (req: Request, res: Response) => {
-  const { userId, displayName, avatar } = req.body;
+  const { userId, displayName, avatar, accountType } = req.body;
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     {
-      $set: { displayName, avatar }, // Mongoose tự động bỏ qua nếu giá trị là undefined
+      $set: { displayName, avatar, accountType }, // Mongoose tự động bỏ qua nếu giá trị là undefined
     },
     { new: true } // Option này để trả về dữ liệu MỚI sau khi update
   );

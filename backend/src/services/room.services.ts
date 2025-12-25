@@ -51,7 +51,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",
@@ -179,6 +179,23 @@ const isInvitedForRoom = async (roomId, peerId: string) => {
   return false;
 };
 
+const getRoomShedule = async (userId: string, col: string) => {
+  const roomSchedule = await Room.find({
+    hostId: { $ne: userId },
+    type: "SCHEDULED",
+    invited: { $in: userId },
+  }).select(col);
+  return roomSchedule;
+}
+
+const getRoomSheduleInvited = async (roomId: string, hostId: string) => {
+  const invitedUser = await Room.find({
+    hostId: hostId,
+    roomId: roomId,
+  }).select("invited");
+  return invitedUser;
+};
+
 export {
   generateToken,
   createRoomOnVideoSDK,
@@ -188,4 +205,6 @@ export {
   updateRoomOnDatabase,
   isHost,
   isInvitedForRoom,
+  getRoomShedule,
+  getRoomSheduleInvited,
 };
