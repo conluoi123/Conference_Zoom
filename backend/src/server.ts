@@ -1,6 +1,6 @@
+//Nodejs express
 import session from "express-session";
 import express from "express";
-import path from "path";
 
 //SocketIO and WebRTC
 import { createServer } from "http";
@@ -26,6 +26,10 @@ import {
 import { socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
+
+//Scheduling notifications
+import { Agendash } from "agendash";
+import Agenda from "agenda";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -53,7 +57,6 @@ const io = new Server(server, {
 socketHandler(io);
 
 //middlewares
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -71,6 +74,9 @@ app.use(
     },
   })
 );
+
+const agenda = new Agenda();
+app.use("/dash", Agendash(agenda));
 
 signInRouter(app);
 sendOtpRouter(app);
