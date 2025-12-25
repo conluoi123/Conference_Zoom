@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 interface Message {
   id: string; // Bắt buộc phải có ID duy nhất để làm key
+  avatar: string;
   participantId: string;
   participantName: string;
   content: string;
@@ -19,6 +20,7 @@ interface ChatPanelProps {
   roomId: string;
   participantName: string;
   participantId: string;
+  avatar: string;
 }
 
 export default function ChatPanel({
@@ -27,6 +29,7 @@ export default function ChatPanel({
   roomId,
   participantName,
   participantId,
+  avatar
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -39,6 +42,7 @@ export default function ChatPanel({
       const isMine = data.participantId === participantId;
       return {
         id: crypto.randomUUID(),
+        avatar: data.avatar,
         participantName: data.participantName || "Người lạ",
         participantId: data.participantId,
         content: data.content,
@@ -111,6 +115,7 @@ export default function ChatPanel({
 
     const messagePayload = {
       roomId,
+      avatar: avatar,
       content: inputMessage.trim(),
       participantName: participantName,
       participantId: participantId,
@@ -195,14 +200,18 @@ export default function ChatPanel({
                         : "bg-gradient-to-br from-purple-500 to-purple-600"
                     }`}
                   >
-                    {user?.avatar ? (
+                    {message.isLocal ? (
                       <img
-                        src={user.avatar}
+                        src={user?.avatar}
                         alt="Profile"
                         className="w-full h-full object-cover rounded-full"
                       />
                     ) : (
-                      getInitials(message.participantName)
+                      <img
+                        src={message.avatar}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
                     )}
                   </div>
 

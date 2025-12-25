@@ -12,6 +12,7 @@ import { SubtitleBar } from "./common/meetings/SubtitleBar";
 import { VirtualBackgroundProcessor } from "@videosdk.live/videosdk-media-processor-web";
 // Import Shadcn Pagination nếu bạn đã cài
 import { Copy, X, MonitorPlay, UserPlus, Settings } from "lucide-react";
+
 import { toast } from "sonner";
 import {
   Pagination,
@@ -824,6 +825,7 @@ export function MeetingRoom({
                   roomId={roomId}
                   participantName={user!.displayName}
                   participantId={user!.id}
+                  avatar={user?.avatar || ""}
                 />
               )}
               {isParticipantOpen && (

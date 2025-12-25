@@ -16,6 +16,8 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import { PreJoinPage } from "./components/pages/PreJoinMeetingPage.tsx";
 import {Toaster} from "sonner"
 import MeetingsPage from "./components/pages/MeetingPage.tsx";
+import RecordingPage from "./components/pages/RecordingPage.tsx";
+import { RecordingDetail } from "./components/pages/RecordingDetail.tsx";
 export default function App() {
   return (
     <Router>
@@ -30,6 +32,8 @@ export default function App() {
           <Route path="/pre-join" element={<PreJoinPage />} />
           <Route path="/schedule" element={<SchedulePage />}/>
           <Route path="meet" element={<MeetingsPage />} />
+          <Route path="/recording" element={<RecordingPage />} />
+          <Route path="/recordings/:id" element={<RecordingDetail />}/>
           {/* <Route path="/settings/profile" element={<ProfileModal onClose={() => {}} chosenPage="profile"/>} />
           <Route path="/settings/notifications" element={<ProfileModal onClose={() => {}} chosenPage="notifications"/>} /> */}
           {/* <Route path="/settings/privacy" element={<ProfileModal onClose={() => {}} chosenPage="privacy"/>} />
