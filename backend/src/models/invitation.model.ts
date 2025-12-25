@@ -2,24 +2,19 @@ import mongoose, { Schema, Document } from "mongoose";
 
 //invitationId là objectId do mongoDB sinh ra
 export interface IInvitation extends Document {
-  scheduleId: String;
-  email: String;
-  userId: String;
-  joinLink: String;
+  scheduleId: string;
+  email: string;
+  joinLink: string;
   status: "pending" | "accepted" | "declined";
   sentAt: Date;
 }
 
-const schemaInvitation = new Schema<IInvitation>({
+const invitationSchema = new Schema<IInvitation>({
   scheduleId: {
     type: String,
     required: true,
   },
   email: {
-    type: String,
-    required: true,
-  },
-  userId: {
     type: String,
     required: true,
   },
@@ -32,3 +27,6 @@ const schemaInvitation = new Schema<IInvitation>({
   },
   sentAt: { type: Date },
 });
+
+const Invitation = mongoose.model<IInvitation>("Invitation", invitationSchema);
+export default Invitation;

@@ -65,3 +65,13 @@ const isDueSchedule = (schedule: any) => {
 };
 
 export { latestSchedule, isDueSchedule };
+
+const getScheduleInfo = async (scheduleId: string) => {
+  const schedule = await Schedule.findById(scheduleId);
+  if (!schedule) {
+    throw new Error("Không tìm thấy lịch hẹn");
+  }
+  return schedule;
+};
+
+export { getScheduleInfo };

@@ -14,8 +14,20 @@ const onParticipantJoined = async (data) => {
     });
     return;
   }
-  participant.joinTime = new Date();
   participant.leaveTime = null;
+  await participant.save();
 };
 
-export { onParticipantJoined };
+const onParticipantLeft = async (data) => {
+  const participant = await Participant.findOne({
+    sessionId: data.sessionId,
+    participantId: data.participantId,
+  });
+  if (!participant) {
+    throw new Error("Người tham gia không tồn tại");
+  }
+  participant.leaveTime = new Date();
+  await participant.save();
+};
+
+export { onParticipantJoined, onParticipantLeft };

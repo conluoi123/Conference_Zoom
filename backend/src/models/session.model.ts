@@ -4,7 +4,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface ISession extends Document {
   roomId: string;
   sessionId: string;
-  scheduleId: String;
+  scheduleId: string;
   start: Date;
   end: Date;
   invited: string[];

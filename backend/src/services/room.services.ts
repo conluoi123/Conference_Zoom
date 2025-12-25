@@ -51,7 +51,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
+        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",
@@ -59,10 +59,8 @@ const createRoomOnVideoSDK = async () => {
           "session-ended",
           "recording-started",
           "recording-stopped",
-          "recording-failed",
           "transcription-started",
           "transcription-stopped",
-          "transcription-failed",
         ],
       },
     }),
@@ -145,7 +143,7 @@ const updateRoomOnDatabase = async (
   const update: any = {};
   if (title != null) update.title = title;
   if (settings != null) update.settings = settings;
-  if (invited != null) update.title = title;
+  if (invited != null) update.invited = [...update.invited, ...invited];
   const room = await Room.findOneAndUpdate(
     { roomId: roomId, hostId: hostId },
     { $set: update },
@@ -186,7 +184,7 @@ const getRoomShedule = async (userId: string, col: string) => {
     invited: { $in: userId },
   }).select(col);
   return roomSchedule;
-}
+};
 
 const getRoomSheduleInvited = async (roomId: string, hostId: string) => {
   const invitedUser = await Room.find({

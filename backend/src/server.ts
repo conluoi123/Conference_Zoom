@@ -23,13 +23,15 @@ import {
   signInRouter,
   verifyOtpRouter,
 } from "./routes/signIn.routes";
-import { socketHandler } from "./socket/socketHandler";
+import { initSocket, socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
 //Scheduling notifications
 import { Agendash } from "agendash";
 import Agenda from "agenda";
+import agenda from "./configs/agenda";
+import notificationRoutes from "./routes/notification.routes";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -41,21 +43,7 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
-
 app.use(cookieParser());
-const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-  pingInterval: 60000, // 60s gửi ping 1 lần
-  pingTimeout: 3000, // timeout 3s nếu không pong lại -> disconnect
-});
-
-socketHandler(io);
-
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -75,8 +63,20 @@ app.use(
   })
 );
 
-const agenda = new Agenda();
-app.use("/dash", Agendash(agenda));
+const server = createServer(app);
+const io = initSocket(server);
+
+//Khởi động agenda
+(async () => {
+  try {
+    await agenda.start();
+    console.log("🚀 Agenda Scheduler đã bắt đầu chạy!");
+  } catch (error) {
+    console.error("Lỗi khởi động Agenda:", error);
+  }
+})();
+
+socketHandler(io);
 
 signInRouter(app);
 sendOtpRouter(app);
@@ -89,6 +89,7 @@ refreshTokenRouter(app);
 logoutRouter(app);
 webHook(app);
 supportProfileRouter(app);
+notificationRoutes(app);
 
 const startServer = async () => {
   try {
@@ -102,3 +103,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+export { io };

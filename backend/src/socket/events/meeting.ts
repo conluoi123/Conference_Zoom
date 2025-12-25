@@ -3,6 +3,11 @@ import Chat from "../../models/chat.model";
 import { getChat, insertNewMessage } from "../../services/chat.services";
 import { isHost, updateRoomOnDatabase } from "../../services/room.services";
 import { addInvitee } from "../../services/session.services";
+import { create } from "domain";
+import {
+  createNotification,
+  generateMeetingMessage,
+} from "../../services/notification.services";
 
 export const meetingSocketHandler = (io: Server, socket: Socket) => {
   socket.on("meeting:join", async ({ roomId, participantName }) => {
@@ -22,6 +27,7 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     socket.emit("meeting:chat-history", chat);
   });
 
+  //Nhắn tin trong phòng họp
   socket.on(
     "meeting:chat",
     ({ roomId, participantId, participantName, content, avatar }) => {
@@ -43,6 +49,7 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     }
   );
 
+  //Chỉnh sửa settings cho phòng họp
   socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
     if (!isHost(roomId, participantId)) {
       console.log("Truy cập không xác định");
@@ -51,15 +58,21 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     updateRoomOnDatabase(roomId, participantId, null, settings, null);
   });
 
-  socket.on("meeting:invite", ({ roomId, participantId, email }) => {
+  //Mời khi đang họp
+  socket.on("meeting:invite", ({ roomId, participantId, emails }) => {
     if (!isHost(roomId, participantId)) {
       console.log("Truy cập không xác định");
       socket.disconnect();
     }
-    addInvitee(roomId, email);
-    socket.to(email).emit("notification:invitation", roomId);
+    emails.forEach(async (email) => {
+      addInvitee(roomId, email);
+      const message = await generateMeetingMessage(roomId, participantId);
+      createNotification(email, "meeting", message);
+      socket.to(email).emit("notification:meeting", { message, roomId });
+    });
   });
 
+  //Rời phòng họp
   socket.on("meeting:leave", ({ roomId, participantName }) => {
     /**
      * Ngắt kết nối socket khỏi {roomId}

@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IParticipant extends Document {
-  participantId: String;
-  sessionId: String;
-  displayName: String;
+  participantId: string;
+  sessionId: string;
+  displayName: string;
   role: "host" | "co-host" | "participant";
   joinTime: Date;
   leaveTime: Date;

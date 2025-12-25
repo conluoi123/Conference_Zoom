@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
-import Session from "../models/session.model";
 import { endSession, startSession } from "../services/session.services";
-import { onParticipantJoined } from "../services/participant.services";
+import {
+  onParticipantJoined,
+  onParticipantLeft,
+} from "../services/participant.services";
+import { endRecording, startRecording } from "../services/recording.services";
 
 const videoSdkWebhook = async (req: Request, res: Response) => {
   try {
@@ -26,7 +29,19 @@ const videoSdkWebhook = async (req: Request, res: Response) => {
       }
 
       case "participant-joined": {
-        onParticipantJoined(data);
+        await onParticipantJoined(data);
+      }
+
+      case "participant-left": {
+        await onParticipantLeft(data);
+      }
+
+      case "recording-started": {
+        await startRecording(data);
+      }
+
+      case "recording-stopped": {
+        await endRecording(data);
       }
     }
     // BẮT BUỘC: Trả về 200 OK ngay lập tức

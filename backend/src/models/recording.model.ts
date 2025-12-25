@@ -3,10 +3,10 @@ import mongoose, { Schema, Document } from "mongoose";
 //recordingId là objectId do mongoDB sinh ra
 
 export interface IRecord extends Document {
-  sessionId: String;
-  fileUrl: String;
-  fileSize: Number;
-  duration: Number;
+  sessionId: string;
+  fileUrl: string;
+  fileSize: number;
+  duration: number;
   createdAt: Date;
   aiSummary: {
     transcript: String;
@@ -22,9 +22,9 @@ const recordSchema = new Schema<IRecord>({
     index: true,
   },
 
-  fileUrl: { type: String },
-  fileSize: { type: Number },
-  duration: { type: Number },
+  fileUrl: { type: String, default: null },
+  fileSize: { type: Number, default: null },
+  duration: { type: Number, default: null },
   createdAt: Date,
   aiSummary: {
     transcript: { type: String },

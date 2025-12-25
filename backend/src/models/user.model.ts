@@ -8,7 +8,7 @@ export interface IUser extends Document {
   isActive: boolean;
   createdAt: Date;
   refreshToken: {
-    refreshToken: String;
+    refreshToken: string;
     expiredTime: Date;
   };
   accountType: {

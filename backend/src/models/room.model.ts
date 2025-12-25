@@ -6,11 +6,11 @@ export interface IRoom extends Document {
   type: "INSTANT" | "SCHEDULED";
   title?: string;
   settings: {
-    allowJoin: Boolean;
-    allowShareScreen: Boolean;
-    allowChat: Boolean;
-    allowMic: Boolean;
-    allowCam: Boolean;
+    allowJoin: boolean;
+    allowShareScreen: boolean;
+    allowChat: boolean;
+    allowMic: boolean;
+    allowCam: boolean;
   };
   invited: string[]; // list user
   createdAt: Date;

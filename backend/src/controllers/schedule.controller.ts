@@ -4,32 +4,58 @@ import {
   updateScheduleOnDb,
 } from "../services/schedule.services";
 import Schedule from "../models/schedule.model";
+import {
+  createRoomOnDatabase,
+  createRoomOnVideoSDK,
+} from "../services/room.services";
+import {
+  createNotification,
+  generateInvitationMessage,
+} from "../services/notification.services";
+import { getIO } from "../socket/socketHandler";
+import { createInvitation } from "../services/invitation.services";
 
 async function createSchedule(req: Request, res: Response) {
   try {
-    const { hostId, roomId, title, startTime, endTime, duration } = req.body;
-    if (!hostId || !roomId || !title || !startTime || !endTime || !duration) {
+    const { hostId, title, startTime, duration, emails } = req.body;
+    if (!hostId || !title || !startTime || !duration) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    const iseExistSchedule = await Schedule.findOne({
-      hostId,
+
+    //Tạo phòng mới
+    const roomId = await createRoomOnVideoSDK();
+    await createRoomOnDatabase({
       roomId,
-      startTime,
+      peerId: hostId,
+      title,
+      meetingType: "schedule",
     });
-    if (iseExistSchedule) {
-      return res.status(409).json({ message: "Schedule is exist" });
-    }
+
+    //Tạo lịch mới
     const schedule = await createScheduleOnDb(
       hostId,
       roomId,
       title,
       startTime,
-      endTime,
+      null,
       duration
     );
+
     if (!schedule) {
       return res.status(500).json({ message: "Failed to create schedule" });
     }
+
+    //Tạo thông báo
+    const message = await generateInvitationMessage(roomId, hostId);
+    emails.forEach((email) => {
+      createInvitation(schedule._id, roomId, email); //Tạo lời mời
+      createNotification(email, "meeting", message); //Tạo thông báo
+
+      //Bắn thông báo
+      const io = getIO();
+      io.to(email).emit("notification:invitation", message);
+    });
+
     return res.status(200).json({ schedule });
   } catch (error) {
     console.error(error);
