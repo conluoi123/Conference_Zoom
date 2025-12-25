@@ -15,7 +15,9 @@ import {
   MonitorStop,
   MonitorPlay,
   Image,
-  Subtitles
+  Subtitles,
+  Circle,
+  Square
 } from "lucide-react";
 import {
   Tooltip,
@@ -43,6 +45,10 @@ interface MeetingControlsProps {
   onOpenSettings: () => void;
   isSettingOpen: boolean;
   isHost: boolean;
+  onToggleRecording: () => void;
+  isRecording: boolean;
+  onToggleTranscript: () => void;
+  isTranscripting: boolean
 }
 
 export const MeetingControls = ({
@@ -58,7 +64,11 @@ export const MeetingControls = ({
   isSettingOpen,
   isHost,
   onToggleBackground,
-  isBackgroundOpen
+  isBackgroundOpen,
+  isRecording,
+  onToggleRecording,
+  isTranscripting,
+  onToggleTranscript,
 }: MeetingControlsProps) => {
   const {
     leave,
@@ -83,6 +93,7 @@ export const MeetingControls = ({
 
   const handleSubtitleClick = () => {
     console.log("Suptitle click");
+    onToggleTranscript()
     // setShowMoreMenu(false);
   };
 
@@ -139,7 +150,7 @@ export const MeetingControls = ({
             label={localWebcamOn ? "Tắt video" : "Bật video"}
             variant={localWebcamOn ? "default" : "danger"}
           />
-
+          {/*  Chia sẻ */}
           <ControlButton icon={Share2} label="Chia sẻ" />
           <ControlButton
             onClick={onToggleChat}
@@ -155,6 +166,17 @@ export const MeetingControls = ({
             variant={isChatOpen ? "success" : "default"}
             onClick={onOpenParticipant}
           />
+
+          {/* Recording */}
+          {/* Chỉ host mới thấy nút này */}
+          {isHost && (
+            <ControlButton
+              icon={isRecording ? Square : Circle}
+              label={isRecording ? "Dừng ghi hình" : "Ghi hình"}
+              onClick={onToggleRecording}
+              variant={isRecording ? "danger" : "default"}
+            ></ControlButton>
+          )}
 
           {/* Settings */}
           {/* Chỉ host mới thấy nút này */}
@@ -213,7 +235,7 @@ export const MeetingControls = ({
                 className="flex items-center gap-3 cursor-pointer hover:bg-gray-700"
               >
                 <Subtitles className="w-4 h-4" />
-                <span>Phụ đề</span>
+                <span>{isTranscripting ? "Tắt phụ đề" : "Bật phụ đề"}</span>
               </DropdownMenuItem>
 
               <DropdownMenuItem className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer border-t border-gray-800 mt-1">

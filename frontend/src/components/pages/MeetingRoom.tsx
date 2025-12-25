@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createCameraVideoTrack, useMeeting } from "@videosdk.live/react-sdk";
+import { createCameraVideoTrack, Constants, useTranscription, useMeeting } from "@videosdk.live/react-sdk";
 import { ParticipantTile } from "./common/meetings/ParticipantTitle";
 import { MeetingControls } from "./common/meetings/MeetingControls";
 import { MeetingHeader } from "./common/meetings/MeetingHeader";
@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ChatPanel from "./common/meetings/ChatPanel";
 import { ParticipantPanel } from "./common/meetings/ParticipantPanel";
 import { BackgroundPanel } from "./common/meetings/BackgroundPanel";
+import { SubtitleBar } from "./common/meetings/SubtitleBar";
 import { VirtualBackgroundProcessor } from "@videosdk.live/videosdk-media-processor-web";
 // Import Shadcn Pagination nếu bạn đã cài
 import { Copy, X, MonitorPlay, UserPlus, Settings } from "lucide-react";
@@ -57,6 +58,8 @@ export function MeetingRoom({
     url?: string;
   }>({ type: "none" });
   const processorRef = useRef<VirtualBackgroundProcessor | null>(null);
+
+  
   // thêm 2 method để nhận biết có người vào, người ra
   // ===================================== CÁC SỰ KIỆN TRONG PHÒNG ==========================================\\
   const {
@@ -67,7 +70,9 @@ export function MeetingRoom({
     presenterId,
     muteMic,
     disableWebcam,
-    changeWebcam
+    changeWebcam,
+    startRecording,
+    stopRecording
   } = useMeeting({
     // ======================================== ĐĂNG KÝ CÁC EVENT LISTENER =============================== \\
     // duyệt người vào phòng - chức năng của host
@@ -159,9 +164,11 @@ export function MeetingRoom({
     },
     onRecordingStarted: () => {
       console.log("🔴 Ghi hình đã bắt đầu");
+      setIsRecording(true);
     },
     onRecordingStopped: () => {
       console.log("⏹️ Ghi hình đã dừng");
+      setIsRecording(false);
     },
   });
   const handleCopy = () => {
@@ -192,6 +199,8 @@ export function MeetingRoom({
     onToggleChat();
     if (isParticipantOpen) setIsParticipantOpen(!isParticipantOpen);
   };
+
+  //======================================Virtual background========================================
   const toggleBackgroundPanel = () => {
     setIsBackgroundOpen(!isBackgroundOpen);
     if (onChatOpen) onToggleChat();
@@ -269,6 +278,134 @@ export function MeetingRoom({
     setBgConfig({ type, url: imageUrl });
     setIsBackgroundOpen(false);
   };
+
+  //==================================Recording=======================================
+  const [isRecording, setIsRecording] = useState(false);
+  const handleRecording = () => {
+    console.log("Recording click");
+    if (isRecording) {
+      stopRecording();
+      return;
+    } 
+    try {
+      const config = {
+        // Layout Configuration
+        layout: {
+          type: "GRID", // "SPOTLIGHT" | "SIDEBAR",  Default : "GRID"
+          priority: "SPEAKER", // "PIN", Default : "SPEAKER"
+          gridSize: 4, // MAX : 4
+        },
+
+        // Theme of recording
+        theme: "DARK", //  "LIGHT" | "DEFAULT"
+
+        // `mode` is used to either record video & audio both or only audio.
+        mode: "video-and-audio", // "audio", Default : "video-and-audio"
+
+        // Quality of recording and is only applicable to `video-and-audio` type mode.
+        quality: "high", /* Default : "med"
+      "low" (SD Recording) | "med" (HD Recording) | "high" (FHD Recording) */
+
+        // This mode refers to orientation of recording.
+        // landscape : Record the meeting in horizontally
+        // portrait : Record the meeting in vertically (Best for mobile view)
+        orientation: "landscape", // "portrait",  Default : "landscape"
+      };
+
+      // Post Transcription Configuration
+      const transcription = {
+        enabled: true, // Enables post transcription
+        language: "vi-VN",
+      };
+      startRecording(null, null, config, transcription);
+    } catch (error) {
+      console.error("Recording error:", error);
+      toast.error("Có lỗi khi ghi hình");
+    }
+  };
+
+  //==================================Transcript=======================================
+  const [isTranscripting, setIsTranscripting] = useState(false);
+  // Configuration for realtime transcription
+  const config = {
+    summary: {
+      enabled: false,
+    },
+  };
+
+  // Callback function for transcription state change event
+  function onTranscriptionStateChanged(data: any) {
+    const { status, id } = data;
+
+    if (status === Constants.transcriptionEvents.TRANSCRIPTION_STARTING) {
+      console.log("Realtime Transcription is starting", id);
+    } else if (status === Constants.transcriptionEvents.TRANSCRIPTION_STARTED) {
+      console.log("Realtime Transcription is started", id);
+    } else if (
+      status === Constants.transcriptionEvents.TRANSCRIPTION_STOPPING
+    ) {
+      console.log("Realtime Transcription is stopping", id);
+    } else if (status === Constants.transcriptionEvents.TRANSCRIPTION_STOPPED) {
+      console.log("Realtime Transcription is stopped", id);
+    }
+  }
+
+  // Callback function for transcription text event
+  function onTranscriptionText(data: any) {
+    let { participantId, participantName, text, timestamp, isFinal } = data;
+    console.log(`${participantName}: ${text}`);
+
+    const subtitleId = `${participantId}-${Date.now()}`;
+
+    setSubtitles((prev) => {
+      // Tìm subtitle của người này
+      const filtered = prev.filter(s => s.participantId !== participantId);
+      
+      // Thêm subtitle mới
+      return [...filtered, {
+        id: subtitleId,
+        participantId,
+        participantName,
+        text,
+      }];
+    });
+
+    // Tự động xóa subtitle của người này khi nói xong
+    setTimeout(() => {
+      setSubtitles((prev) => 
+        prev.filter(s => s.participantId !== participantId)
+      );
+    }, 3000);
+    
+  }
+
+  // Passing callback functions to useTranscription hook
+  const { startTranscription, stopTranscription } = useTranscription({
+    onTranscriptionStateChanged,
+    onTranscriptionText,
+  });
+  // Init streawm transcript
+  startTranscription(config);
+
+  const handleTranscript = () => {
+    if (!isTranscripting) {
+      // startTranscription(config);
+      setIsTranscripting(true);
+    } else {
+      // stopTranscription(config);
+      setIsTranscripting(false);
+    }
+  };
+
+  //======================================= Subtitle ======================================
+  const [subtitles, setSubtitles] = useState<{
+    id: string;
+    participantId: string;
+    participantName: string;
+    text: string;
+  }[]>([]);
+
+
   // ====================================== HÌNH TRONG HÌNH ===============================\\
   const togglePipMode = async () => {
     console.log("Toggle PiP");
@@ -594,6 +731,10 @@ export function MeetingRoom({
                   </motion.div>
                 )}
               </AnimatePresence>
+              {/* Thanh subtitle */}
+              {subtitles.length > 0 && isTranscripting && (
+                <SubtitleBar subtitles={subtitles}/>
+              )}
               {/* THANH MEETING CONTROL (NÊN THÊM HIỆU ỨNG RÊ CHUỘT VÀO THÌ HIỆN) */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto">
                 <MeetingControls
@@ -609,6 +750,10 @@ export function MeetingRoom({
                   onToggleBackground={toggleBackgroundPanel}
                   isSettingOpen={isSettingOpen}
                   onOpenSettings={handleToggleSettings}
+                  isRecording={isRecording}
+                  onToggleRecording={handleRecording}
+                  isTranscripting={isTranscripting}
+                  onToggleTranscript={handleTranscript}
                 />
               </div>
               {totalPages > 1 && (
