@@ -3,7 +3,7 @@ import { X, Mail, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { inviteByEmail } from "@/services/socket";
+import { socketService } from "@/services/socket";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -31,15 +31,20 @@ function InviteModal({ open, onOpenChange, roomId, currentUserId }: any) {
 
   // gửi lời mời qua socket
   const handleInvite = () => {
-    emailList.forEach((email) => {
-      // gọi BE xử lí
-      inviteByEmail(roomId, currentUserId, email);
-    });
-    toast.success(
-      `Đã gửi lời mời tới ${emailList.length + (emailInput ? 1 : 0)} người`
-    );
-    setEmailList([]);
-    setEmailInput("");
+    // 1. Tạo danh sách 
+    let  finalEmails = [...emailList]; 
+    // xử lí lại nếu ô input mà chưa bấm dấu cộng thì hàng ở dưới vẫn vào 
+    const pendingEmail = emailInput.trim(); 
+    if(pendingEmail && pendingEmail.includes('@') && !finalEmails.includes(pendingEmail)){
+      finalEmails.push(pendingEmail);
+    }
+    if(finalEmails.length===0) return; 
+    // 2. Gọi socket 
+    socketService.inviteByEmail(roomId, currentUserId, finalEmails); 
+    toast.success(`Đã gửi lời mời tới ${finalEmails.length} người`);
+    // 3. Reset lại form 
+    setEmailInput(""); 
+    setEmailList([]); 
     onOpenChange(false);
   };
   // GIAO DIỆN

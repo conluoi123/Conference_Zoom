@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { createCameraVideoTrack, Constants, useTranscription, useMeeting } from "@videosdk.live/react-sdk";
+import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  createCameraVideoTrack,
+  Constants,
+  useTranscription,
+  useMeeting,
+} from "@videosdk.live/react-sdk";
 import { ParticipantTile } from "./common/meetings/ParticipantTitle";
 import { MeetingControls } from "./common/meetings/MeetingControls";
 import { MeetingHeader } from "./common/meetings/MeetingHeader";
@@ -11,8 +16,7 @@ import { BackgroundPanel } from "./common/meetings/BackgroundPanel";
 import { SubtitleBar } from "./common/meetings/SubtitleBar";
 import { VirtualBackgroundProcessor } from "@videosdk.live/videosdk-media-processor-web";
 // Import Shadcn Pagination nếu bạn đã cài
-import { Copy, X, MonitorPlay, UserPlus, Settings } from "lucide-react";
-
+import { Copy, X, MonitorPlay, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -25,7 +29,6 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import LoadMeeting from "./common/meetings/LoadMeeting";
 import InviteModal from "./common/meetings/InviteModal";
-import { updateMeetingSettings } from "@/services/socket";
 import { SettingsPanel } from "./common/meetings/SettingPanel";
 interface MeetingRoomProps {
   roomId: string;
@@ -43,7 +46,6 @@ export function MeetingRoom({
   onToggleChat,
   hostId,
 }: MeetingRoomProps) {
-  console.log("Host id là: ", hostId);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isParticipantOpen, setIsParticipantOpen] = useState(false);
   const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
@@ -60,7 +62,6 @@ export function MeetingRoom({
   }>({ type: "none" });
   const processorRef = useRef<VirtualBackgroundProcessor | null>(null);
 
-  
   // thêm 2 method để nhận biết có người vào, người ra
   // ===================================== CÁC SỰ KIỆN TRONG PHÒNG ==========================================\\
   const {
@@ -73,7 +74,7 @@ export function MeetingRoom({
     disableWebcam,
     changeWebcam,
     startRecording,
-    stopRecording
+    stopRecording,
   } = useMeeting({
     // ======================================== ĐĂNG KÝ CÁC EVENT LISTENER =============================== \\
     // duyệt người vào phòng - chức năng của host
@@ -157,6 +158,8 @@ export function MeetingRoom({
         duration: 3000,
       });
     },
+    // JOINED THÀNH CÔNG THÊM MỘT effect để báo lên server
+
     // ============================= RỜI ĐI =============================\\
     onParticipantLeft: (participant) => {
       toast.error(`${participant.displayName} đã rời đi`, {
@@ -186,7 +189,6 @@ export function MeetingRoom({
       clearTimeout(timer);
     };
   }, []);
-
   const { user } = useAuth();
   const participantIds = Array.from(participants.keys());
   const { visible, currentPage, setCurrentPage, totalPages } =
@@ -196,10 +198,20 @@ export function MeetingRoom({
     setIsParticipantOpen(!isParticipantOpen);
     if (onChatOpen) onToggleChat(); // đóng nếu chat mở
   };
-  const toggleChatPanel = () => {
-    onToggleChat();
-    if (isParticipantOpen) setIsParticipantOpen(!isParticipantOpen);
-  };
+  // const toggleChatPanel = () => {
+  //   onToggleChat();
+  //   if (isParticipantOpen) setIsParticipantOpen(!isParticipantOpen);
+  // };
+  // 1. Memoize hàm toggle chat
+  const toggleChatPanel = useCallback(() => {
+    onToggleChat(); // Gọi hàm từ props của cha
+    if (isParticipantOpen) setIsParticipantOpen(false);
+  }, [onToggleChat, isParticipantOpen]);
+
+  // 2. Tương tự cho hàm đóng chat (nếu cần truyền riêng)
+  const handleCloseChat = useCallback(() => {
+    if (onChatOpen) onToggleChat();
+  }, [onChatOpen, onToggleChat]);
 
   //======================================Virtual background========================================
   const toggleBackgroundPanel = () => {
@@ -287,7 +299,7 @@ export function MeetingRoom({
     if (isRecording) {
       stopRecording();
       return;
-    } 
+    }
     try {
       const config = {
         // Layout Configuration
@@ -304,8 +316,8 @@ export function MeetingRoom({
         mode: "video-and-audio", // "audio", Default : "video-and-audio"
 
         // Quality of recording and is only applicable to `video-and-audio` type mode.
-        quality: "high", /* Default : "med"
-      "low" (SD Recording) | "med" (HD Recording) | "high" (FHD Recording) */
+        quality: "high" /* Default : "med"
+      "low" (SD Recording) | "med" (HD Recording) | "high" (FHD Recording) */,
 
         // This mode refers to orientation of recording.
         // landscape : Record the meeting in horizontally
@@ -360,24 +372,26 @@ export function MeetingRoom({
 
     setSubtitles((prev) => {
       // Tìm subtitle của người này
-      const filtered = prev.filter(s => s.participantId !== participantId);
-      
+      const filtered = prev.filter((s) => s.participantId !== participantId);
+
       // Thêm subtitle mới
-      return [...filtered, {
-        id: subtitleId,
-        participantId,
-        participantName,
-        text,
-      }];
+      return [
+        ...filtered,
+        {
+          id: subtitleId,
+          participantId,
+          participantName,
+          text,
+        },
+      ];
     });
 
     // Tự động xóa subtitle của người này khi nói xong
     setTimeout(() => {
-      setSubtitles((prev) => 
-        prev.filter(s => s.participantId !== participantId)
+      setSubtitles((prev) =>
+        prev.filter((s) => s.participantId !== participantId)
       );
     }, 3000);
-    
   }
 
   // Passing callback functions to useTranscription hook
@@ -399,13 +413,14 @@ export function MeetingRoom({
   };
 
   //======================================= Subtitle ======================================
-  const [subtitles, setSubtitles] = useState<{
-    id: string;
-    participantId: string;
-    participantName: string;
-    text: string;
-  }[]>([]);
-
+  const [subtitles, setSubtitles] = useState<
+    {
+      id: string;
+      participantId: string;
+      participantName: string;
+      text: string;
+    }[]
+  >([]);
 
   // ====================================== HÌNH TRONG HÌNH ===============================\\
   const togglePipMode = async () => {
@@ -545,7 +560,6 @@ export function MeetingRoom({
     if (onChatOpen) onToggleChat();
     if (isParticipantOpen) setIsParticipantOpen(false);
   };
-  console.log("ID người tgia là", user?.id);
   // cặp {key,value} để khỏi viết cho ba nút -> gộp lại thành một nút
   const onUpdateSettings = (key: string, value: boolean) => {
     if (!isHost) return;
@@ -734,7 +748,7 @@ export function MeetingRoom({
               </AnimatePresence>
               {/* Thanh subtitle */}
               {subtitles.length > 0 && isTranscripting && (
-                <SubtitleBar subtitles={subtitles}/>
+                <SubtitleBar subtitles={subtitles} />
               )}
               {/* THANH MEETING CONTROL (NÊN THÊM HIỆU ỨNG RÊ CHUỘT VÀO THÌ HIỆN) */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto">
@@ -846,12 +860,12 @@ export function MeetingRoom({
                 />
               )}
               {isBackgroundOpen && (
-                  <BackgroundPanel
-                    isOpen={isBackgroundOpen}
-                    onClose={() => setIsBackgroundOpen(false)}
-                    onSelectBackground={handleSelectBackground}
-                  />
-                )}
+                <BackgroundPanel
+                  isOpen={isBackgroundOpen}
+                  onClose={() => setIsBackgroundOpen(false)}
+                  onSelectBackground={handleSelectBackground}
+                />
+              )}
             </AnimatePresence>
           </main>
         </>

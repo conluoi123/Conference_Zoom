@@ -32,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { memo } from "react";
 interface MeetingControlsProps {
   onLeaveMeeting: () => void;
   onToggleChat: () => void;
@@ -51,7 +52,7 @@ interface MeetingControlsProps {
   isTranscripting: boolean
 }
 
-export const MeetingControls = ({
+export const MeetingControls = memo(({
   onLeaveMeeting,
   onToggleChat,
   isChatOpen,
@@ -255,4 +256,4 @@ export const MeetingControls = ({
       </div>
     </TooltipProvider>
   );
-};
+});

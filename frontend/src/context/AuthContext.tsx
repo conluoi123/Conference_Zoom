@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { setAccessToken, getAccessToken } from "@/services/service";
 import { setLogoutHandler } from "@/services/service";
 import api from "@/services/service";
-
 interface User {
   id: string;
   email: string;
@@ -51,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout();
     });
   }, []);
-
   const login = (userData: User, token: string) => {
     setUser(userData);
     setAccessToken(token);

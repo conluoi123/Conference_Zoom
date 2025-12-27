@@ -3,8 +3,6 @@ import {
   Routes,
   Route,
   Navigate,
-  useNavigate,
-  useLocation,
 } from "react-router-dom";
 import { LoginPage } from "./components/pages/LoginPage.tsx";
 import { OTPPage } from "./components/pages/OTPPage.tsx";
@@ -18,20 +16,24 @@ import {Toaster} from "sonner"
 import MeetingsPage from "./components/pages/MeetingPage.tsx";
 import RecordingPage from "./components/pages/RecordingPage.tsx";
 import { RecordingDetail } from "./components/pages/RecordingDetail.tsx";
+import { SocketListener } from "./context/SocketContext.tsx";
 export default function App() {
   return (
     <Router>
       <AuthProvider>
+        <SocketListener />
         <Toaster position="top-right" richColors />
           <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/otp" element={<OTPPage />} />
-          <Route path="/home" element={<HomePage />} />
+          <Route path="/home" element={   
+            <HomePage />
+          } />
           <Route path="/meeting/:roomId" element={<MeetingPage  />} />
           <Route path="/pre-join" element={<PreJoinPage />} />
           <Route path="/schedule" element={<SchedulePage />}/>
-          <Route path="meet" element={<MeetingsPage />} />
+          <Route path="/meet" element={<MeetingsPage />} />
           <Route path="/recording" element={<RecordingPage />} />
           <Route path="/recordings/:id" element={<RecordingDetail />}/>
           {/* <Route path="/settings/profile" element={<ProfileModal onClose={() => {}} chosenPage="profile"/>} />
