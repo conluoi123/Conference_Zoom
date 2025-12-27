@@ -60,7 +60,7 @@ import { MeetingRoom } from "./MeetingRoom.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import LoadMeeting from "./common/meetings/LoadMeeting.tsx";
 
-export const MeetingPage = () => {
+export const MeetingPage = React.memo(() => {
   const navigate = useNavigate();
   const { roomId: paramRoomId } = useParams();
   const location = useLocation();
@@ -69,18 +69,16 @@ export const MeetingPage = () => {
   // 1. Lấy dữ liệu an toàn và ghi nhớ vào memo/state để tránh tính toán lại mỗi lần render
   const meetingData = (() => {
     const stateData = location.state;
-    const storageData = JSON.parse(
-      sessionStorage.getItem(`meeting_${paramRoomId}`) || "null"
-    );
+    const storageData = JSON.parse(sessionStorage.getItem(`meeting_${paramRoomId}`) || "null");
     return stateData || storageData || {};
   })();
 
-  const {
-    token,
-    roomId: stateRoomId,
+  const { 
+    token, 
+    roomId: stateRoomId, 
     hostId,
     settings,
-    displayName: stateName,
+    displayName: stateName 
   } = meetingData;
 
   const roomId = stateRoomId || paramRoomId;
@@ -95,7 +93,7 @@ export const MeetingPage = () => {
   }, [roomId, token, navigate]);
 
   if (!token || !roomId) {
-    return <LoadMeeting />;
+    return <LoadMeeting />; 
   }
 
   return (
@@ -116,6 +114,7 @@ export const MeetingPage = () => {
       joinWithoutUserInteraction={settings.allowJoin}
       reinitialiseMeetingOnConfigChange={true}
     >
+      
       <MeetingRoom
         roomId={roomId}
         isHost={hostId === user?.id}
@@ -124,4 +123,4 @@ export const MeetingPage = () => {
       />
     </MeetingProvider>
   );
-};
+})

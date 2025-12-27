@@ -34,19 +34,16 @@ interface MeetingRoomProps {
   roomId: string;
   isHost: boolean;
   onLeaveMeeting: () => void;
-  onToggleChat: () => void;
-  onChatOpen: boolean;
   hostId: string;
 }
 export function MeetingRoom({
   roomId,
   isHost,
   onLeaveMeeting,
-  onChatOpen,
-  onToggleChat,
   hostId,
 }: MeetingRoomProps) {
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantOpen, setIsParticipantOpen] = useState(false);
   const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
   const [joinedRequest, setJoinRequests] = useState<any[]>([]);
@@ -180,23 +177,33 @@ export function MeetingRoom({
     toast.success("Đã sao chép liên kết cuộc họp");
   };
 
-  useEffect(() => {
-    setJoined("JOINING");
+  //Tham gia phòng
+  const handleJoin = () => {
     const timer = setTimeout(() => {
       join();
     }, 0);
     return () => {
       clearTimeout(timer);
     };
-  }, []);
+  };
+
+  useEffect(() => {
+    if (meetingId === undefined) handleJoin();
+  }, [meetingId]);
+
+
   const { user } = useAuth();
   const participantIds = Array.from(participants.keys());
   const { visible, currentPage, setCurrentPage, totalPages } =
     useMeetingPagination(participantIds, 4);
   // ==================================== XỬ LÍ CHO PARTICIPANT VÀ CHAT ============================\\
+  const onToggleChat = () => {
+    setIsChatOpen(!isChatOpen);
+  };
+
   const toggleParticipantPanel = () => {
     setIsParticipantOpen(!isParticipantOpen);
-    if (onChatOpen) onToggleChat(); // đóng nếu chat mở
+    if (isChatOpen) onToggleChat(); // đóng nếu chat mở
   };
   // const toggleChatPanel = () => {
   //   onToggleChat();
@@ -210,13 +217,13 @@ export function MeetingRoom({
 
   // 2. Tương tự cho hàm đóng chat (nếu cần truyền riêng)
   const handleCloseChat = useCallback(() => {
-    if (onChatOpen) onToggleChat();
-  }, [onChatOpen, onToggleChat]);
+    if (isChatOpen) onToggleChat();
+  }, [isChatOpen, onToggleChat]);
 
   //======================================Virtual background========================================
   const toggleBackgroundPanel = () => {
     setIsBackgroundOpen(!isBackgroundOpen);
-    if (onChatOpen) onToggleChat();
+    if (isChatOpen) onToggleChat();
     if (isParticipantOpen) setIsParticipantOpen(false);
   };
 
@@ -557,7 +564,7 @@ export function MeetingRoom({
   const [isSettingOpen, setIsSettingOpen] = useState(false);
   const handleToggleSettings = () => {
     setIsSettingOpen(!isSettingOpen);
-    if (onChatOpen) onToggleChat();
+    if (isChatOpen) onToggleChat();
     if (isParticipantOpen) setIsParticipantOpen(false);
   };
   // cặp {key,value} để khỏi viết cho ba nút -> gộp lại thành một nút
@@ -755,7 +762,7 @@ export function MeetingRoom({
                 <MeetingControls
                   onLeaveMeeting={onLeaveMeeting}
                   onToggleChat={toggleChatPanel}
-                  isChatOpen={onChatOpen}
+                  isChatOpen={isChatOpen}
                   isOpen={isParticipantOpen}
                   onOpenParticipant={toggleParticipantPanel}
                   onTogglePip={togglePipMode}
@@ -832,9 +839,9 @@ export function MeetingRoom({
               )}
             </div>
             <AnimatePresence mode="wait">
-              {onChatOpen && (
+              {isChatOpen && (
                 <ChatPanel
-                  isOpen={onChatOpen}
+                  isOpen={isChatOpen}
                   onClose={onToggleChat}
                   roomId={roomId}
                   participantName={user!.displayName}
