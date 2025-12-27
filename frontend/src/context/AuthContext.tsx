@@ -9,11 +9,11 @@ import { useNavigate } from "react-router-dom";
 import { setAccessToken, getAccessToken } from "@/services/service";
 import { setLogoutHandler } from "@/services/service";
 import api from "@/services/service";
-
 interface User {
   id: string;
   email: string;
   displayName: string;
+  avatar: string;
 }
 
 interface AuthContextType {
@@ -50,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout();
     });
   }, []);
-
   const login = (userData: User, token: string) => {
     setUser(userData);
     setAccessToken(token);
@@ -77,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await api.get("/auth/me");
 
-      const { userId, email, displayName } = res.data.data;
+      const { userId, email, displayName, avatar } = res.data.data;
       const token = getAccessToken();
 
       if (!token) throw new Error("No access token");
@@ -86,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: userId,
         email,
         displayName,
+        avatar,
       });
     } catch (err) {
       console.log("refresh user failed");

@@ -6,18 +6,18 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { BiLogoZoom } from "react-icons/bi";
 import { useAuth } from "../../context/AuthContext";
 import { logIn } from "../../services/userApi";
-import {Loading} from "../ui/loading.tsx";
+import { Loading } from "../ui/loading.tsx";
 export function OTPPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "";
-  const {login} = useAuth();
+  const { login } = useAuth();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const input = useRef<(HTMLInputElement | null)[]>([]);
   const [timer, setTimer] = useState(60);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
-  // hiệu ứng loading 
+  // hiệu ứng loading
   const [isLoading, setIsLoading] = useState(false);
 
   // Timer countdown
@@ -52,8 +52,11 @@ export function OTPPage() {
       input.current[index + 1]?.focus();
     }
   };
-  // nhấn nút Space 
-  const handleBackspace = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+  // nhấn nút Space
+  const handleBackspace = (
+    index: number,
+    e: KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       input.current[index - 1]?.focus();
     }
@@ -78,6 +81,7 @@ export function OTPPage() {
               id: res.data.data.userId,
               email: res.data.data.email,
               displayName: res.data.data.displayName,
+              avatar: res.data.data.avatar,
             },
             res.data.accessToken
           );
@@ -95,7 +99,7 @@ export function OTPPage() {
       setIsLoading(false);
     }
   };
-  // gửi lại OTP khi nhấn nút 
+  // gửi lại OTP khi nhấn nút
   const handleResend = async () => {
     try {
       await logIn.sendOtp({ email });
@@ -211,7 +215,7 @@ export function OTPPage() {
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
-              {isLoading ? <Loading size="small" />: "Xác thực OTP"}
+              {isLoading ? <Loading size="small" /> : "Xác thực OTP"}
             </button>
 
             {/* Resend Link */}

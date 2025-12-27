@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Video,
   Plus,
@@ -15,7 +15,6 @@ import {
 import { MainLayout } from "../../layout/MainLayout";
 import { useAuth } from "../../context/AuthContext";
 import { meetingAPI } from "../../services/meetingApi";
-
 interface MeetingData {
   peerId?: string;
   title?: string;
@@ -97,6 +96,7 @@ export function HomePage() {
               id: userData.user.userId,
               email: userData.user.email,
               displayName: userData.user.displayName,
+              avatar: userData.user.avatar,
             },
             userData.accessToken
           );
@@ -118,7 +118,7 @@ export function HomePage() {
         meetingType: "instant",
         startTime: new Date().toISOString(),
       };
-      const response : MeetingResponse = await meetingAPI.createMeeting(
+      const response: MeetingResponse = await meetingAPI.createMeeting(
         meetingData
       );
       if (response.roomId && response.token) {
@@ -294,10 +294,12 @@ export function HomePage() {
               </button>
 
               <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
-                <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Calendar className="w-7 h-7 text-white" />
-                </div>
-                <p className="text-gray-900 font-medium text-sm">Schedule</p>
+                <Link to="/schedule">
+                  <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Calendar className="w-7 h-7 text-white" />
+                  </div>
+                  <p className="text-gray-900 font-medium text-sm">Schedule</p>
+                </Link>
               </button>
 
               <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
@@ -312,25 +314,35 @@ export function HomePage() {
 
             {/* Recordings & History */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow flex items-start gap-4">
-                <div className="bg-red-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Circle className="w-6 h-6 text-red-600 fill-red-600" />
-                </div>
-                <div className="text-left">
-                  <p className="text-gray-900 font-medium mb-1">Recordings</p>
-                  <p className="text-gray-500 text-sm">Cuộc họp đã ghi</p>
-                </div>
-              </button>
+              <Link
+                to="/recording"
+                className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"
+              >
+                <button className="flex gap-4">
+                  <div className="bg-red-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Circle className="w-6 h-6 text-red-600 fill-red-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-gray-900 font-medium mb-1">Recordings</p>
+                    <p className="text-gray-500 text-sm">Cuộc họp đã ghi</p>
+                  </div>
+                </button>
+              </Link>
 
-              <button className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow flex items-start gap-4">
-                <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="text-left">
-                  <p className="text-gray-900 font-medium mb-1">History</p>
-                  <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
-                </div>
-              </button>
+              <Link
+                to="/recording"
+                className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"
+              >
+                <button className="flex gap-4">
+                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-gray-900 font-medium mb-1">History</p>
+                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
+                  </div>
+                </button>
+              </Link>
             </div>
           </div>
 

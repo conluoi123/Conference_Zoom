@@ -110,7 +110,7 @@ export const MeetingPage = () => {
         autoConsume: true,
         debugMode: true,
         multiStream: true,
-        maxResolution:'hd',
+        maxResolution: "hd",
       }}
       token={token}
       joinWithoutUserInteraction={settings.allowJoin}
@@ -119,6 +119,7 @@ export const MeetingPage = () => {
       <MeetingRoom
         roomId={roomId}
         isHost={hostId === user?.id}
+        hostId = {hostId}
         onLeaveMeeting={() => navigate("/home")}
       />
     </MeetingProvider>

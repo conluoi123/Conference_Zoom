@@ -1,6 +1,6 @@
-import { User, UserPlus, Settings, LogOut } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import {useAuth} from '../../context/AuthContext';
+import { User, UserPlus, Settings, LogOut } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 interface ProfileMenuProps {
   onClose: () => void;
@@ -11,9 +11,9 @@ export function ProfileMenu({ onClose, onOpenProfile }: ProfileMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
 
-  const displayName = user?.displayName || 'User';
-  const email = user?.email || '';
-  
+  const displayName = user?.displayName || "User";
+  const email = user?.email || "";
+
   const getInitials = (name: string) => {
     if (!name) return "U";
     const parts = name.split(" ");
@@ -30,8 +30,8 @@ export function ProfileMenu({ onClose, onOpenProfile }: ProfileMenuProps) {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onClose]);
 
   const handleViewProfile = () => {
@@ -40,26 +40,28 @@ export function ProfileMenu({ onClose, onOpenProfile }: ProfileMenuProps) {
   };
 
   const handleAddAccount = () => {
-    alert('Thêm tài khoản mới');
+    alert("Thêm tài khoản mới");
     onClose();
   };
 
   const handleLogOut = () => {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+    if (confirm("Bạn có chắc chắn muốn đăng xuất?")) {
       logout(); // Use AuthContext logout
       onClose();
     }
   };
 
   return (
-    <div 
+    <div
       ref={menuRef}
       className="absolute top-full right-6 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
     >
       <div className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-semibold">{getInitials(displayName)}</span>
+            <span className="text-white text-sm font-semibold">
+              {getInitials(displayName)}
+            </span>
           </div>
           <div>
             <div className="text-gray-900 font-medium">{displayName}</div>

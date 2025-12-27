@@ -1,6 +1,7 @@
 import { useMeeting } from "@videosdk.live/react-sdk";
 import { X, Mic, MicOff, Video, VideoOff, MoreVertical, Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
 interface JoinRequest {
   participantId: string; 
@@ -12,9 +13,10 @@ interface ParticipantPanelProps {
   onClose: () => void;
   joinedRequest : JoinRequest[]; 
   setJoinRequests: React.Dispatch<React.SetStateAction<JoinRequest[]>>; // hàm cập nhật state
+  hostId: string;
 }
 
-export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests }: ParticipantPanelProps) {
+export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, hostId }: ParticipantPanelProps) {
   // Lấy danh sách participants từ VideoSDK
   const { participants, localParticipant } = useMeeting();
   // Chuyển Map thành mảng để dễ render
@@ -29,7 +31,7 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests }: Pa
       setJoinRequests(prev => prev.filter(req => req.participantId !== id));
     }
   }
-
+  const { user } = useAuth();
   return (
     <motion.div
       initial={{ x: "100%" }}
@@ -95,35 +97,51 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests }: Pa
           const isWebcamOn = participant.webcamOn;
 
           return (
-            <div 
-              key={participant.id} 
+            <div
+              key={participant.id}
               className="flex items-center gap-3 p-3 hover:bg-gray-800/60 rounded-xl transition-all group"
             >
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-inner">
-                {participant.displayName.charAt(0).toUpperCase()}
-              </div>
+              {user?.avatar ? (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-inner">
+                  <img
+                    src={user.avatar}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-inner">
+                  {participant.displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
 
               {/* Name */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate text-gray-200">
-                  {participant.displayName} 
-                  {participant.id === localParticipant?.id && <span className="text-gray-500 ml-1">(Bạn)</span>}
+                  {participant.displayName}
+                  {participant.id === localParticipant?.id && (
+                    <span className="text-gray-500 ml-1">(Bạn)</span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {participant.id === localParticipant?.id ? "Người tổ chức" : "Cộng tác viên"}
+                  {participant.id === hostId ? "Người tổ chức" : "Cộng tác viên"}
                 </p>
               </div>
 
               {/* Status Icons (Mic/Cam) */}
               <div className="flex items-center gap-2">
-                <div className={`${isMicOn ? 'text-gray-400' : 'text-red-500'}`}>
+                <div
+                  className={`${isMicOn ? "text-gray-400" : "text-red-500"}`}
+                >
                   {isMicOn ? <Mic size={18} /> : <MicOff size={18} />}
                 </div>
-                <div className={`${isWebcamOn ? 'text-gray-400' : 'text-red-500'}`}>
+                <div
+                  className={`${isWebcamOn ? "text-gray-400" : "text-red-500"}`}
+                >
                   {isWebcamOn ? <Video size={18} /> : <VideoOff size={18} />}
                 </div>
-                
+
                 {/* Menu (Dấu 3 chấm) */}
                 <button className="text-gray-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                   <MoreVertical size={18} />
