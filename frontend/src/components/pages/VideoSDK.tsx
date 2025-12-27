@@ -60,26 +60,27 @@ import { MeetingRoom } from "./MeetingRoom.tsx";
 import { useAuth } from "../../context/AuthContext.tsx";
 import LoadMeeting from "./common/meetings/LoadMeeting.tsx";
 
-export const MeetingPage = React.memo(() => {
+export const MeetingPage = () => {
   const navigate = useNavigate();
   const { roomId: paramRoomId } = useParams();
   const location = useLocation();
   const { user } = useAuth();
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // 1. Lấy dữ liệu an toàn và ghi nhớ vào memo/state để tránh tính toán lại mỗi lần render
   const meetingData = (() => {
     const stateData = location.state;
-    const storageData = JSON.parse(sessionStorage.getItem(`meeting_${paramRoomId}`) || "null");
+    const storageData = JSON.parse(
+      sessionStorage.getItem(`meeting_${paramRoomId}`) || "null"
+    );
     return stateData || storageData || {};
   })();
 
-  const { 
-    token, 
-    roomId: stateRoomId, 
+  const {
+    token,
+    roomId: stateRoomId,
     hostId,
     settings,
-    displayName: stateName 
+    displayName: stateName,
   } = meetingData;
 
   const roomId = stateRoomId || paramRoomId;
@@ -94,7 +95,7 @@ export const MeetingPage = React.memo(() => {
   }, [roomId, token, navigate]);
 
   if (!token || !roomId) {
-    return <LoadMeeting />; 
+    return <LoadMeeting />;
   }
 
   return (
@@ -109,19 +110,17 @@ export const MeetingPage = React.memo(() => {
         autoConsume: true,
         debugMode: true,
         multiStream: true,
+        maxResolution:'hd',
       }}
       token={token}
       joinWithoutUserInteraction={settings.allowJoin}
       reinitialiseMeetingOnConfigChange={true}
     >
-      
       <MeetingRoom
         roomId={roomId}
         isHost={hostId === user?.id}
         onLeaveMeeting={() => navigate("/home")}
-        onToggleChat={() => setIsChatOpen(!isChatOpen)}
-        onChatOpen={isChatOpen}
       />
     </MeetingProvider>
   );
-})
+};
