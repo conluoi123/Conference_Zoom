@@ -138,7 +138,6 @@ export function MeetingRoom({
 
     onError: (error) => {
       console.error("❌ Lỗi SDK:", error);
-      toast.error(`Mã lỗi: ${error.code} | Nội dung: ${error.message}`);
     },
 
     onMeetingStateChanged: ({ state }) => {

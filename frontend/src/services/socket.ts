@@ -143,7 +143,7 @@ class SocketService {
   }
 
   // ============ LISTENERS ============
-  onMeetingJoin(callback: (message: string) => void) {
+  onMeetingJoin(callback: (message: string) => void) {  
     this.socket?.on("meeting:join", callback);
   }
 

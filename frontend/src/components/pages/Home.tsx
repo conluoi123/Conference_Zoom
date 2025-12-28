@@ -272,7 +272,7 @@ export function HomePage() {
           {/* Left Column - Actions */}
           <div className="lg:col-span-2 space-y-6">
             {/* Action Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <button
                 onClick={handleNewMeeting}
                 className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center"
@@ -302,14 +302,14 @@ export function HomePage() {
                 </Link>
               </button>
 
-              <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
+              {/* <button className="bg-white rounded-2xl p-6 hover:shadow-xl transition-shadow group flex flex-col items-center">
                 <div className="bg-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Upload className="w-7 h-7 text-white" />
                 </div>
                 <p className="text-gray-900 font-medium text-sm">
                   Share screen
                 </p>
-              </button>
+              </button> */}
             </div>
 
             {/* Recordings & History */}
