@@ -21,25 +21,29 @@ import { authenticateAccessToken } from "../middlewares/jwt.middleware";
 
 const router = Router();
 const roomRoutes = (app: Express) => {
-  app.post(
+  router.post(
     "/schedule/invited-users",
     authenticateAccessToken,
     getInvietedUsersBySchedule
   );
-  app.get("/schedule", authenticateAccessToken, getRoomScheduleByInvitedUser);
-  app.post(
+  router.get(
+    "/schedule",
+    authenticateAccessToken,
+    getRoomScheduleByInvitedUser
+  );
+  router.post(
     "/create",
     authenticateAccessToken,
     createRoomMiddleware,
     createNewRoom
   );
-  app.post(
+  router.post(
     "/:roomId/join",
     authenticateAccessToken,
     joinRoomMiddleware,
     userJoinRoom
   );
-  app.get(
+  router.get(
     "/:roomId/recordings/:sessionId",
     authenticateAccessToken,
     getSessionRecord
