@@ -60,9 +60,17 @@ const notificationSocketHandler = (
       ]);
       const trigger = new Date(schedule.startTime);
       trigger.setMinutes(trigger.getMinutes() - 15);
+      const uniqueJobId = `schedule_noti_${scheduleId}_${email}`;
+
+      await agenda.cancel({
+        name: "onScheduleNotification",
+        "data.uniqueJobId": uniqueJobId,
+      });
+
       await agenda.schedule(trigger, "onScheduleNotification", {
         schedule,
         email,
+        uniqueJobId,
       });
     }
   });

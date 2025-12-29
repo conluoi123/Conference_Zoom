@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IParticipant extends Document {
   participantId: string;
   sessionId: string;
+  roomId: string;
   displayName: string;
   role: "host" | "co-host" | "participant";
   joinTime: Date;
@@ -18,6 +19,12 @@ const participantSchema = new Schema<IParticipant>({
     type: String,
     required: true,
   },
+
+  roomId: {
+    type: String,
+    required: true,
+  },
+
   displayName: {
     type: String,
   },
@@ -27,7 +34,7 @@ const participantSchema = new Schema<IParticipant>({
     default: "participant",
   },
   joinTime: { type: Date },
-  leaveTime: { type: Date },
+  leaveTime: { type: Date, expires: 604800 },
 });
 
 const Participant = mongoose.model<IParticipant>(

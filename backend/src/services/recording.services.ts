@@ -11,11 +11,16 @@ const startRecording = async (data) => {
 };
 
 const endRecording = async (data) => {
-  const record = await Record.findOne({ sessionId: data.sessionId });
+  const record = await Record.findOneAndUpdate(
+    { sessionId: data.sessionId },
+    {
+      $set: { fileUrl: data.fileUrl },
+    },
+    { new: true }
+  );
   if (!record) {
     throw new Error("Không tìm thấy bản ghi");
   }
-  record.fileUrl = data.fileUrl;
 };
 
 export { startRecording, endRecording };

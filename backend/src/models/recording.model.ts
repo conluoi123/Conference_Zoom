@@ -5,12 +5,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IRecord extends Document {
   sessionId: string;
   fileUrl: string;
-  fileSize: number;
-  duration: number;
   createdAt: Date;
-  aiSummary: {
-    transcript: String;
-  };
 }
 
 // 2. Schema (Triển khai cho Mongoose)
@@ -23,12 +18,7 @@ const recordSchema = new Schema<IRecord>({
   },
 
   fileUrl: { type: String, default: null },
-  fileSize: { type: Number, default: null },
-  duration: { type: Number, default: null },
-  createdAt: Date,
-  aiSummary: {
-    transcript: { type: String },
-  },
+  createdAt: { type: Date, default: null },
 });
 
 const Record = mongoose.model<IRecord>("Record", recordSchema);

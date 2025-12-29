@@ -49,7 +49,8 @@ const userJoinRoom = async (req: Request, res: Response) => {
     if (peerId === room.hostId) userType = "host";
     if (
       (await isInvitedForRoom(roomId, peerId)) ||
-      (await isInvitedForSession(roomId, peerId))
+      (await isInvitedForSession(roomId, peerId)) ||
+      room.settings.allowJoin
     ) {
       userType = "invitee";
     }
@@ -60,16 +61,16 @@ const userJoinRoom = async (req: Request, res: Response) => {
       .status(200)
       .json({ hostId: room.hostId, settings: room.settings, token: token });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json(error);
   }
 };
 
-const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => { 
+const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => {
   try {
     const { userId } = req.query;
-    if(!userId){
-      return res.status(400).json({message: "userId is not found"});
+    if (!userId) {
+      return res.status(400).json({ message: "userId is not found" });
     }
     const roomIds = await getRoomShedule(userId as string, "roomId");
     const hostIds = await getRoomShedule(userId as string, "hostId");
@@ -79,13 +80,13 @@ const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => {
     console.error("getRoomScheduleByInvitedUser error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
-const getInvietedUsersBySchedule = async (req: Request, res: Response) => { 
+const getInvietedUsersBySchedule = async (req: Request, res: Response) => {
   try {
-    const {roomId, hostId} = req.body;
-    if(!roomId || !hostId){
-      return res.status(400).json({message: "Missing required fields"});
+    const { roomId, hostId } = req.body;
+    if (!roomId || !hostId) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
     const invitedUsers = await getRoomSheduleInvited(roomId, hostId);
     return res.status(200).json({ invitedUsers });
@@ -93,7 +94,7 @@ const getInvietedUsersBySchedule = async (req: Request, res: Response) => {
     console.error("getInvietedUsersBySchedule error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 export {
   createNewRoom,

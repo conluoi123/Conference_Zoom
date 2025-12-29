@@ -27,11 +27,8 @@ import { initSocket, socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
-//Scheduling notifications
-import { Agendash } from "agendash";
-import Agenda from "agenda";
-import agenda from "./configs/agenda";
 import notificationRoutes from "./routes/notification.routes";
+import { startAgenda } from "./configs/agenda";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -67,14 +64,7 @@ const server = createServer(app);
 const io = initSocket(server);
 
 //Khởi động agenda
-(async () => {
-  try {
-    await agenda.start();
-    console.log("🚀 Agenda Scheduler đã bắt đầu chạy!");
-  } catch (error) {
-    console.error("Lỗi khởi động Agenda:", error);
-  }
-})();
+startAgenda();
 
 socketHandler(io);
 
