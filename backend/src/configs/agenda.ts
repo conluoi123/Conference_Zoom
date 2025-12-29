@@ -22,10 +22,4 @@ export const startAgenda = async () => {
   }
 };
 
-const graceful = () => {
-  agenda.stop();
-};
-process.on("SIGTERM", graceful);
-process.on("SIGINT", graceful);
-
 export default agenda;
