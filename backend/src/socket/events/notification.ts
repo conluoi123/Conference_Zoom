@@ -52,26 +52,30 @@ const notificationSocketHandler = (
   agenda: Agenda
 ) => {
   socket.on("notification:invitation", async (scheduleId, email, status) => {
-    updateInvitationStatus(scheduleId, email, status);
-    if (status == "accepted") {
+    try {
       const schedule = await getScheduleInfo(scheduleId);
-      updateRoomOnDatabase(schedule.roomId, schedule.hostId, null, null, [
-        email,
-      ]);
-      const trigger = new Date(schedule.startTime);
-      trigger.setMinutes(trigger.getMinutes() - 15);
-      const uniqueJobId = `schedule_noti_${scheduleId}_${email}`;
+      updateInvitationStatus(scheduleId, email, status);
+      if (status == "accepted") {
+        updateRoomOnDatabase(schedule.roomId, schedule.hostId, null, null, [
+          email,
+        ]);
+        const trigger = new Date(schedule.startTime);
+        trigger.setMinutes(trigger.getMinutes() - 15);
+        const uniqueJobId = `schedule_noti_${scheduleId}_${email}`;
 
-      await agenda.cancel({
-        name: "onScheduleNotification",
-        "data.uniqueJobId": uniqueJobId,
-      });
+        await agenda.cancel({
+          name: "onScheduleNotification",
+          "data.uniqueJobId": uniqueJobId,
+        });
 
-      await agenda.schedule(trigger, "onScheduleNotification", {
-        schedule,
-        email,
-        uniqueJobId,
-      });
+        await agenda.schedule(trigger, "onScheduleNotification", {
+          schedule,
+          email,
+          uniqueJobId,
+        });
+      }
+    } catch (error) {
+      io.to(email).emit("notification:invitation-error", error);
     }
   });
 };

@@ -6,10 +6,14 @@ import {
   generateToken,
   getRoomShedule,
   getRoomSheduleInvited,
+  isHost,
   isInvitedForRoom,
 } from "../services/room.services";
 import { isInvitedForSession } from "../services/session.services";
 import { isDueSchedule, latestSchedule } from "../services/schedule.services";
+import { getRecording } from "../services/recording.services";
+import User from "../models/user.model";
+import { RequestWithUser } from "./signIn.controller";
 
 const createNewRoom = async (req: Request, res: Response) => {
   try {
@@ -96,9 +100,25 @@ const getInvietedUsersBySchedule = async (req: Request, res: Response) => {
   }
 };
 
+const getSessionRecord = async (req: RequestWithUser, res: Response) => {
+  try {
+    const sessionId = req.params.sessionId;
+    const roomId = req.params.roomId;
+    const { id, email } = req.user;
+    const record = await getRecording(sessionId);
+    if (!isHost(roomId, id) || !record.shared.includes(email)) {
+      res.status(200).json("");
+    }
+    res.status(200).json(record.fileUrl);
+  } catch (error) {
+    res.status(500).json("Internal Server Error");
+  }
+};
+
 export {
   createNewRoom,
   userJoinRoom,
   getRoomScheduleByInvitedUser,
   getInvietedUsersBySchedule,
+  getSessionRecord,
 };

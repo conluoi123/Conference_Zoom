@@ -45,11 +45,19 @@ async function createSchedule(req: Request, res: Response) {
       return res.status(500).json({ message: "Failed to create schedule" });
     }
 
+    /**Về lịch hẹn
+     * Bên muốn tạo lịch phải trước thời gian họp là 30p
+     * Lời mời chỉ có hạn đến trước lịch họp là 15p
+     */
+
     //Tạo thông báo
+    const expires = new Date(startTime);
+    expires.setMinutes(expires.getMinutes() - 15); // Lùi lại 15 phút
+
     const message = await generateInvitationMessage(roomId, hostId);
     emails.forEach((email) => {
-      createInvitation(schedule._id, roomId, email); //Tạo lời mời
-      createNotification(email, "meeting", message); //Tạo thông báo
+      createInvitation(schedule._id, roomId, email, expires); //Tạo lời mời
+      createNotification(email, "invitation", message); //Tạo thông báo
 
       //Bắn thông báo
       const io = getIO();

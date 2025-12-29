@@ -7,6 +7,7 @@ import {
   updateUserInfo,
 } from "../controllers/user.controller";
 import { authenticateAccessToken } from "../middlewares/jwt.middleware";
+import { getAllNotifications } from "../controllers/notification.controller";
 
 const router = Router();
 const userRoutes = (app: Express) => {
@@ -22,6 +23,12 @@ const userRoutes = (app: Express) => {
     authenticateAccessToken,
     userMiddleware,
     getUserMeetingHistory
+  );
+  app.get(
+    "/:id/notifications",
+    authenticateAccessToken,
+    userMiddleware,
+    getAllNotifications
   );
   router.get("/auth/me", authenticateAccessToken, getUser);
   app.use("", router);

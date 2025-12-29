@@ -7,6 +7,7 @@ export interface IInvitation extends Document {
   joinLink: string;
   status: "pending" | "accepted" | "declined";
   sentAt: Date;
+  expiresAt: Date;
 }
 
 const invitationSchema = new Schema<IInvitation>({
@@ -26,6 +27,12 @@ const invitationSchema = new Schema<IInvitation>({
     enum: ["pending", "accepted", "declined"],
   },
   sentAt: { type: Date },
+
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: { expires: 0 },
+  },
 });
 
 const Invitation = mongoose.model<IInvitation>("Invitation", invitationSchema);

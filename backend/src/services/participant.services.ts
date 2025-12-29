@@ -58,7 +58,11 @@ const getMeetingHistory = async (participantId: string) => {
   let roomInfo = [];
   history.forEach(async (data) => {
     const room = await findRoomOnDatabase(data.roomId);
-    roomInfo.push({ roomId: room.roomId, title: room.title });
+    roomInfo.push({
+      roomId: room.roomId,
+      title: room.title,
+      sessionId: data.sessionId,
+    });
   });
   return roomInfo;
 };

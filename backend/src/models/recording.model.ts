@@ -6,6 +6,7 @@ export interface IRecord extends Document {
   sessionId: string;
   fileUrl: string;
   createdAt: Date;
+  shared: string[];
 }
 
 // 2. Schema (Triển khai cho Mongoose)
@@ -19,6 +20,10 @@ const recordSchema = new Schema<IRecord>({
 
   fileUrl: { type: String, default: null },
   createdAt: { type: Date, default: null },
+  shared: {
+    type: [String],
+    default: [],
+  },
 });
 
 const Record = mongoose.model<IRecord>("Record", recordSchema);
