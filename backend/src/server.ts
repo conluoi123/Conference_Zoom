@@ -27,6 +27,7 @@ import { initSocket, socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
+import notificationRoutes from "./routes/notification.routes";
 import agenda, { startAgenda } from "./configs/agenda";
 
 const PORT = ENV.PORT || 8080;
@@ -78,6 +79,7 @@ refreshTokenRouter(app);
 logoutRouter(app);
 webHook(app);
 supportProfileRouter(app);
+notificationRoutes(app);
 
 const startServer = async () => {
   try {
