@@ -14,18 +14,31 @@ const createInvitation = async (scheduleId, roomId, email, expires) => {
   if (!invitation) {
     throw new Error("Không thể tạo lời mời");
   }
+  return invitation._id;
 };
+
+type InvitationStatus = "accepted" | "declined";
+
 const updateInvitationStatus = async (scheduleId, email, status: string) => {
-  const invitation = await Invitation.findOne({
-    scheduleId: scheduleId,
-    email: email,
-    status: "pending",
-  });
-  if (!invitation) {
-    throw new Error("Lời mời đã hết hạn");
+  const validStatuses: InvitationStatus[] = ["accepted", "declined"];
+  if (!validStatuses.includes(status as InvitationStatus)) {
+    throw new Error("Trạng thái không hợp lệ");
   }
-  invitation.status = status as "accepted" | "declined";
-  await invitation.save();
+  const updatedInvitation = await Invitation.findOneAndUpdate(
+    {
+      scheduleId: scheduleId,
+      email: email,
+      status: "pending",
+    },
+    {
+      $set: { status: status },
+    },
+    { new: true }
+  );
+
+  if (!updatedInvitation) {
+    throw new Error("Lời mời đã hết hạn hoặc không tồn tại");
+  }
 };
 
 export { createInvitation, updateInvitationStatus };

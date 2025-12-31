@@ -37,7 +37,7 @@ const scheduleNotification = (agenda: Agenda) => {
     const message = `Nhắc nhở: Bạn có lịch họp "${schedule.title}" vào lúc ${timeString}.`;
 
     try {
-      await createNotification(email, "schedule", message);
+      await createNotification(email, `schedule-${schedule._id}`, message);
       const io = getIO();
       io.to(email).emit("notification:schedule", message);
     } catch (err) {

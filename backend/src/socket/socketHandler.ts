@@ -50,7 +50,7 @@ const socketHandler = (io: Server) => {
           shareRecording(sessionId, emails);
           emails.forEach((email) => {
             const message = `Bạn được chia sẻ bản ghi cho cuộc họp ${roomId}`;
-            createNotification(email, "recording", message);
+            createNotification(email, `recording-${sessionId}`, message);
             io.to(email).emit("notification:recording", {
               roomId,
               sessionId,

@@ -55,9 +55,9 @@ async function createSchedule(req: Request, res: Response) {
     expires.setMinutes(expires.getMinutes() - 15); // Lùi lại 15 phút
 
     const message = await generateInvitationMessage(roomId, hostId);
-    emails.forEach((email) => {
-      createInvitation(schedule._id, roomId, email, expires); //Tạo lời mời
-      createNotification(email, "invitation", message); //Tạo thông báo
+    emails.forEach(async (email) => {
+      const id = await createInvitation(schedule._id, roomId, email, expires); //Tạo lời mời
+      createNotification(email, `invitation-${id}`, message); //Tạo thông báo
 
       //Bắn thông báo
       const io = getIO();

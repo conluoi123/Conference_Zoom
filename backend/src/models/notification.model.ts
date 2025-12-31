@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 //notificationId là objectId do mongoDB sinh ra
 export interface INotification extends Document {
   recipient: string; //email
-  type: string; //meeting (đang họp), invitation (mời tham gia lịch họp), schedule(thông báo lịch)
+  type: string; //meeting-roomId (đang họp), invitation-invitationId (mời tham gia lịch họp), schedule-scheduleId(thông báo lịch)
   content: string;
   isRead: boolean;
   sentAt: Date;
