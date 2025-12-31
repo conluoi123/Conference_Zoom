@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronLeft,
   Calendar,
@@ -15,7 +15,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/layout/MainLayout";
 import { Textarea } from "../ui/textarea";
 import { useAuth } from "@/context/AuthContext";
-
+import {
+  useMeeting,
+} from "@videosdk.live/react-sdk";
 import {
   Dialog,
   DialogContent,
@@ -24,14 +26,18 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+
 import * as z from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-// 1. Schema Validate
+import { scheduleApi } from "@/services/scheduleApi";
+import { meetingAPI } from "@/services/meetingApi";
+
+// =============== SCHEMA ===============
 const scheduleSchema = z.object({
-  roomId: z.string().min(1, "Vui lòng nhập vào mã phòng"),
+  roomId: z.string().optional().or(z.literal("")),
   title: z.string().min(5, "Tiêu đề phải có ít nhất 5 ký tự"),
   date: z.string().min(1, "Vui lòng chọn ngày"),
   time: z.string().min(1, "Vui lòng chọn giờ"),
@@ -39,7 +45,6 @@ const scheduleSchema = z.object({
     message: "Thời lượng phải là số dương",
   }),
   description: z.string().optional(),
-  attendee: z.string().email("Email không hợp lệ").or(z.literal("")),
 });
 
 type ScheduleFormValues = z.infer<typeof scheduleSchema>;
@@ -47,11 +52,14 @@ type ScheduleFormValues = z.infer<typeof scheduleSchema>;
 function SchedulePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [attendees, setAttendees] = useState<string[]>([]);
+  const [emailInput, setEmailInput] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [formData, setFormData] = useState<ScheduleFormValues | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 2. React Hook Form
+  
   const {
     register,
     handleSubmit,
@@ -59,41 +67,81 @@ function SchedulePage() {
     reset,
   } = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
-    defaultValues: { duration: "60", attendee: "" },
+    defaultValues: { duration: "60" },
   });
 
-  // Xử lý khi nhấn nút Schedule Meeting lần đầu
+  // =============== ADD EMAIL ===============
+  const handleAddEmail = () => {
+    setEmailError("");
+
+    if (!emailInput.trim()) return;
+
+    const emailSchema = z.string().email("Email không hợp lệ");
+    const result = emailSchema.safeParse(emailInput.trim());
+
+    if (!result.success) {
+      setEmailError("Email không hợp lệ");
+      return;
+    }
+
+    if (attendees.includes(emailInput.trim())) {
+      setEmailError("Email đã tồn tại trong attendee");
+      return;
+    }
+
+    setAttendees((prev) => [...prev, emailInput.trim()]);
+    setEmailInput("");
+  };
+
+  // =============== REMOVE EMAIL ===============
+  const handleRemoveEmail = (email: string) => {
+    setAttendees((prev) => prev.filter((x) => x !== email));
+  };
+
+  // =============== SUBMIT FIRST TIME (OPEN CONFIRM DIALOG) ===============
   const onSubmitForm = (data: ScheduleFormValues) => {
     setFormData(data);
     setIsConfirmOpen(true);
   };
 
-  // Xử lý xác nhận cuối cùng trong Modal
+  // =============== FINAL CONFIRM (CALL API) ===============
   const handleFinalConfirm = async () => {
+    if (!formData || !user) return;
+
     setIsSubmitting(true);
     try {
-      // Giả lập gọi API tạo lịch hẹn
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const startTime = new Date(`${formData.date}T${formData.time}`);
 
-      toast.success("Tạo lịch họp thành công!", {
-        description: `Cuộc họp "${formData?.title}" đã được lên lịch.`,
+      const scheData = await scheduleApi.createSchedule({
+        hostId: user.id,
+        title: formData.title,
+        startTime,
+        duration: formData.duration,
+        emails: attendees, // gửi lên BE
       });
+      
+      // await meetingAPI.joinMeeting({roomId: scheData.schedule.roomId,peerId: user.id})
 
-      setIsConfirmOpen(false);
+      toast.success("Tạo lịch họp thành công!");
+
       reset();
-      navigate("/home"); // Thường sẽ quay về home sau khi tạo xong
-    } catch (error) {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+      setAttendees([]);
+      setIsConfirmOpen(false);
+
+      // navigate("/home");
+    } catch (error: any) {
+      toast.error(error?.message || "Có lỗi xảy ra, vui lòng thử lại.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   return (
     <MainLayout>
       <div className="min-h-screen bg-slate-50/50 p-6 md:p-12">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Header */}
+          {/* HEADER */}
           <div className="space-y-4">
             <Link
               to="/home"
@@ -102,166 +150,104 @@ function SchedulePage() {
               <ChevronLeft className="w-4 h-4" />
               Back to Home
             </Link>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold text-slate-900">
-                Schedule a Meeting
-              </h1>
-              <p className="text-slate-500">
-                Create a new meeting and invite attendees
-              </p>
-            </div>
+            <h1 className="text-3xl font-bold">Schedule a Meeting</h1>
           </div>
 
-          {/* Form */}
+          {/* FORM */}
           <form onSubmit={handleSubmit(onSubmitForm)}>
-            <Card className="border-none shadow-sm ring-1 ring-slate-200">
+            <Card>
               <CardContent className="p-8 space-y-6">
-                {/* RoomId */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    RoomID *
-                  </label>
+                {/* ROOM ID */}
+                <div>
+                  <label>Room ID</label>
                   <Input
                     {...register("roomId")}
-                    placeholder="123.456"
-                    className={`bg-slate-100/50 border-none h-12 focus-visible:ring-1 focus-visible:ring-blue-500 ${
-                      errors.roomId ? "ring-1 ring-red-500" : ""
-                    }`}
-                  >
-                    {errors.roomId && (
-                      <p className="text-xs text-red-500 font-medium">
-                        {errors.roomId.message}
-                      </p>
-                    )}
-                  </Input>
-                </div>
-                {/* Title */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    Meeting Title *
-                  </label>
-                  <Input
-                    {...register("title")}
-                    placeholder="e.g., Weekly Team Sync"
-                    className={`bg-slate-100/50 border-none h-12 focus-visible:ring-1 focus-visible:ring-blue-500 ${
-                      errors.title ? "ring-1 ring-red-500" : ""
-                    }`}
+                    placeholder="Có thể bỏ trống"
                   />
+                </div>
+
+                {/* TITLE */}
+                <div>
+                  <label>Title *</label>
+                  <Input {...register("title")} />
                   {errors.title && (
-                    <p className="text-xs text-red-500 font-medium">
+                    <p className="text-red-500 text-xs">
                       {errors.title.message}
                     </p>
                   )}
                 </div>
 
-                {/* Date & Time Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                      Date *
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
-                      <Input
-                        type="date"
-                        {...register("date")}
-                        className="bg-slate-100/50 border-none h-12 pl-10 focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                    </div>
-                    {errors.date && (
-                      <p className="text-xs text-red-500 font-medium">
-                        {errors.date.message}
-                      </p>
-                    )}
+                {/* DATE & TIME */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label>Date *</label>
+                    <Input type="date" {...register("date")} />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                      Time *
-                    </label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
-                      <Input
-                        type="time"
-                        {...register("time")}
-                        className="bg-slate-100/50 border-none h-12 pl-10 focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                    </div>
-                    {errors.time && (
-                      <p className="text-xs text-red-500 font-medium">
-                        {errors.time.message}
-                      </p>
-                    )}
+                  <div>
+                    <label>Time *</label>
+                    <Input type="time" {...register("time")} />
                   </div>
                 </div>
 
-                {/* Duration */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    Duration (minutes)
-                  </label>
-                  <Input
-                    type="number"
-                    {...register("duration")}
-                    placeholder="60"
-                    className="bg-white border-slate-200 h-12 focus-visible:ring-1 focus-visible:ring-blue-500"
-                  />
-                  {errors.duration && (
-                    <p className="text-xs text-red-500 font-medium">
-                      {errors.duration.message}
-                    </p>
-                  )}
+                {/* DURATION */}
+                <div>
+                  <label>Duration (minutes)</label>
+                  <Input type="number" {...register("duration")} />
                 </div>
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    Description
-                  </label>
-                  <Textarea
-                    {...register("description")}
-                    placeholder="Add meeting agenda, notes, or any other details..."
-                    className="bg-slate-100/50 border-none min-h-[120px] focus-visible:ring-1 focus-visible:ring-blue-500 resize-none"
-                  />
+                {/* DESCRIPTION */}
+                <div>
+                  <label>Description</label>
+                  <Textarea {...register("description")} />
                 </div>
 
-                {/* Attendees */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    Attendees
-                  </label>
+                {/* ATTENDEE INPUT */}
+                <div>
+                  <label>Attendees</label>
+
                   <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Users className="absolute left-3 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
-                      <Input
-                        {...register("attendee")}
-                        placeholder="Enter email address"
-                        className="bg-slate-100/50 border-none h-12 pl-10 focus-visible:ring-1 focus-visible:ring-blue-500"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      className="h-12 w-12 border-slate-200"
-                    >
-                      <Plus className="w-5 h-5" />
+                    <Input
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" &&
+                        (e.preventDefault(), handleAddEmail())
+                      }
+                      placeholder="Nhập email"
+                    />
+                    <Button type="button" onClick={handleAddEmail}>
+                      <Plus />
                     </Button>
                   </div>
-                  {errors.attendee && (
-                    <p className="text-xs text-red-500 font-medium">
-                      {errors.attendee.message}
-                    </p>
+
+                  {emailError && (
+                    <p className="text-red-500 text-xs">{emailError}</p>
+                  )}
+
+                  {/* LIST EMAIL TAGS */}
+                  {attendees.length > 0 && (
+                    <div className="flex gap-2 flex-wrap pt-2">
+                      {attendees.map((email) => (
+                        <div
+                          key={email}
+                          className="flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs"
+                        >
+                          <span>{email}</span>
+                          <button
+                            onClick={() => handleRemoveEmail(email)}
+                            className="font-bold hover:text-red-600"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
 
-                {/* Submit Button */}
-                <div className="pt-4 flex justify-end">
-                  <Button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 px-8 h-12 rounded-lg font-bold"
-                  >
-                    Schedule Meeting
-                  </Button>
+                {/* SUBMIT */}
+                <div className="flex justify-end">
+                  <Button type="submit">Schedule Meeting</Button>
                 </div>
               </CardContent>
             </Card>
@@ -269,50 +255,23 @@ function SchedulePage() {
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* CONFIRM DIALOG */}
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Xác nhận lịch họp</DialogTitle>
             <DialogDescription>
-              Bạn có chắc chắn muốn lên lịch cuộc họp này không? Vui lòng kiểm
-              tra lại thông tin.
+              Vui lòng kiểm tra lại thông tin
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 text-sm">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <span className="font-semibold">Tiêu đề:</span>
-              <span className="col-span-3">{formData?.title}</span>
-            </div>
-            <div className="grid grid-cols-4 items-center gap4">
-              <span className="font-semibold">Mã phòng</span>
-              <span className="col-span-3">{formData?.roomId}</span>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <span className="font-semibold">Thời gian:</span>
-              <span className="col-span-3">
-                {formData?.date} lúc {formData?.time}
-              </span>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsConfirmOpen(false)}
-              disabled={isSubmitting}
-            >
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>
               Hủy
             </Button>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 min-w-[100px]"
-              onClick={handleFinalConfirm}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Xác nhận"
-              )}
+
+            <Button onClick={handleFinalConfirm} disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Xác nhận"}
             </Button>
           </DialogFooter>
         </DialogContent>
