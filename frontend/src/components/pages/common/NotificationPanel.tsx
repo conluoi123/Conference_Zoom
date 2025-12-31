@@ -94,7 +94,7 @@ export function NotificationPanel() {
               <p className="text-sm text-gray-500">Không có thông báo mới</p>
             </div>
           ) : (
-            notifications.slice(0, 10).map((notification) => (
+            notifications.slice(0, 5).map((notification) => (
               <DropdownMenuItem
                 key={notification._id}
                 className={`px-4 py-3 cursor-pointer focus:bg-gray-50 ${!notification.isRead ? "bg-blue-50/50" : ""

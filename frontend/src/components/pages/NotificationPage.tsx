@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Bell, ChevronLeft, Video, Users, Calendar, CheckCheck, X } from "lucide-react";
 import { MainLayout } from "@/layout/MainLayout";
 import { Link, useNavigate } from "react-router-dom";
-import { useNotification  } from "@/context/NotificationContext";
+import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -60,17 +60,10 @@ const getNotificationTitle = (type: string) => {
 };
 
 function NotificationPage() {
-  const { notifications, markAsRead, isLoading } = useNotification();
+  const { notifications, markAsRead, isLoading, currentPage, totalPages, setPage, currentFilter, setFilter } = useNotification();
   const { user } = useAuth();
-  const [filter, setFilter] = useState<string>("all");
   const [joiningMeetingId, setJoiningMeetingId] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  const filteredNotifications = notifications.filter((notif) => {
-    if (filter === "all") return true;
-    if (filter === "unread") return !notif.isRead;
-    return notif.type === filter;
-  });
 
   const handleMarkAllAsRead = async () => {
     const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -187,7 +180,7 @@ function NotificationPage() {
               ].map((filterOption) => (
                 <Button
                   key={filterOption.value}
-                  variant={filter === filterOption.value ? "default" : "outline"}
+                  variant={currentFilter === filterOption.value ? "default" : "outline"}
                   onClick={() => setFilter(filterOption.value)}
                   className="min-w-[100px]"
                 >
@@ -202,93 +195,131 @@ function NotificationPage() {
                 <div className="flex items-center justify-center py-20">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
-              ) : filteredNotifications.length === 0 ? (
+              ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 px-4">
                   <Bell className="w-16 h-16 text-gray-300 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Không có thông báo
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {filter === "all"
+                    {currentFilter === "all"
                       ? "Bạn chưa có thông báo nào"
-                      : filter === "unread"
+                      : currentFilter === "unread"
                         ? "Bạn đã đọc hết thông báo"
-                        : `Không có thông báo loại ${getNotificationTitle(filter)}`}
+                        : `Không có thông báo loại ${getNotificationTitle(currentFilter)}`}
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
-                  {filteredNotifications.map((notification) => (
-                    <div
-                      key={notification._id}
-                      className={`p-6 hover:bg-gray-50 transition-colors ${!notification.isRead ? "bg-blue-50/30" : ""
-                        }`}
-                    >
-                      <div className="flex gap-4">
-                        <div className="shrink-0 mt-1">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {getNotificationTitle(notification.type)}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {formatRelativeTime(notification.sentAt)}
-                              </p>
+                <>
+                  <div className="divide-y divide-gray-100">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification._id}
+                        className={`p-6 hover:bg-gray-50 transition-colors ${!notification.isRead ? "bg-blue-50/30" : ""
+                          }`}
+                      >
+                        <div className="flex gap-4">
+                          <div className="shrink-0 mt-1">
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4 mb-2">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                  {getNotificationTitle(notification.type)}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {formatRelativeTime(notification.sentAt)}
+                                </p>
+                              </div>
+                              {!notification.isRead && (
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 bg-blue-600 rounded-full"></span>
+                                  <span className="text-sm font-medium text-blue-600">
+                                    Mới
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                            {!notification.isRead && (
-                              <div className="flex items-center gap-2">
-                                <span className="w-3 h-3 bg-blue-600 rounded-full"></span>
-                                <span className="text-sm font-medium text-blue-600">
-                                  Mới
-                                </span>
+                            <p className="text-gray-700 leading-relaxed mb-3">
+                              {notification.content}
+                            </p>
+
+                            {/* Action buttons for meeting invitations */}
+                            {(notification.type === "meeting" || notification.type === "invitation") && notification.roomId && (
+                              <div className="flex gap-3 mt-4">
+                                <Button
+                                  onClick={(e) => handleJoinMeeting(e, notification.roomId!, notification._id)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                                  size="sm"
+                                  disabled={joiningMeetingId === notification._id}
+                                >
+                                  {joiningMeetingId === notification._id ? (
+                                    <>
+                                      <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      Đang tham gia...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Video className="w-4 h-4 mr-2" />
+                                      Tham gia
+                                    </>
+                                  )}
+                                </Button>
+                                <Button
+                                  onClick={(e) => handleDeclineMeeting(e, notification._id)}
+                                  variant="outline"
+                                  className="border-gray-300 hover:bg-gray-100"
+                                  size="sm"
+                                  disabled={joiningMeetingId === notification._id}
+                                >
+                                  <X className="w-4 h-4 mr-2" />
+                                  Từ chối
+                                </Button>
                               </div>
                             )}
                           </div>
-                          <p className="text-gray-700 leading-relaxed mb-3">
-                            {notification.content}
-                          </p>
-
-                          {/* Action buttons for meeting invitations */}
-                          {notification.type === "meeting" && notification.roomId && (
-                            <div className="flex gap-3 mt-4">
-                              <Button
-                                onClick={(e) => handleJoinMeeting(e, notification.roomId!, notification._id)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                                size="sm"
-                                disabled={joiningMeetingId === notification._id}
-                              >
-                                {joiningMeetingId === notification._id ? (
-                                  <>
-                                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    Đang tham gia...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Video className="w-4 h-4 mr-2" />
-                                    Tham gia
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                onClick={(e) => handleDeclineMeeting(e, notification._id)}
-                                variant="outline"
-                                className="border-gray-300 hover:bg-gray-100"
-                                size="sm"
-                                disabled={joiningMeetingId === notification._id}
-                              >
-                                <X className="w-4 h-4 mr-2" />
-                                Từ chối
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === 1 || isLoading}
+                        onClick={() => setPage(currentPage - 1)}
+                      >
+                        Trước
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                          <Button
+                            key={p}
+                            variant={currentPage === p ? "default" : "ghost"}
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={() => setPage(p)}
+                            disabled={isLoading}
+                          >
+                            {p}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages || isLoading}
+                        onClick={() => setPage(currentPage + 1)}
+                      >
+                        Sau
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
