@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../configs/env";
 import Room from "../models/room.model";
 import User from "../models/user.model";
+import { startSession } from "./session.services";
 
 //===================== VIDEOSDK ========================
 const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
@@ -51,7 +52,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://biserial-subattenuate-arie.ngrok-free.dev",
+        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",
@@ -68,7 +69,6 @@ const createRoomOnVideoSDK = async () => {
 
   // 2. Gọi API
   const response = await fetch(url, options);
-
   // 3. Parse dữ liệu JSON
   const data = await response.json();
 
@@ -78,7 +78,6 @@ const createRoomOnVideoSDK = async () => {
     const errorMessage = data.error || "Tạo phòng trên VideoSDK thất bại";
     throw new Error(`Lỗi VideoSDK: ${errorMessage}`);
   }
-
   return data.roomId;
 };
 

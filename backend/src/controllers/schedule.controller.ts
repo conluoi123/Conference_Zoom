@@ -7,6 +7,7 @@ import Schedule from "../models/schedule.model";
 import {
   createRoomOnDatabase,
   createRoomOnVideoSDK,
+  generateToken,
 } from "../services/room.services";
 import {
   createNotification,
@@ -14,6 +15,7 @@ import {
 } from "../services/notification.services";
 import { getIO } from "../socket/socketHandler";
 import { createInvitation } from "../services/invitation.services";
+import { addInvitee } from "../services/session.services";
 
 async function createSchedule(req: Request, res: Response) {
   try {
@@ -30,7 +32,6 @@ async function createSchedule(req: Request, res: Response) {
       title,
       meetingType: "schedule",
     });
-
     //Tạo lịch mới
     const schedule = await createScheduleOnDb(
       hostId,

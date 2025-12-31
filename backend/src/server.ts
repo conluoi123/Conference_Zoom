@@ -27,6 +27,7 @@ import { initSocket, socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
+import scheduleRouter from "./routes/schedule.routes";
 //Scheduling notifications
 import { Agendash } from "agendash";
 import Agenda from "agenda";
@@ -90,6 +91,7 @@ logoutRouter(app);
 webHook(app);
 supportProfileRouter(app);
 notificationRoutes(app);
+scheduleRouter(app);
 
 const startServer = async () => {
   try {

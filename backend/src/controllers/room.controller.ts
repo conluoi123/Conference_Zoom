@@ -10,6 +10,7 @@ import {
 } from "../services/room.services";
 import { isInvitedForSession } from "../services/session.services";
 import { isDueSchedule, latestSchedule } from "../services/schedule.services";
+import Session from "../models/session.model";
 
 const createNewRoom = async (req: Request, res: Response) => {
   try {
@@ -37,16 +38,21 @@ const createNewRoom = async (req: Request, res: Response) => {
 const userJoinRoom = async (req: Request, res: Response) => {
   try {
     const { roomId, peerId } = req.body;
+    
     const room = res.locals.roomInfo;
 
     if (room.type === "SCHEDULED") {
       const schedule = await latestSchedule(roomId);
+      if(schedule[schedule.length - 1].hostId != peerId)
+      // console.log(schedule)
       if (!isDueSchedule(schedule))
         return res.status(403).json("Chưa đến thời gian vào phòng họp");
     }
 
     let userType = "peer";
-    if (peerId === room.hostId) userType = "host";
+    if (peerId === room.hostId) {
+      userType = "host";
+    } else 
     if (
       (await isInvitedForRoom(roomId, peerId)) ||
       (await isInvitedForSession(roomId, peerId))

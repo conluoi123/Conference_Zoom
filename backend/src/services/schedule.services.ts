@@ -57,7 +57,7 @@ const latestSchedule = (roomId: string) => {
 
 const isDueSchedule = (schedule: any) => {
   const now = Date.now();
-  const due = new Date(schedule.startTime).getTime();
+  const due = new Date(schedule[schedule.length - 1].startTime).getTime();
   if (due < now) {
     return true;
   }
