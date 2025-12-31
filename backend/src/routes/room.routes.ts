@@ -5,6 +5,10 @@ import {
   userJoinRoom,
   getInvietedUsersBySchedule,
   getSessionRecord,
+  getAllRecordings,
+  shareRecordingController,
+  deleteRecording,
+  startRecordingController,
 } from "../controllers/room.controller";
 import {
   createRoomMiddleware,
@@ -48,6 +52,35 @@ const roomRoutes = (app: Express) => {
     authenticateAccessToken,
     getSessionRecord
   );
+  
+  // Lấy tất cả recordings của user
+  router.get(
+    "/recordings",
+    authenticateAccessToken,
+    getAllRecordings
+  );
+
+  // Chia sẻ recording với emails
+  router.post(
+    "/recordings/:sessionId/share",
+    authenticateAccessToken,
+    shareRecordingController
+  );
+
+  // Xóa recording
+  router.delete(
+    "/recordings/:sessionId",
+    authenticateAccessToken,
+    deleteRecording
+  );
+
+  // Bắt đầu recording
+  router.post(
+    "/recordings/start",
+    authenticateAccessToken,
+    startRecordingController
+  );
+
   app.use("/rooms", router);
 };
 

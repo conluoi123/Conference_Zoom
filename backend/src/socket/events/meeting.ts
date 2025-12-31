@@ -68,7 +68,7 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     emails.forEach(async (email) => {
       addInvitee(roomId, email);
       const message = await generateMeetingMessage(roomId, participantId);
-      createNotification(email, "meeting", message);
+      createNotification(email, "meeting", message, roomId);
       io.to(email).emit("notification:meeting", { message, roomId });
       console.log(`   - ✅ Đã bắn sự kiện 'notification:meeting' tới ${email}`);
     });

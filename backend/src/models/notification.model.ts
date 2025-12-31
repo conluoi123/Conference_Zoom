@@ -4,6 +4,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface INotification extends Document {
   recipient: string; //email
   type: string; //meeting (đang họp), invitation (mời tham gia lịch họp), schedule(thông báo lịch)
+  roomId?: string;
   content: string;
   isRead: boolean;
   sentAt: Date;
@@ -12,6 +13,7 @@ export interface INotification extends Document {
 const notificationSchema = new Schema<INotification>({
   recipient: { type: String, required: true },
   type: { type: String },
+  roomId : {type: String},
   content: { type: String },
   isRead: { type: Boolean },
   sentAt: {

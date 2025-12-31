@@ -13,6 +13,7 @@ export interface IRoom extends Document {
     allowCam: boolean;
   };
   invited: string[]; // list user
+  participants : string[];
   createdAt: Date;
   lastUsedAt: Date;
 }

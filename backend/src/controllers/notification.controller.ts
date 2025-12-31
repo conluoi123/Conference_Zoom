@@ -3,9 +3,12 @@ import { getNotifications, markNotificationAsRead } from "../services/notificati
 
 // notification.controller.ts
 const getAllNotifications = async (req: Request, res: Response) => {
-  const { email } = req.query; // Đổi từ req.body sang req.query
-  const notifications = await getNotifications(email as string);
-  return res.status(200).json({ notifications });
+  const { email, page, limit } = req.query; // Đổi từ req.body sang req.query
+  const pageNum = parseInt(page as string) || 1;
+  const limitNum = parseInt(limit as string) || 10;
+  const results = await getNotifications(email as string, pageNum, limitNum);
+
+  return res.status(200).json(results);
 };
 
 const markAsRead = async (req: Request, res: Response) => {

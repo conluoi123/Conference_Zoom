@@ -3,10 +3,11 @@ import Room from "../models/room.model";
 import Schedule from "../models/schedule.model";
 import User from "../models/user.model";
 
-const createNotification = async (email, type, message: string) => {
+const createNotification = async (email, type, message: string, roomId?: string) => {
   const notification = await Notification.create({
     recipient: email,
     type: type,
+    roomId: roomId,
     content: message,
     isRead: false,
     sentAt: new Date(),
@@ -35,13 +36,29 @@ const generateInvitationMessage = async (roomId, participantId: string) => {
   const message = `${user.displayName} hẹn bạn tham gia lịch họp: "${room.title}"`;
   return message;
 };
+/*
+  Thêm logic phân trang 
+*/
+const getNotifications = async (email: string, page: number = 1, limit: number = 10) => {
+  const skip = (page - 1) * limit;
 
-const getNotifications = async (email: string) => {
-  const notifications = await Notification.find({ recipient: email });
-  if (!notifications) {
-    return [];
-  }
-  return notifications;
+  const [notifications, total, unreadCount] = await Promise.all([
+    Notification.find({ recipient: email })
+      .sort({ sentAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Notification.countDocuments({ recipient: email }),
+    Notification.countDocuments({ recipient: email, isRead: false }),
+  ]);
+
+  return {
+    notifications: notifications || [],
+    total,
+    unreadCount,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 };
 
 const markNotificationAsRead = async (notificationId: string) => {

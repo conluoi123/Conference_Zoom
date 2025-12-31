@@ -51,7 +51,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://eudaemonistically-metallographical-kasha.ngrok-free.dev",
+        endPoint: ENV.VIDEOSDK_WEBHOOK_URL  || "https://eudaemonistically-metallographical-kasha.ngrok-free.dev",
         events: [
           "participant-joined",
           "participant-left",
@@ -98,22 +98,29 @@ const validateRoomOnVideoSDK = async (roomId: string) => {
 };
 
 //===================== ROOM REPOSITORY ========================
+/*
+  Thêm trường mảng participants để share video record
+*/
+
 const createRoomOnDatabase = async ({
   roomId,
   peerId,
   title = "Cuộc họp mới",
   meetingType,
+  participants = [],
 }: {
   roomId: string;
   peerId: string;
   title?: string;
   meetingType: "schedule" | "instant";
+  participants?: string[];
 }) => {
   const room = await Room.create({
     roomId,
     hostId: peerId,
     title,
     type: meetingType === "schedule" ? "SCHEDULED" : "INSTANT",
+    participants,
     createdAt: new Date(),
   });
 
