@@ -158,7 +158,11 @@ class SocketService {
   onChatHistory(callback: (messages: any[]) => void) {
     this.socket?.on("meeting:chat-history", callback);
   }
-
+   /*
+    on: đăng ký lắng nghe 
+    callback: nhận vào một function, có type là (message, roomid)
+    ko cần promise vì đây là socket
+  */
   onMeetingInviteNotification(
     callback: (data: { message: string; roomId: string }) => void
   ) {
