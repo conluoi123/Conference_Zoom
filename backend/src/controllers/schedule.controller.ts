@@ -7,7 +7,10 @@ import Schedule from "../models/schedule.model";
 import {
   createRoomOnDatabase,
   createRoomOnVideoSDK,
+  findRoomOnDatabase,
   generateToken,
+  getRoomShedule,
+  updateRoomOnDatabase,
 } from "../services/room.services";
 import {
   createNotification,
@@ -19,23 +22,34 @@ import { addInvitee } from "../services/session.services";
 
 async function createSchedule(req: Request, res: Response) {
   try {
-    const { hostId, title, startTime, duration, emails } = req.body;
+    const { hostId, roomId, title, startTime, duration, emails } = req.body;
     if (!hostId || !title || !startTime || !duration) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-
+    let room = "";
+    if (roomId === "") {
+      room = await createRoomOnVideoSDK();
+      console.log(`room id: ${room}`);
+      await createRoomOnDatabase({
+        roomId: room,
+        peerId: hostId,
+        title,
+        meetingType: "schedule",
+      });
+    } else {
+      const isExistRoom = await findRoomOnDatabase(roomId);
+      if (!isExistRoom) {
+        return res.status(404).json({ message: "Room is not exists" });
+      }
+      room = roomId;
+      await updateRoomOnDatabase(room, hostId, title, null, null);
+    }
     //Tạo phòng mới
-    const roomId = await createRoomOnVideoSDK();
-    await createRoomOnDatabase({
-      roomId,
-      peerId: hostId,
-      title,
-      meetingType: "schedule",
-    });
+    
     //Tạo lịch mới
     const schedule = await createScheduleOnDb(
       hostId,
-      roomId,
+      room,
       title,
       startTime,
       null,
@@ -46,11 +60,19 @@ async function createSchedule(req: Request, res: Response) {
       return res.status(500).json({ message: "Failed to create schedule" });
     }
 
+    /**Về lịch hẹn
+     * Bên muốn tạo lịch phải trước thời gian họp là 30p
+     * Lời mời chỉ có hạn đến trước lịch họp là 15p
+     */
+
     //Tạo thông báo
-    const message = await generateInvitationMessage(roomId, hostId);
+    const expires = new Date(startTime);
+    expires.setMinutes(expires.getMinutes() - 15); // Lùi lại 15 phút
+
+    const message = await generateInvitationMessage(room, hostId);
     emails.forEach((email) => {
-      createInvitation(schedule._id, roomId, email); //Tạo lời mời
-      createNotification(email, "meeting", message); //Tạo thông báo
+      createInvitation(schedule._id, room, email, expires); //Tạo lời mời
+      createNotification(email, "invitation", message, schedule._id as string); //Tạo thông báo
 
       //Bắn thông báo
       const io = getIO();
@@ -64,7 +86,7 @@ async function createSchedule(req: Request, res: Response) {
   }
 }
 
-async function getListScheduleById(req: Request, res: Response) {
+async function getListScheduleByHostId(req: Request, res: Response) {
   try {
     const { userId } = req.query;
     if (!userId) {
@@ -72,7 +94,10 @@ async function getListScheduleById(req: Request, res: Response) {
         message: "userId is not found",
       });
     }
-    const listSchedule = await Schedule.find({ hostId: userId });
+    const listSchedule = await Schedule.find({
+      hostId: userId,
+      $or: [{ endTime: null }, { endTime: { $gt: new Date() } }],
+    });
     return res.status(200).json({
       listSchedule,
     });
@@ -116,39 +141,135 @@ async function updateSchedule(req: Request, res: Response) {
     });
   }
 }
-
-async function getListScheduleByRoom(req: Request, res: Response) {
+const getUpcomingSchedules = async (req: Request, res: Response) => {
   try {
-    const { roomIds, hostIds, startTimes } = req.body;
-    if (!roomIds || !hostIds || !startTimes) {
-      return res.status(400).json({
-        message: "Missing required fields",
-      });
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
     }
-    const listSchedule = await Schedule.find({
-      roomId: { $in: roomIds },
-      hostId: { $in: hostIds },
-      startTime: { $in: startTimes },
+
+    const start = new Date();
+
+    const now = new Date(
+      start.getFullYear(),
+      start.getMonth(),
+      start.getDate(),
+      0,
+      0,
+      0,
+      0
+    );
+    const threeDaysLater = new Date();
+    threeDaysLater.setDate(now.getDate() + 3);
+
+    // rooms user được mời
+    const invitedRooms = await getRoomShedule(userId as string, "roomId");
+
+    const invitedRoomIds = invitedRooms.map((r) => String(r.roomId));
+
+    // schedules user được mời
+    const invitedSchedules = await Schedule.find({
+      roomId: { $in: invitedRoomIds },
+      startTime: { $gte: now, $lte: threeDaysLater },
+      $or: [{ endTime: null }, { endTime: { $gt: now } }],
     });
-    if (!listSchedule || listSchedule.length === 0) {
-      return res.status(404).json({
-        message: "No schedules found",
-      });
-    }
+
+    // schedules user là host
+    const hostSchedules = await Schedule.find({
+      hostId: userId,
+      startTime: { $gte: now, $lte: threeDaysLater },
+      $or: [{ endTime: null }, { endTime: { $gt: now } }],
+    });
+
+    const unique = new Map();
+    [...invitedSchedules, ...hostSchedules].forEach((s) =>
+      unique.set(String(s._id), s)
+    );
+
+    const schedules = [...unique.values()].sort(
+      (a: any, b: any) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+
     return res.status(200).json({
-      listSchedule,
+      success: true,
+      schedules,
     });
   } catch (error) {
-    console.error("Update schedule error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    console.error("getUpcomingSchedules error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
+const getListSchedule = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
+
+    const today = new Date();
+
+    // ---- mốc thời gian ----
+    const oneMonthAgo = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 30
+    );
+
+    const oneMonthLater = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 30
+    );
+
+    // rooms user được mời
+    const invitedRooms = await getRoomShedule(userId as string, "roomId");
+    const invitedRoomIds = invitedRooms.map((r) => String(r.roomId));
+
+    // schedules user được mời
+    const invitedSchedules = await Schedule.find({
+      roomId: { $in: invitedRoomIds },
+      startTime: { $gte: oneMonthAgo, $lte: oneMonthLater },
+      $or: [{ endTime: null }, { endTime: { $gt: oneMonthAgo } }],
+    });
+
+    // schedules user là host
+    const hostSchedules = await Schedule.find({
+      hostId: userId,
+      startTime: { $gte: oneMonthAgo, $lte: oneMonthLater },
+      $or: [{ endTime: null }, { endTime: { $gt: oneMonthAgo } }],
+    });
+
+    // ---- loại trùng ----
+    const unique = new Map();
+    [...invitedSchedules, ...hostSchedules].forEach((s) =>
+      unique.set(String(s._id), s)
+    );
+
+    const schedules = [...unique.values()].sort(
+      (a: any, b: any) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+
+    return res.status(200).json({
+      success: true,
+      schedules,
+    });
+  } catch (error) {
+    console.error("getUpcomingSchedules error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
 
 export {
   createSchedule,
-  getListScheduleById,
+  getListScheduleByHostId,
   updateSchedule,
-  getListScheduleByRoom,
+  getUpcomingSchedules,
+  getListSchedule,
 };

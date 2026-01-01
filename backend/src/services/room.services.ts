@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import { ENV } from "../configs/env";
 import Room from "../models/room.model";
 import User from "../models/user.model";
-import { startSession } from "./session.services";
 
 //===================== VIDEOSDK ========================
 const generateToken = (userType?: string, peerId?: string, roomId?: string) => {
@@ -140,12 +139,19 @@ const updateRoomOnDatabase = async (
   invited: string[]
 ) => {
   const update: any = {};
+  const pushData: any = {};
   if (title != null) update.title = title;
   if (settings != null) update.settings = settings;
-  if (invited != null) update.invited = [...update.invited, ...invited];
+  if (invited && invited.length > 0) {
+    pushData.invited = { $each: invited };
+  }
+  const finalUpdate: any = {};
+  if (Object.keys(update).length > 0) finalUpdate.$set = update;
+  if (Object.keys(pushData).length > 0) finalUpdate.$addToSet = pushData;
+
   const room = await Room.findOneAndUpdate(
     { roomId: roomId, hostId: hostId },
-    { $set: update },
+    finalUpdate,
     { new: true }
   );
   if (!room) {
@@ -177,10 +183,9 @@ const isInvitedForRoom = async (roomId, peerId: string) => {
 };
 
 const getRoomShedule = async (userId: string, col: string) => {
+  const user = await User.findById(userId);
   const roomSchedule = await Room.find({
-    hostId: { $ne: userId },
-    type: "SCHEDULED",
-    invited: { $in: userId },
+    invited: user.email ,
   }).select(col);
   return roomSchedule;
 };

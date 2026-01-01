@@ -30,18 +30,22 @@ const videoSdkWebhook = async (req: Request, res: Response) => {
 
       case "participant-joined": {
         await onParticipantJoined(data);
+        break;
       }
 
       case "participant-left": {
         await onParticipantLeft(data);
+        break;
       }
 
       case "recording-started": {
         await startRecording(data);
+        break;
       }
 
       case "recording-stopped": {
         await endRecording(data);
+        break;
       }
     }
     // BẮT BUỘC: Trả về 200 OK ngay lập tức

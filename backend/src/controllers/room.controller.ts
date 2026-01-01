@@ -3,13 +3,18 @@ import { Request, Response } from "express";
 import {
   createRoomOnDatabase,
   createRoomOnVideoSDK,
+  findRoomOnDatabase,
   generateToken,
   getRoomShedule,
   getRoomSheduleInvited,
+  isHost,
   isInvitedForRoom,
 } from "../services/room.services";
 import { isInvitedForSession } from "../services/session.services";
 import { isDueSchedule, latestSchedule } from "../services/schedule.services";
+import { getRecording } from "../services/recording.services";
+import User from "../models/user.model";
+import { RequestWithUser } from "./signIn.controller";
 import Session from "../models/session.model";
 
 const createNewRoom = async (req: Request, res: Response) => {
@@ -55,7 +60,8 @@ const userJoinRoom = async (req: Request, res: Response) => {
     } else 
     if (
       (await isInvitedForRoom(roomId, peerId)) ||
-      (await isInvitedForSession(roomId, peerId))
+      (await isInvitedForSession(roomId, peerId)) ||
+      room.settings.allowJoin
     ) {
       userType = "invitee";
     }
@@ -66,44 +72,52 @@ const userJoinRoom = async (req: Request, res: Response) => {
       .status(200)
       .json({ hostId: room.hostId, settings: room.settings, token: token });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json(error);
   }
 };
 
-const getRoomScheduleByInvitedUser = async (req: Request, res: Response) => { 
+const getInvietedUsersBySchedule = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.query;
-    if(!userId){
-      return res.status(400).json({message: "userId is not found"});
+    const { roomId, hostId } = req.body;
+    if (!roomId || !hostId) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
-    const roomIds = await getRoomShedule(userId as string, "roomId");
-    const hostIds = await getRoomShedule(userId as string, "hostId");
-    const startTimes = await getRoomShedule(userId as string, "startTime");
-    return res.status(200).json({ roomIds, hostIds, startTimes });
-  } catch (error) {
-    console.error("getRoomScheduleByInvitedUser error:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-}
-
-const getInvietedUsersBySchedule = async (req: Request, res: Response) => { 
-  try {
-    const {roomId, hostId} = req.body;
-    if(!roomId || !hostId){
-      return res.status(400).json({message: "Missing required fields"});
+    const isExistRoom = await findRoomOnDatabase(roomId);
+    if (!isExistRoom) {
+      return res.status(404).json({ message: "Room is not exists" });
     }
+    if (isExistRoom.hostId != hostId) {
+      return res.status(403).json({ message: "You don't have permission to reschedule for this room" });
+    }
+      
     const invitedUsers = await getRoomSheduleInvited(roomId, hostId);
+    console.log(invitedUsers)
     return res.status(200).json({ invitedUsers });
   } catch (error) {
     console.error("getInvietedUsersBySchedule error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
+
+const getSessionRecord = async (req: RequestWithUser, res: Response) => {
+  try {
+    const sessionId = req.params.sessionId;
+    const roomId = req.params.roomId;
+    const { id, email } = req.user;
+    const record = await getRecording(sessionId);
+    if (!isHost(roomId, id) || !record.shared.includes(email)) {
+      res.status(200).json("");
+    }
+    res.status(200).json(record.fileUrl);
+  } catch (error) {
+    res.status(500).json("Internal Server Error");
+  }
+};
 
 export {
   createNewRoom,
   userJoinRoom,
-  getRoomScheduleByInvitedUser,
   getInvietedUsersBySchedule,
+  getSessionRecord,
 };

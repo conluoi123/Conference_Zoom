@@ -1,12 +1,11 @@
 import Notification from "../models/notification.model";
 import Room from "../models/room.model";
-import Schedule from "../models/schedule.model";
 import User from "../models/user.model";
 
-const createNotification = async (email, type, message: string) => {
+const createNotification = async (email, type, message, typeId?: string) => {
   const notification = await Notification.create({
     recipient: email,
-    type: type,
+    type: typeId ? type + "-" + typeId : type,
     content: message,
     isRead: false,
     sentAt: new Date(),
@@ -44,9 +43,21 @@ const getNotifications = async (email: string) => {
   return notifications;
 };
 
+const markNotificationAsRead = async (notificationId: string) => {
+  const notification = await Notification.findByIdAndUpdate(
+    notificationId,
+    { isRead: true },
+    { new: true }
+  );
+  if (!notification) {
+    throw new Error("Notification not found");
+  }
+  return notification;
+};
 export {
   createNotification,
   generateMeetingMessage,
   generateInvitationMessage,
   getNotifications,
+  markNotificationAsRead
 };

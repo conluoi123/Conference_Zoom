@@ -14,7 +14,11 @@ const notificationSchema = new Schema<INotification>({
   type: { type: String },
   content: { type: String },
   isRead: { type: Boolean },
-  sentAt: { type: Date },
+  sentAt: {
+    type: Date,
+    default: Date.now,
+    expires: 604800,
+  },
 });
 
 const Notification = mongoose.model<INotification>(

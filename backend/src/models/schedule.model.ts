@@ -9,7 +9,7 @@ export interface ISchedule extends Document {
   startTime: Date;
   endTime: Date;
   duration: Number;
-}
+} 
 
 const scheduleSchema = new Schema<ISchedule>({
   hostId: {

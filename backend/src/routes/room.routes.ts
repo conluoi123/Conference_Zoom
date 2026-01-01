@@ -1,9 +1,10 @@
 import { Router, Express } from "express";
 import {
   createNewRoom,
-  getRoomScheduleByInvitedUser,
+  // getRoomScheduleByInvitedUser,
   userJoinRoom,
   getInvietedUsersBySchedule,
+  getSessionRecord,
 } from "../controllers/room.controller";
 import {
   createRoomMiddleware,
@@ -20,23 +21,32 @@ import { authenticateAccessToken } from "../middlewares/jwt.middleware";
 
 const router = Router();
 const roomRoutes = (app: Express) => {
-  app.post(
-    "/rooms/schedule/invited-users",
+  router.post(
+    "/schedule/invited-users",
     authenticateAccessToken,
     getInvietedUsersBySchedule
   );
-  app.get("/rooms/schedule", authenticateAccessToken, getRoomScheduleByInvitedUser);
-  app.post(
-    "/rooms/create",
+  // router.get(
+  //   "/schedule",
+  //   authenticateAccessToken,
+  //   getRoomScheduleByInvitedUser
+  // );
+  router.post(
+    "/create",
     authenticateAccessToken,
     createRoomMiddleware,
     createNewRoom
-  ); // create new meeting room
-  app.post(
-    "/rooms/:roomId/join",
+  );
+  router.post(
+    "/:roomId/join",
     authenticateAccessToken,
     joinRoomMiddleware,
     userJoinRoom
+  );
+  router.get(
+    "/:roomId/recordings/:sessionId",
+    authenticateAccessToken,
+    getSessionRecord
   );
   app.use("/rooms", router);
 };
