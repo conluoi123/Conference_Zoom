@@ -15,7 +15,6 @@ const recordSchema = new Schema<IRecord>({
     type: String,
     required: true,
   },
-
   fileUrl: { type: String, default: null },
   createdAt: { type: Date, default: null },
   shared: {

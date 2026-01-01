@@ -28,6 +28,7 @@ import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
 import agenda, { startAgenda } from "./configs/agenda";
+import { recordingRoutes } from "./routes/recording.routes";
 
 const PORT = ENV.PORT || 8080;
 const app = express();
@@ -67,15 +68,20 @@ startAgenda();
 
 socketHandler(io);
 
+//Login - Logout
 signInRouter(app);
 sendOtpRouter(app);
 verifyOtpRouter(app);
 outlookSignInRouter(app);
+logoutRouter(app);
 
+//Authenticate Token
+refreshTokenRouter(app);
+
+//App
 userRoutes(app);
 roomRoutes(app);
-refreshTokenRouter(app);
-logoutRouter(app);
+recordingRoutes(app);
 webHook(app);
 supportProfileRouter(app);
 
@@ -92,6 +98,7 @@ const startServer = async () => {
 
 startServer();
 
+//Tat agenda tranh tinh trang treo
 const graceful = async () => {
   await agenda.stop();
   server.close(() => {
