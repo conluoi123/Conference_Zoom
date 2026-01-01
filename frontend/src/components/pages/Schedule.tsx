@@ -1,23 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  ChevronLeft,
-  Calendar,
-  Clock,
-  Users,
-  Plus,
-  Loader2,
-} from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Card, CardContent } from "../ui/card";
+import { ChevronLeft, Plus, Loader2, Calendar, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/layout/MainLayout";
-import { Textarea } from "../ui/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
-import {
-  useMeeting,
-} from "@videosdk.live/react-sdk";
 import {
   Dialog,
   DialogContent,
@@ -26,16 +16,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
 import * as z from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { scheduleApi } from "@/services/scheduleApi";
-import { meetingAPI } from "@/services/meetingApi";
 
-// =============== SCHEMA ===============
 const scheduleSchema = z.object({
   roomId: z.string().optional().or(z.literal("")),
   title: z.string().min(5, "Tiêu đề phải có ít nhất 5 ký tự"),
@@ -49,31 +35,144 @@ const scheduleSchema = z.object({
 
 type ScheduleFormValues = z.infer<typeof scheduleSchema>;
 
+// Helper function to format date consistently
+const formatDateForInput = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+// Helper function to format time consistently
+const formatTimeForInput = (date: Date) => {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
 function SchedulePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-
   const [attendees, setAttendees] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [formData, setFormData] = useState<ScheduleFormValues | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [roomError, setRoomError] = useState("");
+  const [checkingRoom, setCheckingRoom] = useState(false);
+  const [isRoomValid, setIsRoomValid] = useState<boolean | null>(null);
+
+  // Schedule list states
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<any>(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
-    defaultValues: { duration: "60" },
+    defaultValues: {
+      duration: "60",
+    },
   });
 
-  // =============== ADD EMAIL ===============
+  const roomIdValue = watch("roomId");
+
+  // Load schedules on mount
+  useEffect(() => {
+    loadSchedules();
+  }, []);
+
+  const loadSchedules = async () => {
+    if (!user?.id) return;
+    setLoadingSchedules(true);
+    try {
+      const list = await scheduleApi.getListScheduleByHostId({
+        userId: user.id,
+      });
+
+      // Load invited users from ROOM for each schedule
+      const schedulesWithEmails = await Promise.all(
+        list.map(async (schedule: any) => {
+          try {
+            // Get emails from ROOM, not from schedule
+            const roomData = await scheduleApi.getInvitedUserInRoom({
+              hostId: user.id,
+              roomId: schedule.roomId,
+            });
+            return {
+              ...schedule,
+              emails: roomData.invited || [], // emails come from room
+            };
+          } catch {
+            return {
+              ...schedule,
+              emails: [],
+            };
+          }
+        })
+      );
+
+      setSchedules(schedulesWithEmails);
+    } catch (error: any) {
+      toast.error(error?.message || "Không thể tải danh sách lịch họp");
+    } finally {
+      setLoadingSchedules(false);
+    }
+  };
+
+  // ==================== CHECK ROOM ====================
+  useEffect(() => {
+    if (!roomIdValue) {
+      setRoomError("");
+      setIsRoomValid(null);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      handleCheckRoom(roomIdValue);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [roomIdValue]);
+
+  const handleCheckRoom = async (roomId: string) => {
+    setRoomError("");
+    setIsRoomValid(null);
+    if (!roomId.trim() || !user) return;
+
+    try {
+      setCheckingRoom(true);
+      const res = await scheduleApi.getInvitedUserInRoom({
+        hostId: user.id,
+        roomId,
+      });
+      const list = res.invited || [];
+      setAttendees((prev) => {
+        const merged = [...prev];
+        list.forEach((email: string) => {
+          if (!merged.includes(email)) merged.push(email);
+        });
+        return merged;
+      });
+      setIsRoomValid(true);
+    } catch {
+      setRoomError("Phòng họp không tồn tại hoặc bạn không phải host");
+      setIsRoomValid(false);
+    } finally {
+      setCheckingRoom(false);
+    }
+  };
+
+  // ==================== ADD EMAIL ====================
   const handleAddEmail = () => {
     setEmailError("");
-
     if (!emailInput.trim()) return;
 
     const emailSchema = z.string().email("Email không hợp lệ");
@@ -93,42 +192,61 @@ function SchedulePage() {
     setEmailInput("");
   };
 
-  // =============== REMOVE EMAIL ===============
   const handleRemoveEmail = (email: string) => {
     setAttendees((prev) => prev.filter((x) => x !== email));
   };
 
-  // =============== SUBMIT FIRST TIME (OPEN CONFIRM DIALOG) ===============
+  // ==================== SUBMIT STEP 1 ====================
   const onSubmitForm = (data: ScheduleFormValues) => {
+    if (data.roomId && isRoomValid === false) {
+      toast.error("Phòng họp không hợp lệ — vui lòng kiểm tra lại.");
+      return;
+    }
+
     setFormData(data);
     setIsConfirmOpen(true);
   };
 
-  // =============== FINAL CONFIRM (CALL API) ===============
+  // ==================== FINAL CONFIRM ====================
   const handleFinalConfirm = async () => {
     if (!formData || !user) return;
-
     setIsSubmitting(true);
+
     try {
       const startTime = new Date(`${formData.date}T${formData.time}`);
 
-      const scheData = await scheduleApi.createSchedule({
-        hostId: user.id,
-        title: formData.title,
-        startTime,
-        duration: formData.duration,
-        emails: attendees, // gửi lên BE
-      });
-      
-      // await meetingAPI.joinMeeting({roomId: scheData.schedule.roomId,peerId: user.id})
-
-      toast.success("Tạo lịch họp thành công!");
+      if (editingSchedule) {
+        // Update existing schedule
+        await scheduleApi.updateSchedule({
+          scheduleId: editingSchedule._id,
+          title: formData.title,
+          startTime,
+          endTime: undefined,
+          duration: formData.duration,
+          emails: attendees,
+        });
+        toast.success("Cập nhật lịch họp thành công!");
+      } else {
+        // Create new schedule
+        const scheData = await scheduleApi.createSchedule({
+          hostId: user.id,
+          roomId: formData.roomId || "",
+          title: formData.title,
+          startTime,
+          duration: formData.duration,
+          emails: attendees,
+        });
+        toast.success(
+          `Tạo lịch họp thành công! RoomId: ${scheData.schedule.roomId}`
+        );
+      }
 
       reset();
       setAttendees([]);
+      setEditingSchedule(null);
       setIsConfirmOpen(false);
-
-      // navigate("/home");
+      loadSchedules();
+      navigate("/home");
     } catch (error: any) {
       toast.error(error?.message || "Có lỗi xảy ra, vui lòng thử lại.");
     } finally {
@@ -136,146 +254,387 @@ function SchedulePage() {
     }
   };
 
+  // ==================== EDIT SCHEDULE ====================
+  const handleEditSchedule = async (schedule: any) => {
+    const startDateTime = new Date(schedule.startTime);
+
+    // Use helper functions for consistent formatting
+    const dateStr = formatDateForInput(startDateTime);
+    const timeStr = formatTimeForInput(startDateTime);
+
+    setEditingSchedule(schedule);
+    setValue("roomId", schedule.roomId || "");
+    setValue("title", schedule.title);
+    setValue("date", dateStr);
+    setValue("time", timeStr);
+    setValue("duration", schedule.duration.toString());
+    setValue("description", schedule.description || "");
+
+    // Load fresh attendees data from room using getInvitedUserInRoom
+    if (schedule.roomId && user?.id) {
+      try {
+        const roomData = await scheduleApi.getInvitedUserInRoom({
+          hostId: user.id,
+          roomId: schedule.roomId,
+        });
+        setAttendees(roomData.invited || []);
+        setIsRoomValid(true);
+        setRoomError("");
+      } catch {
+        setAttendees([]);
+        setIsRoomValid(false);
+        setRoomError("Không thể tải danh sách người tham gia");
+      }
+    } else {
+      setAttendees([]);
+      setIsRoomValid(null);
+      setRoomError("");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSchedule(null);
+    reset();
+    setAttendees([]);
+    setIsRoomValid(null);
+    setRoomError("");
+  };
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-slate-50/50 p-6 md:p-12">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* HEADER */}
-          <div className="space-y-4">
-            <Link
-              to="/home"
-              className="flex items-center text-blue-600 text-sm font-medium hover:underline gap-1"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-            <h1 className="text-3xl font-bold">Schedule a Meeting</h1>
-          </div>
+      <div className="max-w-7xl mx-auto p-6">
+        <Link
+          to="/home"
+          className="text-blue-500 flex items-center gap-2 mb-6 hover:underline"
+        >
+          <ChevronLeft size={20} />
+          Back to Home
+        </Link>
 
-          {/* FORM */}
-          <form onSubmit={handleSubmit(onSubmitForm)}>
-            <Card>
-              <CardContent className="p-8 space-y-6">
-                {/* ROOM ID */}
-                <div>
-                  <label>Room ID</label>
-                  <Input
-                    {...register("roomId")}
-                    placeholder="Có thể bỏ trống"
-                  />
+        {/* TWO COLUMN LAYOUT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* LEFT COLUMN - SCHEDULE LIST (Scrollable) */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-6">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Calendar size={24} />
+                    Lịch họp
+                  </h2>
+                  {loadingSchedules && (
+                    <Loader2 className="animate-spin" size={20} />
+                  )}
                 </div>
 
-                {/* TITLE */}
-                <div>
-                  <label>Title *</label>
-                  <Input {...register("title")} />
-                  {errors.title && (
-                    <p className="text-red-500 text-xs">
-                      {errors.title.message}
+                {/* SCROLLABLE LIST */}
+                <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-2 space-y-3">
+                  {schedules.length === 0 && !loadingSchedules && (
+                    <p className="text-gray-500 text-center py-8 text-sm">
+                      Chưa có lịch họp
                     </p>
                   )}
-                </div>
 
-                {/* DATE & TIME */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label>Date *</label>
-                    <Input type="date" {...register("date")} />
-                  </div>
-                  <div>
-                    <label>Time *</label>
-                    <Input type="time" {...register("time")} />
-                  </div>
-                </div>
+                  {schedules.map((schedule) => {
+                    const startTime = new Date(schedule.startTime);
+                    const dateStr = formatDateForInput(startTime);
+                    const timeStr = formatTimeForInput(startTime);
 
-                {/* DURATION */}
-                <div>
-                  <label>Duration (minutes)</label>
-                  <Input type="number" {...register("duration")} />
-                </div>
-
-                {/* DESCRIPTION */}
-                <div>
-                  <label>Description</label>
-                  <Textarea {...register("description")} />
-                </div>
-
-                {/* ATTENDEE INPUT */}
-                <div>
-                  <label>Attendees</label>
-
-                  <div className="flex gap-2">
-                    <Input
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" &&
-                        (e.preventDefault(), handleAddEmail())
-                      }
-                      placeholder="Nhập email"
-                    />
-                    <Button type="button" onClick={handleAddEmail}>
-                      <Plus />
-                    </Button>
-                  </div>
-
-                  {emailError && (
-                    <p className="text-red-500 text-xs">{emailError}</p>
-                  )}
-
-                  {/* LIST EMAIL TAGS */}
-                  {attendees.length > 0 && (
-                    <div className="flex gap-2 flex-wrap pt-2">
-                      {attendees.map((email) => (
-                        <div
-                          key={email}
-                          className="flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs"
-                        >
-                          <span>{email}</span>
-                          <button
-                            onClick={() => handleRemoveEmail(email)}
-                            className="font-bold hover:text-red-600"
-                          >
-                            ✕
-                          </button>
+                    return (
+                      <div
+                        key={schedule._id}
+                        className={`border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                          editingSchedule?._id === schedule._id
+                            ? "ring-2 ring-blue-500 bg-blue-50"
+                            : ""
+                        }`}
+                        onClick={() => handleEditSchedule(schedule)}
+                      >
+                        <h3 className="font-semibold text-sm mb-2">
+                          {schedule.title}
+                        </h3>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <p>
+                            📅 {dateStr} | ⏰ {timeStr}
+                          </p>
+                          <p>⏱️ {schedule.duration} phút</p>
+                          {schedule.roomId && (
+                            <p className="font-mono text-xs truncate">
+                              🏠 {schedule.roomId}
+                            </p>
+                          )}
+                          {schedule.emails && schedule.emails.length > 0 && (
+                            <p className="text-blue-600">
+                              👥 {schedule.emails.length} người
+                            </p>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* SUBMIT */}
-                <div className="flex justify-end">
-                  <Button type="submit">Schedule Meeting</Button>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
-          </form>
+          </div>
+
+          {/* RIGHT COLUMN - FORM */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h1 className="text-2xl font-bold">
+                    {editingSchedule
+                      ? "Chỉnh sửa lịch họp"
+                      : "Tạo lịch họp mới"}
+                  </h1>
+                  {editingSchedule && (
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <X size={16} className="mr-2" />
+                      Hủy
+                    </Button>
+                  )}
+                </div>
+
+                <form
+                  onSubmit={handleSubmit(onSubmitForm)}
+                  className="space-y-4"
+                >
+                  {/* ROOM ID */}
+                  <div>
+                    <label className="block mb-2 font-medium text-sm">
+                      Room ID (tùy chọn)
+                    </label>
+                    <Input
+                      {...register("roomId")}
+                      placeholder="Để trống để tạo phòng mới"
+                      disabled={!!editingSchedule}
+                    />
+                    {checkingRoom && (
+                      <p className="text-blue-500 text-xs mt-1">
+                        🔍 Đang kiểm tra phòng…
+                      </p>
+                    )}
+                    {isRoomValid && (
+                      <p className="text-green-500 text-xs mt-1">
+                        ✔ Phòng hợp lệ — bạn là host
+                      </p>
+                    )}
+                    {roomError && (
+                      <p className="text-red-500 text-xs mt-1">
+                        ❌ {roomError}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* TITLE */}
+                  <div>
+                    <label className="block mb-2 font-medium text-sm">
+                      Tiêu đề *
+                    </label>
+                    <Input
+                      {...register("title")}
+                      placeholder="Nhập tiêu đề cuộc họp"
+                    />
+                    {errors.title && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.title.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* DATE + TIME */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block mb-2 font-medium text-sm">
+                        Ngày *
+                      </label>
+                      <Input type="date" {...register("date")} />
+                      {errors.date && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.date.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block mb-2 font-medium text-sm">
+                        Giờ *
+                      </label>
+                      <Input type="time" {...register("time")} />
+                      {errors.time && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.time.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* DURATION */}
+                  <div>
+                    <label className="block mb-2 font-medium text-sm">
+                      Thời lượng (phút) *
+                    </label>
+                    <Input
+                      type="number"
+                      {...register("duration")}
+                      placeholder="60"
+                    />
+                    {errors.duration && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.duration.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* DESCRIPTION */}
+                  <div>
+                    <label className="block mb-2 font-medium text-sm">
+                      Mô tả
+                    </label>
+                    <Textarea
+                      {...register("description")}
+                      placeholder="Mô tả cuộc họp"
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* ATTENDEES */}
+                  <div>
+                    <label className="block mb-2 font-medium text-sm">
+                      Mời người tham gia
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" &&
+                          (e.preventDefault(), handleAddEmail())
+                        }
+                        placeholder="Nhập email"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddEmail}
+                        className="bg-blue-500 hover:bg-blue-600"
+                      >
+                        <Plus size={16} />
+                      </Button>
+                    </div>
+                    {emailError && (
+                      <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                    )}
+                    {attendees.length > 0 && (
+                      <div className="flex gap-2 flex-wrap mt-3">
+                        {attendees.map((email) => (
+                          <div
+                            key={email}
+                            className="flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs"
+                          >
+                            <span>{email}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEmail(email)}
+                              className="font-bold hover:text-red-600"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* SUBMIT */}
+                  <div className="flex justify-end pt-4">
+                    <Button
+                      type="submit"
+                      className="bg-blue-500 hover:bg-blue-600"
+                      disabled={checkingRoom}
+                    >
+                      {editingSchedule ? "Cập nhật lịch họp" : "Tạo lịch họp"}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+
+        {/* CONFIRM DIALOG */}
+        <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingSchedule ? "Xác nhận cập nhật" : "Xác nhận lịch họp"}
+              </DialogTitle>
+              <DialogDescription>
+                Vui lòng kiểm tra lại thông tin
+              </DialogDescription>
+            </DialogHeader>
+
+            {formData && (
+              <div className="p-4 space-y-2 text-sm bg-gray-50 rounded-lg">
+                <p>
+                  <strong>Tiêu đề:</strong> {formData.title}
+                </p>
+                <p>
+                  <strong>Ngày:</strong> {formData.date}
+                </p>
+                <p>
+                  <strong>Giờ:</strong> {formData.time}
+                </p>
+                <p>
+                  <strong>Thời lượng:</strong> {formData.duration} phút
+                </p>
+                {formData.roomId && (
+                  <p>
+                    <strong>Room ID:</strong> {formData.roomId}
+                  </p>
+                )}
+                {attendees.length > 0 && (
+                  <div>
+                    <strong>Attendees:</strong>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {attendees.map((email) => (
+                        <span
+                          key={email}
+                          className="bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 text-xs"
+                        >
+                          {email}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsConfirmOpen(false)}
+                disabled={isSubmitting}
+              >
+                Hủy
+              </Button>
+              <Button onClick={handleFinalConfirm} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={16} />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* CONFIRM DIALOG */}
-      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Xác nhận lịch họp</DialogTitle>
-            <DialogDescription>
-              Vui lòng kiểm tra lại thông tin
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>
-              Hủy
-            </Button>
-
-            <Button onClick={handleFinalConfirm} disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Xác nhận"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </MainLayout>
   );
 }
