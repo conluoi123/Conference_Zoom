@@ -3,25 +3,34 @@ import api from "./service";
 /*
     Định nghĩa Interface để khớp với BE. 
  */
-export interface INotification{
-    _id: string; 
-    recipient: string; 
-    type: string; 
-    content: string; 
-    isRead: boolean; 
+export interface INotification {
+    _id: string;
+    recipient: string;
+    type: string;
+    content: string;
+    roomId?: string; // Optional roomId for meeting/invitation notifications
+    isRead: boolean;
     sentAt: string; // API trả về string tự xử lí 
 }
 
 export const notificationService = {
-    getAllNotifications : async (email:string) => {
-        try{
-            const response = await api.get<{notifications : INotification}>("/notifications", {
-                data : {email} // gửi email vào JSON, nên thay đổi truyền vào query
+    getAllNotifications: async (userId: string, email: string): Promise<INotification[]> => {
+        try {
+            const response = await api.get<{ notifications: INotification[] }>(`/${userId}/notifications`, {
+                params: { email } // Email as query param
             });
-            return response.data.notifications; // nhận về mảng thông báo 
-        } catch(err)
-        {
-            console.error("Lỗi lấy thông báo: ", err); 
+            return response.data.notifications;
+        } catch (err) {
+            console.error("Lỗi lấy thông báo: ", err);
+            throw err;
+        }
+    },
+
+    markAsRead: async (notificationId: string): Promise<void> => {
+        try {
+            await api.post("/notifications/mark-read", { notificationId });
+        } catch (err) {
+            console.error("Lỗi đánh dấu đã đọc: ", err);
             throw err;
         }
     }

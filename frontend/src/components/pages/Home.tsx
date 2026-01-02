@@ -315,7 +315,7 @@ export function HomePage() {
             {/* Recordings & History */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
-                to="/recording"
+                to="/history"
                 className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"
               >
                 <button className="flex gap-4">
@@ -323,14 +323,14 @@ export function HomePage() {
                     <Circle className="w-6 h-6 text-red-600 fill-red-600" />
                   </div>
                   <div className="text-left">
-                    <p className="text-gray-900 font-medium mb-1">Recordings</p>
-                    <p className="text-gray-500 text-sm">Cuộc họp đã ghi</p>
+                    <p className="text-gray-900 font-medium mb-1">History</p>
+                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
                   </div>
                 </button>
               </Link>
 
               <Link
-                to="/recording"
+                to="/history"
                 className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"
               >
                 <button className="flex gap-4">
@@ -395,11 +395,10 @@ export function HomePage() {
                   return (
                     <button
                       key={day}
-                      className={`h-9 rounded-lg text-sm font-medium transition-colors ${
-                        isSelected
+                      className={`h-9 rounded-lg text-sm font-medium transition-colors ${isSelected
                           ? "bg-blue-600 text-white"
                           : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                        }`}
                       onClick={() =>
                         setCurrentDay(
                           new Date(

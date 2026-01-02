@@ -143,7 +143,7 @@ class SocketService {
   }
 
   // ============ LISTENERS ============
-  onMeetingJoin(callback: (message: string) => void) {  
+  onMeetingJoin(callback: (message: string) => void) {
     this.socket?.on("meeting:join", callback);
   }
 
@@ -158,7 +158,11 @@ class SocketService {
   onChatHistory(callback: (messages: any[]) => void) {
     this.socket?.on("meeting:chat-history", callback);
   }
-
+  /*
+    on: đăng ký lắng nghe 
+    callback: nhận vào một function, có type là (message, roomid)
+    
+  */
   onMeetingInviteNotification(
     callback: (data: { message: string; roomId: string }) => void
   ) {
@@ -169,17 +173,47 @@ class SocketService {
     this.socket?.on("notification:schedule", callback);
   }
 
+  onMeetingSettingsUpdated(callback: (settings: any) => void) {
+    this.socket?.on("meeting:settings_updated", callback);
+  }
+
+  // ============ RECORDING EVENTS ============
+  shareRecording(userId: string, roomId: string, sessionId: string, emails: string[]) {
+    if (!this.socket?.connected) {
+      console.error("❌ Socket chưa kết nối");
+      return;
+    }
+
+    if (!emails || emails.length === 0) {
+      console.warn("⚠️ Danh sách email trống");
+      return;
+    }
+
+    console.log(`📹 Chia sẻ recording ${sessionId} cho ${emails.length} người`);
+    this.socket.emit("recording:share", userId, roomId, sessionId, emails);
+  }
+
+  onRecordingShared(callback: (data: {
+    roomId: string;
+    sessionId: string;
+    message: string
+  }) => void) {
+    this.socket?.on("notification:recording", callback);
+  }
+
   // ============ CLEANUP ============
   offMeetingEvents() {
     this.socket?.off("meeting:join");
     this.socket?.off("meeting:leave");
     this.socket?.off("meeting:chat");
     this.socket?.off("meeting:chat-history");
+    this.socket?.off("meeting:settings_updated");
   }
 
   offNotificationEvents() {
     this.socket?.off("notification:schedule");
     this.socket?.off("notification:meeting");
+    this.socket?.off("notification:recording");
   }
 
   offAllEvents() {

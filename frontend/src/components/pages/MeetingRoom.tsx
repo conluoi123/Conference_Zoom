@@ -30,6 +30,7 @@ import { useAuth } from "@/context/AuthContext";
 import LoadMeeting from "./common/meetings/LoadMeeting";
 import InviteModal from "./common/meetings/InviteModal";
 import { SettingsPanel } from "./common/meetings/SettingPanel";
+import { socketService } from "@/services/socket";
 interface MeetingRoomProps {
   roomId: string;
   isHost: boolean;
@@ -190,8 +191,21 @@ export function MeetingRoom({
     if (meetingId === undefined) handleJoin();
   }, [meetingId]);
 
-
   const { user } = useAuth();
+
+  // Join socket room when meeting is joined
+  useEffect(() => {
+    if (joined === "JOINED" && user?.displayName && socketService.isConnected()) {
+      console.log(`🚪 Joining socket room: ${roomId}`);
+      socketService.joinMeetingRoom(roomId, user.displayName);
+
+      return () => {
+        console.log(`🚪 Leaving socket room: ${roomId}`);
+        socketService.leaveMeetingRoom(roomId, user.displayName);
+      };
+    }
+  }, [joined, roomId, user?.displayName]);
+
   const participantIds = Array.from(participants.keys());
   const { visible, currentPage, setCurrentPage, totalPages } =
     useMeetingPagination(participantIds, 4);
@@ -570,35 +584,43 @@ export function MeetingRoom({
   const onUpdateSettings = (key: string, value: boolean) => {
     if (!isHost) return;
     const newSettings = { ...roomSettings, [key]: value };
-    updateMeetingSettings(roomId, user?.id!, newSettings);
+    socketService.updateMeetingSettings(roomId, user?.id!, newSettings);
     setRoomSettings(newSettings);
   };
-  /* Sự kiện lắng nghe Socket khi BE hoàn thành */
-  // useEffect(() => {
-  //   if (!socket) return;
 
-  //   // Lắng nghe sự kiện cài đặt từ BE
-  //   socket.on("meeting:settings_updated", (newSettings: any) => {
-  //     setRoomSettings(newSettings);
+  // Listen for settings updates from host
+  useEffect(() => {
+    const handleSettingsUpdate = (newSettings: any) => {
+      console.log("📢 Received settings update:", newSettings);
+      setRoomSettings(newSettings);
 
-  //     // THỰC THI QUA VIDEOSDK:
-  //     // Nếu Host tắt quyền Mic, tự động tắt Mic của chính mình
-  //     if (newSettings.allowMic === false) {
-  //       muteMic();
-  //       toast.warning("Host đã tắt Micro của toàn phòng");
-  //     }
+      // Only enforce for non-host participants
+      if (isHost) return;
 
-  //     // Nếu Host tắt quyền Camera, tự động tắt Camera của chính mình
-  //     if (newSettings.allowWebcam === false) {
-  //       disableWebcam();
-  //       toast.warning("Host đã tắt Camera của toàn phòng");
-  //     }
-  //   });
+      // Auto-disable mic if host turned it off
+      if (newSettings.allowMic === false && localParticipant?.micOn) {
+        muteMic();
+        toast.warning("Host đã tắt Micro của toàn phòng");
+      }
 
-  //   return () => {
-  //     socket.off("meeting:settings_updated");
-  //   };
-  // }, [muteMic, disableWebcam]);
+      // Auto-disable camera if host turned it off
+      if (newSettings.allowWebcam === false && localParticipant?.webcamOn) {
+        disableWebcam();
+        toast.warning("Host đã tắt Camera của toàn phòng");
+      }
+
+      // Notify about chat restriction
+      if (newSettings.allowChat === false) {
+        toast.warning("Host đã tắt Chat của toàn phòng");
+      }
+    };
+
+    socketService.onMeetingSettingsUpdated(handleSettingsUpdate);
+
+    return () => {
+      socketService.offMeetingEvents();
+    };
+  }, [muteMic, disableWebcam, localParticipant, isHost]);
   //=========================================== RETURN =========================================
   return (
     <div className="bg-gray-950 h-screen w-screen flex flex-col overflow-hidden text-white">
