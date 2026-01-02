@@ -14,10 +14,7 @@ const recordSchema = new Schema<IRecord>({
   sessionId: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
   },
-
   fileUrl: { type: String, default: null },
   createdAt: { type: Date, default: null },
   shared: {

@@ -4,7 +4,7 @@ import {
   // getRoomScheduleByInvitedUser,
   userJoinRoom,
   getInvietedUsersBySchedule,
-  getSessionRecord,
+  // getSessionRecord,
 } from "../controllers/room.controller";
 import {
   createRoomMiddleware,
@@ -43,11 +43,11 @@ const roomRoutes = (app: Express) => {
     joinRoomMiddleware,
     userJoinRoom
   );
-  router.get(
-    "/:roomId/recordings/:sessionId",
-    authenticateAccessToken,
-    getSessionRecord
-  );
+  // router.get(
+  //   "/:roomId/recordings/:sessionId",
+  //   authenticateAccessToken,
+  //   getSessionRecord
+  // );
   app.use("/rooms", router);
 };
 

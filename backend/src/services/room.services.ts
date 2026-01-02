@@ -51,7 +51,7 @@ const createRoomOnVideoSDK = async () => {
     body: JSON.stringify({
       region,
       webhook: {
-        endPoint: "https://israel-ramose-premeditatingly.ngrok-free.dev",
+        endPoint: ENV.BACKEND_URL,
         events: [
           "participant-joined",
           "participant-left",
@@ -145,6 +145,7 @@ const updateRoomOnDatabase = async (
   if (invited && invited.length > 0) {
     pushData.invited = { $each: invited };
   }
+  console.log(1)
   const finalUpdate: any = {};
   if (Object.keys(update).length > 0) finalUpdate.$set = update;
   if (Object.keys(pushData).length > 0) finalUpdate.$addToSet = pushData;

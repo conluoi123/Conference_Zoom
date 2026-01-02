@@ -37,7 +37,7 @@ const scheduleNotification = (agenda: Agenda) => {
     const message = `Nhắc nhở: Bạn có lịch họp "${schedule.title}" vào lúc ${timeString}.`;
 
     try {
-      await createNotification(email, "schedule", message);
+      await createNotification(email, `schedule-${schedule._id}`, message);
       const io = getIO();
       io.to(email).emit("notification:schedule", message);
     } catch (err) {
@@ -51,35 +51,44 @@ const notificationSocketHandler = (
   socket: Socket,
   agenda: Agenda
 ) => {
-  socket.on("notification:invitation", async ({scheduleId, email, status}) => {
-    try {
-      const schedule = await getScheduleInfo(scheduleId);
-      if (!updateInvitationStatus(scheduleId, email, status)) {
-        throw new Error("Lời mời đã hết hạn");
-      };
-      if (status == "accepted") {
-        await updateRoomOnDatabase(schedule.roomId, schedule.hostId, null, null, [
-          email,
-        ]);
-        const trigger = new Date(schedule.startTime);
-        trigger.setMinutes(trigger.getMinutes() - 15);
-        const uniqueJobId = `schedule_noti_${scheduleId}_${email}`;
+  socket.on(
+    "notification:invitation",
+    async ({ scheduleId, email, status }) => {
+      try {
+        console.log(0)
+        const schedule = await getScheduleInfo(scheduleId);
+        console.log(schedule);
+        if (!updateInvitationStatus(scheduleId, email, status)) {
+          throw new Error("Lời mời đã hết hạn");
+        }
+        if (status == "accepted") {
+          await updateRoomOnDatabase(
+            schedule.roomId,
+            schedule.hostId,
+            null,
+            null,
+            [email]
+          );
+          const trigger = new Date(schedule.startTime);
+          trigger.setMinutes(trigger.getMinutes() - 15);
+          const uniqueJobId = `schedule_noti_${scheduleId}_${email}`;
 
-        await agenda.cancel({
-          name: "onScheduleNotification",
-          "data.uniqueJobId": uniqueJobId,
-        });
+          await agenda.cancel({
+            name: "onScheduleNotification",
+            "data.uniqueJobId": uniqueJobId,
+          });
 
-        await agenda.schedule(trigger, "onScheduleNotification", {
-          schedule,
-          email,
-          uniqueJobId,
-        });
+          await agenda.schedule(trigger, "onScheduleNotification", {
+            schedule,
+            email,
+            uniqueJobId,
+          });
+        }
+      } catch (error) {
+        io.to(email).emit("notification:invitation-error", error);
       }
-    } catch (error) {
-      io.to(email).emit("notification:invitation-error", error);
     }
-  });
+  );
 };
 
 export { notificationSocketHandler, scheduleNotification };

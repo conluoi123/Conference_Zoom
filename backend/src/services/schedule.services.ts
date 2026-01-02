@@ -66,7 +66,9 @@ const isDueSchedule = (schedule: any) => {
 export { latestSchedule, isDueSchedule };
 
 const getScheduleInfo = async (scheduleId: string) => {
+  console.log(scheduleId)
   const schedule = await Schedule.findById(scheduleId);
+  console.log(schedule);
   if (!schedule) {
     throw new Error("Lịch hẹn đã bị hủy");
   }

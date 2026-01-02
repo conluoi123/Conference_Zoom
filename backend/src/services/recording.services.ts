@@ -39,11 +39,11 @@ const shareRecording = async (sessionId, emails) => {
 
 /**Từ lịch sử các cuộc họp tham gia có nút view recordings, bấm vào nếu có thì hiện kh thì thôi */
 const getRecording = async (sessionId: string) => {
-  const record = await Record.findOne({ sessionId });
-  if (!record) {
+  const records = await Record.find({ sessionId });
+  if (!records) {
     throw new Error("Không có bản ghi được chia sẻ cho phiên họp này");
   }
-  return record;
+  return records;
 };
 
 export { startRecording, endRecording, getRecording, shareRecording };
