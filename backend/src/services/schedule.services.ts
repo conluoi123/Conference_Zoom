@@ -25,14 +25,13 @@ async function createScheduleOnDb(
 }
 
 async function updateScheduleOnDb(
-  roomId: string,
-  hostId: string,
+  scheduleId: string,
   title: string,
   startTime: Date,
   endTime: Date,
   duration: number
 ) {
-  const schedule = await Schedule.findOne({ roomId, hostId, startTime });
+  const schedule = await Schedule.findById(scheduleId);
   if (!schedule) {
     return null;
   }

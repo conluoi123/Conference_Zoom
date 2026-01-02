@@ -10,6 +10,7 @@ import {
   findRoomOnDatabase,
   generateToken,
   getRoomShedule,
+  getRoomSheduleInvited,
   updateRoomOnDatabase,
 } from "../services/room.services";
 import {
@@ -18,7 +19,6 @@ import {
 } from "../services/notification.services";
 import { getIO } from "../socket/socketHandler";
 import { createInvitation } from "../services/invitation.services";
-import { addInvitee } from "../services/session.services";
 
 async function createSchedule(req: Request, res: Response) {
   try {
@@ -111,34 +111,65 @@ async function getListScheduleByHostId(req: Request, res: Response) {
 
 async function updateSchedule(req: Request, res: Response) {
   try {
-    const { roomId, hostId, title, startTime, endTime, duration } = req.body;
-    if (!roomId || !hostId || !title || !startTime || !endTime || !duration) {
-      return res.status(400).json({
-        message: "Missing required fields",
-      });
-    }
+    console.log(0);
+    const { scheduleId, title, startTime, endTime, duration, emails } =
+      req.body;
+    
     const updatedSchedule = await updateScheduleOnDb(
-      roomId,
-      hostId,
+      scheduleId,
       title,
       startTime,
       endTime,
       duration
     );
+    console.log(1);
     if (!updatedSchedule) {
-      return res.status(404).json({
-        message: "Schedule not found",
-      });
+      return res.status(404).json({ message: "Schedule not found" });
     }
+
+    const expires = new Date(startTime);
+    expires.setMinutes(expires.getMinutes() - 15);
+
+    const existsInvitedUser = await getRoomSheduleInvited(
+      updatedSchedule.roomId,
+      updatedSchedule.hostId
+    );
+
+    const invitedList = existsInvitedUser?.invited ?? [];
+    const message = await generateInvitationMessage(
+      updatedSchedule.roomId,
+      updatedSchedule.hostId
+    );
+
+    for (const email of emails) {
+      if (!invitedList.includes(email)) {
+        await createInvitation(
+          scheduleId,
+          updatedSchedule.roomId,
+          email,
+          expires
+        );
+        await createNotification(
+          email,
+          "invitation",
+          message,
+          scheduleId as string
+        );
+
+        const io = getIO();
+        io.to(email).emit("notification:invitation", message);
+      }
+    }
+
     return res.status(200).json({
       message: "Schedule updated successfully",
       schedule: updatedSchedule,
     });
   } catch (error) {
     console.error("Update schedule error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    if (!res.headersSent) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   }
 }
 const getUpcomingSchedules = async (req: Request, res: Response) => {

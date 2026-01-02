@@ -191,7 +191,7 @@ const getRoomShedule = async (userId: string, col: string) => {
 };
 
 const getRoomSheduleInvited = async (roomId: string, hostId: string) => {
-  const invitedUser = await Room.find({
+  const invitedUser = await Room.findOne({
     hostId: hostId,
     roomId: roomId,
   }).select("invited");

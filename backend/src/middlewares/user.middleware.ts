@@ -14,6 +14,7 @@ const userMiddleware = async (
     const { userId } = req.query;
     id = userId.toString();
   }
+  console.log("loi o day")
   console.log(id);
   const user = await User.findOne({ _id: id });
   if (!id || !user) {
