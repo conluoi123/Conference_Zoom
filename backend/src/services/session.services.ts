@@ -8,7 +8,7 @@ const startSession = async (roomId, sessionId, start: string) => {
     sessionId: sessionId,
     start: new Date(start),
     end: null,
-    invitedUsers: [],
+    invited: [],
   });
   if (!session) {
     throw new Error("Lỗi database: Tạo phiên thất bại");
@@ -54,7 +54,8 @@ const isInvitedForSession = async (roomId, peerId: string) => {
   }
   console.log(session);
   if (!session) {
-    throw new Error("Phiên họp đã kết thúc");
+    // throw new Error("Phiên họp đã kết thúc");
+    return false;
   }
   if (session.invited.includes(user.email)) return true;
   return false;

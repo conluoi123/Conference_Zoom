@@ -27,7 +27,9 @@ import { initSocket, socketHandler } from "./socket/socketHandler";
 import { refreshTokenRouter } from "./routes/refreshAccessToken.routes";
 import logoutRouter from "./routes/logout.routes";
 import { supportProfileRouter } from "./routes/supportProfile.routes";
+import notificationRoutes from "./routes/notification.routes";
 import agenda, { startAgenda } from "./configs/agenda";
+import scheduleRouter from "./routes/schedule.routes";
 import { recordingRoutes } from "./routes/recording.routes";
 
 const PORT = ENV.PORT || 8080;
@@ -84,6 +86,8 @@ roomRoutes(app);
 recordingRoutes(app);
 webHook(app);
 supportProfileRouter(app);
+notificationRoutes(app);
+scheduleRouter(app);
 
 const startServer = async () => {
   try {

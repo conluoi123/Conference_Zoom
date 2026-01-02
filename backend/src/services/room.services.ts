@@ -68,7 +68,6 @@ const createRoomOnVideoSDK = async () => {
 
   // 2. Gọi API
   const response = await fetch(url, options);
-
   // 3. Parse dữ liệu JSON
   const data = await response.json();
 
@@ -78,7 +77,6 @@ const createRoomOnVideoSDK = async () => {
     const errorMessage = data.error || "Tạo phòng trên VideoSDK thất bại";
     throw new Error(`Lỗi VideoSDK: ${errorMessage}`);
   }
-
   return data.roomId;
 };
 
@@ -141,12 +139,20 @@ const updateRoomOnDatabase = async (
   invited: string[]
 ) => {
   const update: any = {};
+  const pushData: any = {};
   if (title != null) update.title = title;
   if (settings != null) update.settings = settings;
-  if (invited != null) update.invited = [...update.invited, ...invited];
+  if (invited && invited.length > 0) {
+    pushData.invited = { $each: invited };
+  }
+  console.log(1)
+  const finalUpdate: any = {};
+  if (Object.keys(update).length > 0) finalUpdate.$set = update;
+  if (Object.keys(pushData).length > 0) finalUpdate.$addToSet = pushData;
+
   const room = await Room.findOneAndUpdate(
     { roomId: roomId, hostId: hostId },
-    { $set: update },
+    finalUpdate,
     { new: true }
   );
   if (!room) {
@@ -178,16 +184,15 @@ const isInvitedForRoom = async (roomId, peerId: string) => {
 };
 
 const getRoomShedule = async (userId: string, col: string) => {
+  const user = await User.findById(userId);
   const roomSchedule = await Room.find({
-    hostId: { $ne: userId },
-    type: "SCHEDULED",
-    invited: { $in: userId },
+    invited: user.email ,
   }).select(col);
   return roomSchedule;
 };
 
 const getRoomSheduleInvited = async (roomId: string, hostId: string) => {
-  const invitedUser = await Room.find({
+  const invitedUser = await Room.findOne({
     hostId: hostId,
     roomId: roomId,
   }).select("invited");

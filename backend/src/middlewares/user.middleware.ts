@@ -17,6 +17,7 @@ const userMiddleware = async (
     // Support /:id route params
     id = req.params.id;
   }
+  console.log("loi o day")
   console.log(id);
   const user = await User.findOne({ _id: id });
   if (!id || !user) {

@@ -16,6 +16,7 @@ const getUser = async (req: RequestWithUser, res: Response) => {
       avatar: user.avatar,
     };
     console.log(data);
+    console.log(1111)
     return res.status(200).json({ data });
   } catch (error) {
     console.error("Error when get user");
@@ -36,7 +37,7 @@ const updateUserInfo = async (req: Request, res: Response) => {
     },
     { new: true } // Option này để trả về dữ liệu MỚI sau khi update
   );
-  res.status(200).json(updatedUser);
+  return res.status(200).json(updatedUser);
 };
 
 const getUserMeetingHistory = async (req: Request, res: Response) => {

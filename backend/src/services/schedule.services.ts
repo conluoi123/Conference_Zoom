@@ -25,14 +25,13 @@ async function createScheduleOnDb(
 }
 
 async function updateScheduleOnDb(
-  roomId: string,
-  hostId: string,
+  scheduleId: string,
   title: string,
   startTime: Date,
   endTime: Date,
   duration: number
 ) {
-  const schedule = await Schedule.findOne({ roomId, hostId, startTime });
+  const schedule = await Schedule.findById(scheduleId);
   if (!schedule) {
     return null;
   }
@@ -57,7 +56,7 @@ const latestSchedule = (roomId: string) => {
 
 const isDueSchedule = (schedule: any) => {
   const now = Date.now();
-  const due = new Date(schedule.startTime).getTime();
+  const due = new Date(schedule[schedule.length - 1].startTime).getTime();
   if (due < now) {
     return true;
   }
@@ -67,7 +66,9 @@ const isDueSchedule = (schedule: any) => {
 export { latestSchedule, isDueSchedule };
 
 const getScheduleInfo = async (scheduleId: string) => {
+  console.log(scheduleId)
   const schedule = await Schedule.findById(scheduleId);
+  console.log(schedule);
   if (!schedule) {
     throw new Error("Lịch hẹn đã bị hủy");
   }

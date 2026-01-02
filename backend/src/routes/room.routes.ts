@@ -1,7 +1,7 @@
 import { Router, Express } from "express";
 import {
   createNewRoom,
-  getRoomScheduleByInvitedUser,
+  // getRoomScheduleByInvitedUser,
   userJoinRoom,
   getInvietedUsersBySchedule,
 } from "../controllers/room.controller";
@@ -26,11 +26,11 @@ const roomRoutes = (app: Express) => {
     authenticateAccessToken,
     getInvietedUsersBySchedule
   );
-  router.get(
-    "/schedule",
-    authenticateAccessToken,
-    getRoomScheduleByInvitedUser
-  );
+  // router.get(
+  //   "/schedule",
+  //   authenticateAccessToken,
+  //   getRoomScheduleByInvitedUser
+  // );
   router.post(
     "/create",
     authenticateAccessToken,
@@ -43,11 +43,11 @@ const roomRoutes = (app: Express) => {
     joinRoomMiddleware,
     userJoinRoom
   );
-  router.get(
-    "/:roomId/recordings/:sessionId",
-    authenticateAccessToken,
-    getSessionRecord
-  );
+  // router.get(
+  //   "/:roomId/recordings/:sessionId",
+  //   authenticateAccessToken,
+  //   getSessionRecord
+  // );
   app.use("/rooms", router);
 };
 

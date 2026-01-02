@@ -4,6 +4,7 @@ import {
   markNotificationAsRead,
 } from "../services/notification.services";
 
+// notification.controller.ts
 const getAllNotifications = async (req: Request, res: Response) => {
   const { email, page, limit } = req.query;
   const pageNum = parseInt(page as string) || 1;
