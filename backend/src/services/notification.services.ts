@@ -36,17 +36,47 @@ const generateInvitationMessage = async (roomId, participantId: string) => {
   return message;
 };
 
-const getNotifications = async (email: string) => {
-  const notifications = await Notification.find({ recipient: email });
-  if (!notifications) {
-    return [];
-  }
-  return notifications;
+const getNotifications = async (
+  email: string,
+  page: number = 1,
+  limit: number = 10
+) => {
+  const skip = (page - 1) * limit;
+
+  const [notifications, total, unreadCount] = await Promise.all([
+    Notification.find({ recipient: email })
+      .sort({ sentAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Notification.countDocuments({ recipient: email }),
+    Notification.countDocuments({ recipient: email, isRead: false }),
+  ]);
+
+  return {
+    notifications: notifications || [],
+    total,
+    unreadCount,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 };
 
+const markNotificationAsRead = async (notificationId: string) => {
+  const notification = await Notification.findByIdAndUpdate(
+    notificationId,
+    { isRead: true },
+    { new: true }
+  );
+  if (!notification) {
+    throw new Error("Notification not found");
+  }
+  return notification;
+};
 export {
   createNotification,
   generateMeetingMessage,
   generateInvitationMessage,
   getNotifications,
+  markNotificationAsRead,
 };
