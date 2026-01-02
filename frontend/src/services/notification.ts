@@ -34,4 +34,4 @@ export const notificationService = {
             throw err;
         }
     }
-}
+};

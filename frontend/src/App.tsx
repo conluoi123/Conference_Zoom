@@ -25,7 +25,7 @@ export default function App() {
       <AuthProvider>
         <NotificationProvider>
           <SocketListener />
-          <Toaster position="top-right" richColors />
+          <Toaster position="bottom-right" richColors />
           <Routes>
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginPage />} />

@@ -48,7 +48,7 @@ export const meetingAPI = {
         peerId,
         roomId,
       };
-
+      console.log(peerId)
       const response = await api.post(`/rooms/${roomId}/join`, requestBody);
 
       return response.data;
