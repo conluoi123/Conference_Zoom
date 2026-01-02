@@ -7,7 +7,7 @@ import {
   updateUserInfo,
 } from "../controllers/user.controller";
 import { authenticateAccessToken } from "../middlewares/jwt.middleware";
-import { getAllNotifications } from "../controllers/notification.controller";
+import { getAllNotifications, markAsRead } from "../controllers/notification.controller";
 
 const router = Router();
 const userRoutes = (app: Express) => {
@@ -18,7 +18,7 @@ const userRoutes = (app: Express) => {
     userMiddleware,
     updateUserInfo
   );
-  app.get(
+  app.post(
     "/:id/meeting-history",
     authenticateAccessToken,
     userMiddleware,
@@ -29,6 +29,11 @@ const userRoutes = (app: Express) => {
     authenticateAccessToken,
     userMiddleware,
     getAllNotifications
+  );
+  app.post(
+    "/notifications/mark-read",
+    authenticateAccessToken,
+    markAsRead
   );
   router.get("/auth/me", authenticateAccessToken, getUser);
   app.use("", router);

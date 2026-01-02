@@ -49,4 +49,5 @@ const getUserMeetingHistory = async (req: Request, res: Response) => {
   }
 };
 
+
 export { getUserInfo, updateUserInfo, getUser, getUserMeetingHistory };

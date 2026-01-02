@@ -22,6 +22,10 @@ const generateMeetingMessage = async (roomId, participantId: string) => {
     Room.findOne({ roomId: roomId }),
   ]);
 
+  if (!user || !room) {
+    return "Bạn được mời tham gia phòng họp";
+  }
+
   const message = `${user.displayName} đã mời bạn tham gia phòng họp: "${room.title}"`;
   return message;
 };
@@ -31,6 +35,10 @@ const generateInvitationMessage = async (roomId, participantId: string) => {
     User.findOne({ _id: participantId }),
     Room.findOne({ roomId: roomId }),
   ]);
+
+  if (!user || !room) {
+    return "Bạn được mời tham gia lịch họp";
+  }
 
   const message = `${user.displayName} hẹn bạn tham gia lịch họp: "${room.title}"`;
   return message;

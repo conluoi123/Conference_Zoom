@@ -4,8 +4,8 @@ import {
   getRoomScheduleByInvitedUser,
   userJoinRoom,
   getInvietedUsersBySchedule,
-  getSessionRecord,
 } from "../controllers/room.controller";
+import { getSessionRecord } from "../controllers/recordings.controller";
 import {
   createRoomMiddleware,
   joinRoomMiddleware,

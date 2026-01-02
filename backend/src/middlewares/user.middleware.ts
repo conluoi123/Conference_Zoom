@@ -7,12 +7,15 @@ const userMiddleware = async (
   next: NextFunction
 ) => {
   let id = "";
-  if (req.body) {
+  if (req.body && req.body.userId) {
     const { userId } = req.body;
-    id = userId
-  } else {
+    id = userId;
+  } else if (req.query && req.query.userId) {
     const { userId } = req.query;
     id = userId.toString();
+  } else if (req.params && req.params.id) {
+    // Support /:id route params
+    id = req.params.id;
   }
   console.log(id);
   const user = await User.findOne({ _id: id });

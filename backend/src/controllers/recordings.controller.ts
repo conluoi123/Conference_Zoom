@@ -10,8 +10,9 @@ const getSessionRecord = async (req: RequestWithUser, res: Response) => {
     const { id, email } = req.user;
     const records = await getRecording(sessionId);
     const urls = [];
+    const userIsHost = await isHost(roomId, id);
     records.forEach((record) => {
-      if (isHost(roomId, id) || record.shared.includes(email)) {
+      if (userIsHost || record.shared.includes(email)) {
         urls.push(record.fileUrl);
       }
     });

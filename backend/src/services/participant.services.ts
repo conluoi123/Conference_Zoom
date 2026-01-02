@@ -55,14 +55,25 @@ const getMeetingHistory = async (participantId: string) => {
   const history = await Participant.find({ participantId }).sort({
     leaveTime: -1,
   });
-  let roomInfo = [];
-  history.forEach(async (data) => {
-    const room = await findRoomOnDatabase(data.roomId);
-    roomInfo.push({
-      roomId: room.roomId,
-      sessionId: data.sessionId,
-    });
-  });
+
+  const roomInfo = await Promise.all(
+    history.map(async (data) => {
+      const room = await findRoomOnDatabase(data.roomId);
+
+      // Import Recording model at top of file if not already imported
+      const Record = require("../models/recording.model").default;
+      const recordings = await Record.find({ sessionId: data.sessionId });
+
+      return {
+        roomId: room?.roomId || data.roomId,
+        sessionId: data.sessionId,
+        title: room?.title || "Cuộc họp",
+        start: data.joinTime,
+        hasRecording: recordings.length > 0
+      };
+    })
+  );
+
   return roomInfo;
 };
 
