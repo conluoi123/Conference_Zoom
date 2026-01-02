@@ -60,7 +60,6 @@ const getMeetingHistory = async (participantId: string) => {
     const room = await findRoomOnDatabase(data.roomId);
     roomInfo.push({
       roomId: room.roomId,
-      title: room.title,
       sessionId: data.sessionId,
     });
   });
