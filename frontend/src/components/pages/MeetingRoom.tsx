@@ -30,6 +30,7 @@ import { useAuth } from "@/context/AuthContext";
 import LoadMeeting from "./common/meetings/LoadMeeting";
 import InviteModal from "./common/meetings/InviteModal";
 import { SettingsPanel } from "./common/meetings/SettingPanel";
+import api from "@/services/service";
 interface MeetingRoomProps {
   roomId: string;
   isHost: boolean;
@@ -162,9 +163,36 @@ export function MeetingRoom({
         duration: 3000,
       });
     },
-    onRecordingStarted: () => {
+    onRecordingStarted: async () => {
       console.log("🔴 Ghi hình đã bắt đầu");
       setIsRecording(true);
+
+      try {
+        console.log("📊 Meeting info:", { meetingId, roomId });
+
+        // Sử dụng roomId làm sessionId (chúng giống nhau)
+        const sessionId = meetingId || roomId;
+
+        if (!sessionId) {
+          console.error("❌ sessionId is undefined!");
+          toast.error("Lỗi: Không có sessionId");
+          return;
+        }
+
+        // Gọi API để lưu recording vào database
+        await api.post("/rooms/recordings/start", {
+          sessionId: sessionId,
+          roomId: roomId,
+        });
+
+        console.log("✅ Recording saved to database");
+        toast.success("Đã bắt đầu ghi hình");
+      } catch (error: any) {
+        console.error("Failed to save recording:", error);
+        console.error("Error response data:", error.response?.data);
+        console.error("Error status:", error.response?.status);
+        toast.error(`Lỗi: ${error.response?.data?.error || error.message}`);
+      }
     },
     onRecordingStopped: () => {
       console.log("⏹️ Ghi hình đã dừng");
@@ -336,7 +364,12 @@ export function MeetingRoom({
         enabled: true, // Enables post transcription
         language: "vi-VN",
       };
-      startRecording(null, null, config, transcription);
+
+      // Webhook Configuration (Auto-sent to this URL when recording stops)
+      // NOTE: Replace with your actual ngrok URL
+      const webhookUrl = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
+
+      startRecording(webhookUrl, null, config, transcription);
     } catch (error) {
       console.error("Recording error:", error);
       toast.error("Có lỗi khi ghi hình");

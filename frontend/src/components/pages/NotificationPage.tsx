@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { Bell, ChevronLeft, Video, Users, Calendar, CheckCheck, X } from "lucide-react";
+import {
+  Bell,
+  ChevronLeft,
+  Video,
+  Users,
+  Calendar,
+  CheckCheck,
+  X,
+} from "lucide-react";
 import { MainLayout } from "@/layout/MainLayout";
 import { Link, useNavigate } from "react-router-dom";
-import { useNotification  } from "@/context/NotificationContext";
+import { useNotification } from "@/context/NotificationContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -61,21 +69,23 @@ const getNotificationTitle = (type: string) => {
 };
 
 function NotificationPage() {
-  const { notifications, markAsRead, isLoading } = useNotification();
+  const {
+    notifications,
+    markAsRead,
+    isLoading,
+    currentPage,
+    totalPages,
+    setPage,
+    currentFilter,
+    setFilter,
+  } = useNotification();
   const { user } = useAuth();
-  const [filter, setFilter] = useState<string>("all");
   const [joiningMeetingId, setJoiningMeetingId] = useState<string | null>(null);
   const [invitationStatus, setInvitationStatus] = useState<
     Record<string, "accepted" | "declined">
   >({});
 
   const navigate = useNavigate();
-
-  const filteredNotifications = notifications.filter((notif) => {
-    if (filter === "all") return true;
-    if (filter === "unread") return !notif.isRead;
-    return notif.type.split("-")[0] === filter;
-  });
 
   const handleMarkAllAsRead = async () => {
     const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -84,7 +94,11 @@ function NotificationPage() {
     }
   };
 
-  const handleJoinMeeting = async (e: React.MouseEvent, roomId: string, notificationId: string) => {
+  const handleJoinMeeting = async (
+    e: React.MouseEvent,
+    roomId: string,
+    notificationId: string
+  ) => {
     e.stopPropagation();
 
     if (!user?.id) {
@@ -140,7 +154,10 @@ function NotificationPage() {
     }
   };
 
-  const handleDeclineMeeting = async (e: React.MouseEvent, notificationId: string) => {
+  const handleDeclineMeeting = async (
+    e: React.MouseEvent,
+    notificationId: string
+  ) => {
     e.stopPropagation();
     await markAsRead(notificationId);
     toast.success("Đã từ chối lời mời");
@@ -175,8 +192,6 @@ function NotificationPage() {
       toast.error("Có lỗi xảy ra khi phản hồi lời mời");
     }
   };
-
-
 
   return (
     <MainLayout>
@@ -226,7 +241,7 @@ function NotificationPage() {
                 <Button
                   key={filterOption.value}
                   variant={
-                    filter === filterOption.value ? "default" : "outline"
+                    currentFilter === filterOption.value ? "default" : "outline"
                   }
                   onClick={() => setFilter(filterOption.value)}
                   className="min-w-[100px]"
@@ -242,162 +257,207 @@ function NotificationPage() {
                 <div className="flex items-center justify-center py-20">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
-              ) : filteredNotifications.length === 0 ? (
+              ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 px-4">
                   <Bell className="w-16 h-16 text-gray-300 mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     Không có thông báo
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {filter === "all"
+                    {currentFilter === "all"
                       ? "Bạn chưa có thông báo nào"
-                      : filter === "unread"
+                      : currentFilter === "unread"
                       ? "Bạn đã đọc hết thông báo"
                       : `Không có thông báo loại ${getNotificationTitle(
-                          filter
+                          currentFilter
                         )}`}
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
-                  {filteredNotifications.map((notification) => (
-                    <div
-                      key={notification._id}
-                      className={`p-6 hover:bg-gray-50 transition-colors ${
-                        !notification.isRead ? "bg-blue-50/30" : ""
-                      }`}
-                    >
-                      <div className="flex gap-4">
-                        <div className="shrink-0 mt-1">
-                          {getNotificationIcon(notification.type.split("-")[0])}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {getNotificationTitle(
-                                  notification.type.split("-")[0]
-                                )}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {formatRelativeTime(notification.sentAt)}
-                              </p>
-                            </div>
-                            {!notification.isRead && (
-                              <div className="flex items-center gap-2">
-                                <span className="w-3 h-3 bg-blue-600 rounded-full"></span>
-                                <span className="text-sm font-medium text-blue-600">
-                                  Mới
-                                </span>
-                              </div>
+                <>
+                  <div className="divide-y divide-gray-100">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification._id}
+                        className={`p-6 hover:bg-gray-50 transition-colors ${
+                          !notification.isRead ? "bg-blue-50/30" : ""
+                        }`}
+                      >
+                        <div className="flex gap-4">
+                          <div className="shrink-0 mt-1">
+                            {getNotificationIcon(
+                              notification.type.split("-")[0]
                             )}
                           </div>
-                          <p className="text-gray-700 leading-relaxed mb-3">
-                            {notification.content}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4 mb-2">
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                  {getNotificationTitle(
+                                    notification.type.split("-")[0]
+                                  )}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {formatRelativeTime(notification.sentAt)}
+                                </p>
+                              </div>
+                              {!notification.isRead && (
+                                <div className="flex items-center gap-2">
+                                  <span className="w-3 h-3 bg-blue-600 rounded-full"></span>
+                                  <span className="text-sm font-medium text-blue-600">
+                                    Mới
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-gray-700 leading-relaxed mb-3">
+                              {notification.content}
+                            </p>
 
-                          {/* Action buttons for meeting invitations */}
-                          {notification.type.split("-")[0] === "meeting" &&
-                            notification.roomId && (
-                              <div className="flex gap-3 mt-4">
-                                <Button
-                                  onClick={(e) =>
-                                    handleJoinMeeting(
-                                      e,
-                                      notification.roomId!,
-                                      notification._id
-                                    )
-                                  }
-                                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                                  size="sm"
-                                  disabled={
-                                    joiningMeetingId === notification._id
-                                  }
-                                >
-                                  {joiningMeetingId === notification._id ? (
-                                    <>
-                                      <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                      Đang tham gia...
-                                    </>
+                            {/* Action buttons for meeting invitations */}
+                            {notification.type.split("-")[0] === "meeting" &&
+                              notification.roomId && (
+                                <div className="flex gap-3 mt-4">
+                                  <Button
+                                    onClick={(e) =>
+                                      handleJoinMeeting(
+                                        e,
+                                        notification.roomId!,
+                                        notification._id
+                                      )
+                                    }
+                                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                                    size="sm"
+                                    disabled={
+                                      joiningMeetingId === notification._id
+                                    }
+                                  >
+                                    {joiningMeetingId === notification._id ? (
+                                      <>
+                                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Đang tham gia...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Video className="w-4 h-4 mr-2" />
+                                        Tham gia
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    onClick={(e) =>
+                                      handleDeclineMeeting(e, notification._id)
+                                    }
+                                    variant="outline"
+                                    className="border-gray-300 hover:bg-gray-100"
+                                    size="sm"
+                                    disabled={
+                                      joiningMeetingId === notification._id
+                                    }
+                                  >
+                                    <X className="w-4 h-4 mr-2" />
+                                    Từ chối
+                                  </Button>
+                                </div>
+                              )}
+
+                            {/* Action buttons for schedule invitations */}
+                            {notification.type.split("-")[0] === "invitation" &&
+                              notification.type.split("-")[1] && (
+                                <div className="flex gap-3 mt-4">
+                                  {invitationStatus[notification._id] ===
+                                  "accepted" ? (
+                                    <p className="text-green-600 font-semibold">
+                                      Bạn đã đồng ý tham gia ✔
+                                    </p>
+                                  ) : invitationStatus[notification._id] ===
+                                    "declined" ? (
+                                    <p className="text-gray-500">
+                                      Bạn đã từ chối lời mời ❌
+                                    </p>
                                   ) : (
                                     <>
-                                      <Video className="w-4 h-4 mr-2" />
-                                      Tham gia
+                                      <Button
+                                        onClick={(e) =>
+                                          handleInvitationResponse(
+                                            e,
+                                            notification._id,
+                                            notification.type.split("-")[1]!,
+                                            "accepted"
+                                          )
+                                        }
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        size="sm"
+                                      >
+                                        <CheckCheck className="w-4 h-4 mr-2" />
+                                        Đồng ý
+                                      </Button>
+
+                                      <Button
+                                        onClick={(e) =>
+                                          handleInvitationResponse(
+                                            e,
+                                            notification._id,
+                                            notification.type.split("-")[1]!,
+                                            "declined"
+                                          )
+                                        }
+                                        variant="outline"
+                                        className="border-gray-300 hover:bg-gray-100"
+                                        size="sm"
+                                      >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Từ chối
+                                      </Button>
                                     </>
                                   )}
-                                </Button>
-                                <Button
-                                  onClick={(e) =>
-                                    handleDeclineMeeting(e, notification._id)
-                                  }
-                                  variant="outline"
-                                  className="border-gray-300 hover:bg-gray-100"
-                                  size="sm"
-                                  disabled={
-                                    joiningMeetingId === notification._id
-                                  }
-                                >
-                                  <X className="w-4 h-4 mr-2" />
-                                  Từ chối
-                                </Button>
-                              </div>
-                            )}
-                          {notification.type.split("-")[0] === "invitation" &&
-                            notification.type.split("-")[1] && (
-                              <div className="flex gap-3 mt-4">
-                                {invitationStatus[notification._id] ===
-                                "accepted" ? (
-                                  <p className="text-green-600 font-semibold">
-                                    Bạn đã đồng ý tham gia ✔
-                                  </p>
-                                ) : invitationStatus[notification._id] ===
-                                  "declined" ? (
-                                  <p className="text-gray-500">
-                                    Bạn đã từ chối lời mời ❌
-                                  </p>
-                                ) : (
-                                  <>
-                                    <Button
-                                      onClick={(e) =>
-                                        handleInvitationResponse(
-                                          e,
-                                          notification._id,
-                                          notification.type.split("-")[1]!,
-                                          "accepted"
-                                        )
-                                      }
-                                      className="bg-green-600 hover:bg-green-700 text-white"
-                                      size="sm"
-                                    >
-                                      <CheckCheck className="w-4 h-4 mr-2" />
-                                      Đồng ý
-                                    </Button>
-
-                                    <Button
-                                      onClick={(e) =>
-                                        handleInvitationResponse(
-                                          e,
-                                          notification._id,
-                                          notification.type.split("-")[1]!,
-                                          "declined"
-                                        )
-                                      }
-                                      variant="outline"
-                                      className="border-gray-300 hover:bg-gray-100"
-                                      size="sm"
-                                    >
-                                      <X className="w-4 h-4 mr-2" />
-                                      Từ chối
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            )}
+                                </div>
+                              )}
+                          </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === 1 || isLoading}
+                        onClick={() => setPage(currentPage - 1)}
+                      >
+                        Trước
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from(
+                          { length: totalPages },
+                          (_, i) => i + 1
+                        ).map((p) => (
+                          <Button
+                            key={p}
+                            variant={currentPage === p ? "default" : "ghost"}
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={() => setPage(p)}
+                            disabled={isLoading}
+                          >
+                            {p}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages || isLoading}
+                        onClick={() => setPage(currentPage + 1)}
+                      >
+                        Sau
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -408,4 +468,3 @@ function NotificationPage() {
 }
 
 export default NotificationPage;
-

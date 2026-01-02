@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/layout/MainLayout";
 import {
@@ -8,9 +8,18 @@ import {
   Users,
   Play,
   MoreVertical,
+  Loader2,
 } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
+import recordingAPI from "@/services/recordingApi";
+import type { Recording as APIRecording } from "@/services/recordingApi";
+import { toast } from "sonner";
+
 export interface Recording {
   id: string;
+  sessionId: string;
+  roomId: string;
+  hostId: string;
   title: string;
   date: string;
   duration: string;
@@ -20,68 +29,22 @@ export interface Recording {
   participants: number;
   size: string;
 }
-import { ChevronLeft } from "lucide-react";
+
 export const mockRecordings: Recording[] = [
   {
     id: "1",
-    title: "Họp đội ngũ phát triển sản phẩm",
-    date: "2024-12-20 14:30",
-    duration: "1:23:45",
-    thumbnail:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop",
+    sessionId: "3739-ycme-k9nj",
+    roomId: "3739-ycme-k9nj",
+    hostId: "694eb047d05b6a0780b04262",
+    title: "Recording 3739-ycme",
+    date: "2024-12-30 22:40",
+    duration: "--:--",
+    thumbnail: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop",
     videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-    host: "Nguyễn Văn A",
-    participants: 12,
-    size: "245 MB",
-  },
-  {
-    id: "2",
-    title: "Thảo luận chiến lược Q1 2025",
-    date: "2024-12-19 10:00",
-    duration: "0:45:30",
-    thumbnail:
-      "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?w=400&h=225&fit=crop",
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-    host: "Trần Thị B",
-    participants: 8,
-    size: "180 MB",
-  },
-  {
-    id: "3",
-    title: "Training nhân viên mới",
-    date: "2024-12-18 09:00",
-    duration: "2:15:20",
-    thumbnail:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop",
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-    host: "Lê Văn C",
-    participants: 25,
-    size: "520 MB",
-  },
-  {
-    id: "4",
-    title: "Gặp gỡ khách hàng - Demo sản phẩm",
-    date: "2024-12-17 15:30",
-    duration: "1:05:12",
-    thumbnail:
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=400&h=225&fit=crop",
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-    host: "Phạm Thị D",
-    participants: 5,
-    size: "195 MB",
-  },
-  {
-    id: "5",
-    title: "Buổi họp hàng tuần toàn công ty",
-    date: "2024-12-16 16:00",
-    duration: "0:52:45",
-    thumbnail:
-      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=225&fit=crop",
-    videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-    host: "Nguyễn Văn A",
-    participants: 45,
-    size: "210 MB",
-  },
+    host: "Host",
+    participants: 1,
+    size: "Processing...",
+  }
 ];
 
 function RecordingPage() {
@@ -89,18 +52,56 @@ function RecordingPage() {
   const [searchItem, setSearchItem] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState<"all" | "day" | "week" | "month">("all");
-  const filterRecording = mockRecordings.filter(
+  const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch recordings from API
+  useEffect(() => {
+    const fetchRecordings = async () => {
+      try {
+        setLoading(true);
+        const data = await recordingAPI.getRecordings();
+
+        // Transform API data to match UI format
+        const transformedData: Recording[] = data.map((rec: APIRecording) => ({
+          id: rec.sessionId,
+          sessionId: rec.sessionId,
+          roomId: rec.roomId,
+          hostId: rec.hostId,
+          title: `Recording ${rec.sessionId.substring(0, 8)}`, // Use sessionId as title
+          date: new Date(rec.createdAt).toLocaleString('vi-VN'),
+          duration: "--:--", // TODO: Calculate from recording metadata
+          thumbnail: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop",
+          videoUrl: rec.fileUrl || "https://www.w3schools.com/html/mov_bbb.mp4", // Mock URL if no fileUrl
+          host: "Unknown", // TODO: Get from Room
+          participants: 0, // TODO: Get from Session
+          size: rec.fileUrl ? "-- MB" : "Processing...", // Show processing if no URL
+        }));
+
+        setRecordings(transformedData);
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to fetch recordings:", err);
+        setError(err.message);
+        toast.error("Không thể tải danh sách recordings");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecordings();
+  }, []);
+
+  const filterRecording = recordings.filter(
     (recording) =>
       recording.title.toLowerCase().includes(searchItem.toLowerCase()) ||
       recording.host.toLowerCase().includes(searchItem.toLowerCase())
   );
-  const [selectedRecording, setSelectedRecording] = useState<Recording | null>(
-    null
-  );
 
   const onSelectRecording = (record: Recording) => {
-    setSelectedRecording(record);
-    navigate(`/recordings/${record.id}`);
+    // Chúng ta cần cả sessionId (định danh duy nhất cuộc họp) và roomId (để phân quyền)
+    navigate(`/recordings/${record.sessionId}?roomId=${record.roomId}`);
   };
   return (
     <MainLayout>
@@ -155,11 +156,10 @@ function RecordingPage() {
                 <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`px-4 py-2.5 transition-colors ${
-                      viewMode === "grid"
-                        ? "bg-blue-50 text-blue-600"
-                        : "bg-white text-gray-600 hover:bg-gray-50"
-                    }`}
+                    className={`px-4 py-2.5 transition-colors ${viewMode === "grid"
+                      ? "bg-blue-50 text-blue-600"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
                   >
                     <svg
                       className="w-5 h-5"
@@ -177,11 +177,10 @@ function RecordingPage() {
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`px-4 py-2.5 transition-colors border-l border-gray-300 ${
-                      viewMode === "list"
-                        ? "bg-blue-50 text-blue-600"
-                        : "bg-white text-gray-600 hover:bg-gray-50"
-                    }`}
+                    className={`px-4 py-2.5 transition-colors border-l border-gray-300 ${viewMode === "list"
+                      ? "bg-blue-50 text-blue-600"
+                      : "bg-white text-gray-600 hover:bg-gray-50"
+                      }`}
                   >
                     <svg
                       className="w-5 h-5"
@@ -211,29 +210,30 @@ function RecordingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm mb-1">Tổng số bản ghi</p>
-                  <p className="text-gray-900">{mockRecordings.length}</p>
+                  <p className="text-gray-900">{recordings.length}</p>
                 </div>
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <Play className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </div>
-
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Thời lượng tổng</p>
-                  <p className="text-gray-900">8h 42m</p>
-                </div>
-                <div className="p-3 bg-purple-50 rounded-lg">
-                  <Clock className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Recordings Grid/List */}
-          {filterRecording.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-xl p-12 text-center">
+              <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+              <p className="text-gray-600">Đang tải recordings...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-white rounded-xl p-12 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-gray-900 mb-2">Lỗi tải dữ liệu</h3>
+              <p className="text-gray-600">{error}</p>
+            </div>
+          ) : filterRecording.length === 0 ? (
             <div className="bg-white rounded-xl p-12 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Play className="w-8 h-8 text-gray-400" />
@@ -282,10 +282,6 @@ function RecordingPage() {
                         <span>{recording.date}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          <span>{recording.participants} người tham gia</span>
-                        </div>
                         <span className="text-xs text-gray-500">
                           {recording.size}
                         </span>
@@ -307,11 +303,10 @@ function RecordingPage() {
               {mockRecordings.map((recording, index) => (
                 <div
                   key={recording.id}
-                  className={`flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    index !== mockRecordings.length - 1
-                      ? "border-b border-gray-200"
-                      : ""
-                  }`}
+                  className={`flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer transition-colors ${index !== mockRecordings.length - 1
+                    ? "border-b border-gray-200"
+                    : ""
+                    }`}
                   onClick={() => onSelectRecording(recording)}
                 >
                   {/* Thumbnail */}
