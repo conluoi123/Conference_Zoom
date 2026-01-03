@@ -49,7 +49,7 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     }
   );
 
-  //Chỉnh sửa settings cho phòng họp        
+  //Chỉnh sửa settings cho phòng họp
   socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
     if (!isHost(roomId, participantId)) {
       console.log("Truy cập không xác định");
@@ -68,8 +68,18 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
     emails.forEach(async (email) => {
       addInvitee(roomId, email);
       const message = await generateMeetingMessage(roomId, participantId);
-      createNotification(email, `meeting-${roomId}`, message);
-      io.to(email).emit("notification:meeting", { message, roomId });
+      const notification = await createNotification(
+        email,
+        `meeting-${roomId}`,
+        message
+      );
+      const { type, content, isRead, sentAt } = notification;
+      io.to(email).emit("notification:meeting", {
+        type,
+        content,
+        isRead,
+        sentAt,
+      });
       console.log(`   - ✅ Đã bắn sự kiện 'notification:meeting' tới ${email}`);
     });
   });

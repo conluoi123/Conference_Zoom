@@ -55,7 +55,7 @@ async function createSchedule(req: Request, res: Response) {
       null,
       duration
     );
-    console.log(schedule._id)
+    console.log(schedule._id);
 
     if (!schedule) {
       return res.status(500).json({ message: "Failed to create schedule" });
@@ -73,11 +73,20 @@ async function createSchedule(req: Request, res: Response) {
     const message = await generateInvitationMessage(room, hostId);
     emails.forEach(async (email) => {
       const id = await createInvitation(schedule._id, room, email, expires); //Tạo lời mời
-      createNotification(email, `invitation`, message, schedule._id as string); //Tạo thông báo
-
+      const notification = await createNotification(
+        email,
+        `invitation-${id}`,
+        message
+      ); //Tạo thông báo
+      const { type, content, isRead, sentAt } = notification;
       //Bắn thông báo
       const io = getIO();
-      io.to(email).emit("notification:invitation", message);
+      io.to(email).emit("notification:invitation", {
+        type,
+        content,
+        isRead,
+        sentAt,
+      });
     });
 
     return res.status(200).json({ schedule });
@@ -144,21 +153,26 @@ async function updateSchedule(req: Request, res: Response) {
 
     for (const email of emails) {
       if (!invitedList.includes(email)) {
-        await createInvitation(
+        const id = await createInvitation(
           scheduleId,
           updatedSchedule.roomId,
           email,
           expires
         );
-        await createNotification(
+        const notification = await createNotification(
           email,
-          "invitation",
-          message,
-          scheduleId as string
+          `invitation-${id}`,
+          message
         );
+        const { type, content, isRead, sentAt } = notification;
 
         const io = getIO();
-        io.to(email).emit("notification:invitation", message);
+        io.to(email).emit("notification:invitation", {
+          type,
+          content,
+          isRead,
+          sentAt,
+        });
       }
     }
 
@@ -294,9 +308,6 @@ const getListSchedule = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-
 
 export {
   createSchedule,

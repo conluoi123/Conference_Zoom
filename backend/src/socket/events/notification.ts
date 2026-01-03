@@ -37,9 +37,19 @@ const scheduleNotification = (agenda: Agenda) => {
     const message = `Nhắc nhở: Bạn có lịch họp "${schedule.title}" vào lúc ${timeString}.`;
 
     try {
-      await createNotification(email, `schedule-${schedule._id}`, message);
+      const notification = await createNotification(
+        email,
+        `schedule-${schedule._id}`,
+        message
+      );
+      const { type, content, isRead, sentAt } = notification;
       const io = getIO();
-      io.to(email).emit("notification:schedule", message);
+      io.to(email).emit("notification:schedule", {
+        type,
+        content,
+        isRead,
+        sentAt,
+      });
     } catch (err) {
       console.error("Lỗi tạo notification:", err);
     }
@@ -55,7 +65,7 @@ const notificationSocketHandler = (
     "notification:invitation",
     async ({ scheduleId, email, status }) => {
       try {
-        console.log(0)
+        console.log(0);
         const schedule = await getScheduleInfo(scheduleId);
         console.log(schedule);
         if (!updateInvitationStatus(scheduleId, email, status)) {

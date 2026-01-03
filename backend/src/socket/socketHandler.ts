@@ -48,13 +48,19 @@ const socketHandler = (io: Server) => {
             socket.disconnect();
           }
           shareRecording(sessionId, emails);
-          emails.forEach((email) => {
-            const message = `Bạn được chia sẻ bản ghi cho cuộc họp ${roomId}`;
-            createNotification(email, `recording-${sessionId}`, message);
+          emails.forEach(async (email) => {
+            const message = `Bạn được chia sẻ bản ghi cho cuộc họp:${roomId}`;
+            const notification = await createNotification(
+              email,
+              `recording-${sessionId}`,
+              message
+            );
+            const { type, content, isRead, sentAt } = notification;
             io.to(email).emit("notification:recording", {
-              roomId,
-              sessionId,
-              message,
+              type,
+              content,
+              isRead,
+              sentAt,
             });
           });
         }

@@ -14,6 +14,7 @@ const createNotification = async (email, type, message: string) => {
   if (!notification) {
     throw new Error("Lỗi tạo thông báo");
   }
+  return notification;
 };
 
 const generateMeetingMessage = async (roomId, participantId: string) => {
@@ -26,7 +27,7 @@ const generateMeetingMessage = async (roomId, participantId: string) => {
     return "Bạn được mời tham gia phòng họp";
   }
 
-  const message = `${user.displayName} đã mời bạn tham gia phòng họp: "${room.title}"`;
+  const message = `${user.displayName} đã mời bạn tham gia phòng họp:${room.roomId}`;
   return message;
 };
 
@@ -40,7 +41,7 @@ const generateInvitationMessage = async (roomId, participantId: string) => {
     return "Bạn được mời tham gia lịch họp";
   }
 
-  const message = `${user.displayName} hẹn bạn tham gia lịch họp: "${room.title}"`;
+  const message = `${user.displayName} hẹn bạn tham gia lịch họp:${room.roomId}`;
   return message;
 };
 
@@ -88,5 +89,3 @@ export {
   getNotifications,
   markNotificationAsRead,
 };
-
-
