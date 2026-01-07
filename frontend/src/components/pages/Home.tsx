@@ -461,6 +461,7 @@ export function HomePage() {
                           )
                         )
                         setOpenModal(true);
+                        if(hasMeeting)
                         setModalMeetings(schedulesByDate[dateKey]);
                       }
                       }
