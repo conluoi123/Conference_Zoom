@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   getNotifications,
   markNotificationAsRead,
+  getInvitationStatusByNotification
 } from "../services/notification.services";
 
 // notification.controller.ts
@@ -31,4 +32,21 @@ const markAsRead = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllNotifications, markAsRead };
+const getStatusToNotify = async (req: Request, res: Response) => {
+  const { notificationId } = req.body;
+
+  if (!notificationId) {
+    return res.status(400).json({ error: "Notification ID is required" });
+  }
+
+  try {
+    const status = await getInvitationStatusByNotification(notificationId);
+    return res.status(200).json({ status });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "Failed to mark notification as read" });
+  }
+}
+
+export { getAllNotifications, markAsRead, getStatusToNotify };

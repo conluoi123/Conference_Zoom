@@ -106,6 +106,7 @@ async function getListScheduleByHostId(req: Request, res: Response) {
     }
     const listSchedule = await Schedule.find({
       hostId: userId,
+      startTime: {$gte: new Date()},
       $or: [{ endTime: null }, { endTime: { $gt: new Date() } }],
     });
     return res.status(200).json({

@@ -44,4 +44,25 @@ const updateInvitationStatus = async (scheduleId, email, status: string) => {
   }
 };
 
-export { createInvitation, updateInvitationStatus };
+const getScheduleIdByInvitationId = async (invitationId: string) => {
+  const invitation = await Invitation.findById(invitationId);
+  if (!invitation) {
+    throw new Error("Lời mời đã hết hạn hoặc không tồn tại");
+  }
+  return invitation.scheduleId;
+}
+
+const getInvitationStatus = async (invitationId: string) => {
+  const invitation = await Invitation.findById(invitationId);
+  if (!invitation) {
+    return "expired";
+  }
+  return invitation.status;
+}
+
+export {
+  createInvitation,
+  updateInvitationStatus,
+  getScheduleIdByInvitationId,
+  getInvitationStatus,
+};

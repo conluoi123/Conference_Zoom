@@ -1,7 +1,7 @@
 import Notification from "../models/notification.model";
 import Room from "../models/room.model";
-import Schedule from "../models/schedule.model";
 import User from "../models/user.model";
+import { getInvitationStatus } from "./invitation.services";
 
 const createNotification = async (email, type, message: string) => {
   const notification = await Notification.create({
@@ -82,10 +82,20 @@ const markNotificationAsRead = async (notificationId: string) => {
   }
   return notification;
 };
+
+const getInvitationStatusByNotification = async (notificationId: string) => {
+  const notification = await Notification.findById(notificationId);
+  if (!notification) {
+    throw new Error("Notification not found");
+  }
+  const status = await getInvitationStatus(notification.type.split("-")[1]);
+  return status;
+};
 export {
   createNotification,
   generateMeetingMessage,
   generateInvitationMessage,
   getNotifications,
   markNotificationAsRead,
+  getInvitationStatusByNotification,
 };

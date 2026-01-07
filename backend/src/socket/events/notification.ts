@@ -1,6 +1,6 @@
 import Agenda from "agenda";
 import { Server, Socket } from "socket.io";
-import { updateInvitationStatus } from "../../services/invitation.services";
+import { updateInvitationStatus, getScheduleIdByInvitationId } from "../../services/invitation.services";
 import { updateRoomOnDatabase } from "../../services/room.services";
 import { getScheduleInfo } from "../../services/schedule.services";
 import { createNotification } from "../../services/notification.services";
@@ -63,8 +63,9 @@ const notificationSocketHandler = (
 ) => {
   socket.on(
     "notification:invitation",
-    async ({ scheduleId, email, status }) => {
+    async ({ invitationId, email, status }) => {
       try {
+        const scheduleId = await getScheduleIdByInvitationId(invitationId);
         console.log(0);
         const schedule = await getScheduleInfo(scheduleId);
         console.log(schedule);
