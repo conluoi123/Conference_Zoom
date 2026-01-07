@@ -121,7 +121,7 @@ function NotificationPage() {
   const filteredNotifications = notifications.filter((notif) => {
     if (filter === "all") return true;
     if (filter === "unread") return !notif.isRead;
-    return notif.type === filter;
+    return notif.type.split("-")[0] === filter;
   });
 
   const handleMarkAllAsRead = async () => {

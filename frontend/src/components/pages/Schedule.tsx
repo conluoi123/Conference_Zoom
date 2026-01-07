@@ -414,7 +414,7 @@ function SchedulePage() {
                   {/* ROOM ID */}
                   <div>
                     <label className="block mb-2 font-medium text-sm">
-                      Room ID (tùy chọn)
+                      Room ID 
                     </label>
                     <Input
                       {...register("roomId")}
