@@ -114,6 +114,7 @@ export function HomePage() {
         const res = await scheduleApi.getListSchedule({
           userId: user.id,
         });
+        console.log(res)
         setSchedules(res || []);
       } catch (err) {
         console.error(err);
@@ -245,7 +246,7 @@ export function HomePage() {
     return acc;
   }, {});
 
-  const selectedDateKey = getLocalDateKey(currentDay);
+  // const selectedDateKey = getLocalDateKey(currentDay);
 
   return (
     <MainLayout>
@@ -438,7 +439,7 @@ export function HomePage() {
                   );
                   const dateKey = getLocalDateKey(dateObj);
                   const hasMeeting = schedulesByDate[dateKey]?.length > 0;
-
+                  console.log(hasMeeting)
                   const isSelected =
                     currentDay.getDate() === day &&
                     currentDay.getMonth() === currentMonth.getMonth() &&
@@ -447,11 +448,11 @@ export function HomePage() {
                   return (
                     <button
                       key={day}
-                      className={`h-9 rounded-lg text-sm font-medium transition-colors ${isSelected
+                      className={`relative h-9 rounded-lg text-sm font-medium transition-colors ${isSelected
                         ? "bg-blue-600 text-white"
                         : "text-gray-700 hover:bg-gray-100"
                         }`}
-                      onClick={() =>
+                      onClick={() => {
                         setCurrentDay(
                           new Date(
                             currentMonth.getFullYear(),
@@ -459,6 +460,9 @@ export function HomePage() {
                             day
                           )
                         )
+                        setOpenModal(true);
+                        setModalMeetings(schedulesByDate[dateKey]);
+                      }
                       }
                     >
                       {day}

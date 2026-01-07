@@ -145,23 +145,30 @@ function SchedulePage() {
   const handleCheckRoom = async (roomId: string) => {
     setRoomError("");
     setIsRoomValid(null);
-    if (!roomId.trim() || !user) return;
-
+    if (!roomId.trim() || !user) {
+      setRoomError("");
+      return;
+    }
     try {
       setCheckingRoom(true);
       const res = await scheduleApi.getInvitedUserInRoom({
         hostId: user.id,
         roomId,
       });
-      const list = res.invited || [];
-      setAttendees((prev) => {
-        const merged = [...prev];
-        list.forEach((email: string) => {
-          if (!merged.includes(email)) merged.push(email);
+      if (!res.success) {
+        setRoomError("Phòng họp không tồn tại hoặc bạn không phải host");
+        setIsRoomValid(false);
+      } else {
+        const list = res.invited || [];
+        setAttendees((prev) => {
+          const merged = [...prev];
+          list.forEach((email: string) => {
+            if (!merged.includes(email)) merged.push(email);
+          });
+          return merged;
         });
-        return merged;
-      });
-      setIsRoomValid(true);
+        setIsRoomValid(true);
+      }
     } catch {
       setRoomError("Phòng họp không tồn tại hoặc bạn không phải host");
       setIsRoomValid(false);
