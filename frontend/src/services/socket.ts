@@ -134,12 +134,12 @@ class SocketService {
   }
 
   respondToInvitation(
-    scheduleId: string,
+    invitationId: string,
     email: string,
     status: "accepted" | "declined"
   ) {
     if (!this.socket?.connected) return;
-    this.socket.emit("notification:invitation", { scheduleId, email, status });
+    this.socket.emit("notification:invitation", { invitationId, email, status });
   }
 
   // ============ LISTENERS ============

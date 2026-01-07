@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Bell, ChevronLeft, Video, Users, Calendar, CheckCheck, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Bell,
+  ChevronLeft,
+  Video,
+  Users,
+  Calendar,
+  CheckCheck,
+  X,
+} from "lucide-react";
 import { MainLayout } from "@/layout/MainLayout";
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/context/NotificationContext";
@@ -7,6 +15,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { meetingAPI } from "@/services/meetingApi";
+import { socketService } from "@/services/socket";
+import { notificationService } from "@/services/notification";
 
 // Helper function to format relative time
 const formatRelativeTime = (dateString: string): string => {
@@ -33,7 +43,7 @@ const formatRelativeTime = (dateString: string): string => {
 
 // Get icon based on notification type
 const getNotificationIcon = (type: string) => {
-  const typePrefix = type.split('-')[0]; // Extract prefix before '-'
+  const typePrefix = type.split("-")[0]; // Extract prefix before '-'
   switch (typePrefix) {
     case "meeting":
       return <Video className="w-6 h-6 text-blue-600" />;
@@ -48,7 +58,7 @@ const getNotificationIcon = (type: string) => {
 
 // Get title based on notification type
 const getNotificationTitle = (type: string) => {
-  const typePrefix = type.split('-')[0]; // Extract prefix before '-'
+  const typePrefix = type.split("-")[0]; // Extract prefix before '-'
   switch (typePrefix) {
     case "meeting":
       return "Lời mời họp";
@@ -63,9 +73,9 @@ const getNotificationTitle = (type: string) => {
 
 // Extract roomId from notification type (format: "meeting-roomId")
 const extractRoomId = (type: string): string | null => {
-  const parts = type.split('-');
-  if (parts.length >= 2 && parts[0] === 'meeting') {
-    return parts.slice(1).join('-'); // Handle roomId with dashes
+  const parts = type.split("-");
+  if (parts.length >= 2 && parts[0] === "meeting") {
+    return parts.slice(1).join("-"); // Handle roomId with dashes
   }
   return null;
 };
@@ -75,7 +85,38 @@ function NotificationPage() {
   const { user } = useAuth();
   const [filter, setFilter] = useState<string>("all");
   const [joiningMeetingId, setJoiningMeetingId] = useState<string | null>(null);
+  const [invitationStatus, setInvitationStatus] = useState<
+    Record<string, "accepted" | "declined" | "expired">
+  >({});
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      setLoading(true);
+      for (const n of notifications) {
+        if (n.type.startsWith("invitation")) {
+          try {
+            type StatusType = "accepted" | "declined" | "expired";
+
+            const status = (await notificationService.getStatusToNotify(
+              n._id
+            )) as StatusType;
+
+            setInvitationStatus((prev) => ({
+              ...prev,
+              [n._id]: status,
+            }));
+          } catch (error) {
+            console.log("Loi, " + error);
+          }
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchStatuses();
+  }, [notifications]);
 
   const filteredNotifications = notifications.filter((notif) => {
     if (filter === "all") return true;
@@ -90,7 +131,11 @@ function NotificationPage() {
     }
   };
 
-  const handleJoinMeeting = async (e: React.MouseEvent, roomId: string, notificationId: string) => {
+  const handleJoinMeeting = async (
+    e: React.MouseEvent,
+    roomId: string,
+    notificationId: string
+  ) => {
     e.stopPropagation();
 
     if (!user?.id) {
@@ -146,10 +191,44 @@ function NotificationPage() {
     }
   };
 
-  const handleDeclineMeeting = async (e: React.MouseEvent, notificationId: string) => {
+  const handleDeclineMeeting = async (
+    e: React.MouseEvent,
+    notificationId: string
+  ) => {
     e.stopPropagation();
     await markAsRead(notificationId);
     toast.success("Đã từ chối lời mời");
+  };
+
+  const handleInvitationResponse = async (
+    e: React.MouseEvent,
+    notificationId: string,
+    invitationId: string,
+    status: "accepted" | "declined"
+  ) => {
+    e.stopPropagation();
+
+    if (!user?.email) {
+      toast.error("Bạn cần đăng nhập để phản hồi lời mời");
+      return;
+    }
+
+    try {
+      console.log(invitationId);
+      socketService.respondToInvitation(invitationId, user.email, status);
+      await markAsRead(notificationId);
+
+      setInvitationStatus((prev) => ({
+        ...prev,
+        [notificationId]: status,
+      }));
+
+      status === "accepted"
+        ? toast.success("Bạn đã chấp nhận lời mời")
+        : toast.success("Bạn đã từ chối lời mời");
+    } catch (err) {
+      toast.error("Có lỗi xảy ra khi phản hồi lời mời");
+    }
   };
 
   return (
@@ -170,7 +249,8 @@ function NotificationPage() {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Thông báo</h1>
                 <p className="text-gray-600 mt-1">
-                  {notifications.filter((n) => !n.isRead).length} thông báo chưa đọc
+                  {notifications.filter((n) => !n.isRead).length} thông báo chưa
+                  đọc
                 </p>
               </div>
               {notifications.some((n) => !n.isRead) && (
@@ -198,7 +278,9 @@ function NotificationPage() {
               ].map((filterOption) => (
                 <Button
                   key={filterOption.value}
-                  variant={filter === filterOption.value ? "default" : "outline"}
+                  variant={
+                    filter === filterOption.value ? "default" : "outline"
+                  }
                   onClick={() => setFilter(filterOption.value)}
                   className="min-w-[100px]"
                 >
@@ -209,7 +291,9 @@ function NotificationPage() {
 
             {/* Main content */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {isLoading ? (
+              {loading ? (
+                <div>Đang tải thông báo .....</div>
+              ) : isLoading ? (
                 <div className="flex items-center justify-center py-20">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
@@ -223,8 +307,10 @@ function NotificationPage() {
                     {filter === "all"
                       ? "Bạn chưa có thông báo nào"
                       : filter === "unread"
-                        ? "Bạn đã đọc hết thông báo"
-                        : `Không có thông báo loại ${getNotificationTitle(filter)}`}
+                      ? "Bạn đã đọc hết thông báo"
+                      : `Không có thông báo loại ${getNotificationTitle(
+                          filter
+                        )}`}
                   </p>
                 </div>
               ) : (
@@ -237,8 +323,9 @@ function NotificationPage() {
                           markAsRead(notification._id);
                         }
                       }}
-                      className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.isRead ? "bg-blue-50/30" : ""
-                        }`}
+                      className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
+                        !notification.isRead ? "bg-blue-50/30" : ""
+                      }`}
                     >
                       <div className="flex gap-4">
                         <div className="shrink-0 mt-1">
@@ -270,17 +357,25 @@ function NotificationPage() {
                           {/* Action buttons for meeting invitations */}
                           {(() => {
                             const roomId = extractRoomId(notification.type);
-                            const typePrefix = notification.type.split('-')[0];
+                            const typePrefix = notification.type.split("-")[0];
 
                             // Meeting invitation buttons
-                            if (typePrefix === 'meeting' && roomId) {
+                            if (typePrefix === "meeting" && roomId) {
                               return (
                                 <div className="flex gap-3 mt-4">
                                   <Button
-                                    onClick={(e) => handleJoinMeeting(e, roomId, notification._id)}
+                                    onClick={(e) =>
+                                      handleJoinMeeting(
+                                        e,
+                                        roomId,
+                                        notification._id
+                                      )
+                                    }
                                     className="bg-blue-600 hover:bg-blue-700 text-white"
                                     size="sm"
-                                    disabled={joiningMeetingId === notification._id}
+                                    disabled={
+                                      joiningMeetingId === notification._id
+                                    }
                                   >
                                     {joiningMeetingId === notification._id ? (
                                       <>
@@ -295,11 +390,15 @@ function NotificationPage() {
                                     )}
                                   </Button>
                                   <Button
-                                    onClick={(e) => handleDeclineMeeting(e, notification._id)}
+                                    onClick={(e) =>
+                                      handleDeclineMeeting(e, notification._id)
+                                    }
                                     variant="outline"
                                     className="border-gray-300 hover:bg-gray-100"
                                     size="sm"
-                                    disabled={joiningMeetingId === notification._id}
+                                    disabled={
+                                      joiningMeetingId === notification._id
+                                    }
                                   >
                                     <X className="w-4 h-4 mr-2" />
                                     Từ chối
@@ -308,12 +407,76 @@ function NotificationPage() {
                               );
                             }
 
+                            {
+                              /* Action buttons for schedule invitations */
+                            }
+                            if (
+                              typePrefix === "invitation" &&
+                              notification.type.split("-")[1]!
+                            ) {
+                              return (
+                                <div className="flex gap-3 mt-4">
+                                  {invitationStatus[notification._id] ===
+                                  "accepted" ? (
+                                    <p className="text-green-600 font-semibold">
+                                      Bạn đã đồng ý tham gia ✔
+                                    </p>
+                                  ) : invitationStatus[notification._id] ===
+                                    "declined" ? (
+                                    <p className="text-gray-500">
+                                      Bạn đã từ chối lời mời ❌
+                                    </p>
+                                  ) : invitationStatus[notification._id] ===
+                                    "expired" ? (
+                                    <p className="text-gray-500">
+                                      Lời mời đã hết hạn
+                                    </p>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        onClick={(e) =>
+                                          handleInvitationResponse(
+                                            e,
+                                            notification._id,
+                                            notification.type.split("-")[1]!,
+                                            "accepted"
+                                          )
+                                        }
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        size="sm"
+                                      >
+                                        <CheckCheck className="w-4 h-4 mr-2" />
+                                        Đồng ý
+                                      </Button>
+
+                                      <Button
+                                        onClick={(e) =>
+                                          handleInvitationResponse(
+                                            e,
+                                            notification._id,
+                                            notification.type.split("-")[1]!,
+                                            "declined"
+                                          )
+                                        }
+                                        variant="outline"
+                                        className="border-gray-300 hover:bg-gray-100"
+                                        size="sm"
+                                      >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Từ chối
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            }
+
                             // Recording notification button
-                            if (typePrefix === 'recording') {
+                            if (typePrefix === "recording") {
                               return (
                                 <div className="flex gap-3 mt-4">
                                   <Button
-                                    onClick={() => navigate('/history')}
+                                    onClick={() => navigate("/history")}
                                     className="bg-purple-600 hover:bg-purple-700 text-white"
                                     size="sm"
                                   >

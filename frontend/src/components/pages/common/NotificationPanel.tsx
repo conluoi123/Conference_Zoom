@@ -107,18 +107,21 @@ export function NotificationPanel() {
             notifications.slice(0, 10).map((notification) => (
               <DropdownMenuItem
                 key={notification._id}
-                className={`px-4 py-3 cursor-pointer focus:bg-gray-50 ${!notification.isRead ? "bg-blue-50/50" : ""
-                  }`}
-                onClick={() => handleNotificationClick(notification._id, notification.isRead)}
+                className={`px-4 py-3 cursor-pointer focus:bg-gray-50 ${
+                  !notification.isRead ? "bg-blue-50/50" : ""
+                }`}
+                onClick={() =>
+                  handleNotificationClick(notification._id, notification.isRead)
+                }
               >
                 <div className="flex gap-3 w-full">
                   <div className="shrink-0 mt-1">
-                    {getNotificationIcon(notification.type)}
+                    {getNotificationIcon(notification.type.split("-")[0])}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className="text-sm font-semibold text-gray-900 truncate">
-                        {getNotificationTitle(notification.type)}
+                        {getNotificationTitle(notification.type.split("-")[0])}
                       </p>
                       {!notification.isRead && (
                         <span className="w-2 h-2 bg-blue-600 rounded-full shrink-0 mt-1"></span>
