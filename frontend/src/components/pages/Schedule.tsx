@@ -108,7 +108,7 @@ function SchedulePage() {
             });
             return {
               ...schedule,
-              emails: roomData.invited || [], // emails come from room
+              emails: roomData.response.invited || [], // emails come from room
             };
           } catch {
             return {
@@ -155,11 +155,12 @@ function SchedulePage() {
         hostId: user.id,
         roomId,
       });
+      console.log(res)
       if (!res.success) {
         setRoomError("Phòng họp không tồn tại hoặc bạn không phải host");
         setIsRoomValid(false);
       } else {
-        const list = res.invited || [];
+        const list = res.response.invited || [];
         setAttendees((prev) => {
           const merged = [...prev];
           list.forEach((email: string) => {
@@ -284,7 +285,7 @@ function SchedulePage() {
           hostId: user.id,
           roomId: schedule.roomId,
         });
-        setAttendees(roomData.invited || []);
+        setAttendees(roomData.response.invited || []);
         setIsRoomValid(true);
         setRoomError("");
       } catch {

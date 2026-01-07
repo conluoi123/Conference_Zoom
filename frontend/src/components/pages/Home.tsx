@@ -567,8 +567,8 @@ export function HomePage() {
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-lg w-[480px] max-w-[90vw]">
               {/* Header */}
-              <div className="bg-orange-100 px-4 py-3 rounded-t-2xl flex justify-between items-center">
-                <p className="font-semibold text-gray-800">
+              <div className="bg-blue-500 px-4 py-3 rounded-t-2xl flex justify-between items-center">
+                <p className="font-semibold text-black">
                   Lịch họp ngày {currentDay.toLocaleDateString("vi-VN")}
                 </p>
                 <button

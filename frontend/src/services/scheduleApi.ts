@@ -1,3 +1,4 @@
+import { success } from "zod";
 import api from "./service";
 interface ScheduleData {
   hostId: string;
@@ -53,7 +54,7 @@ export const scheduleApi = {
         hostId,
         roomId,
       });
-      return response.data?.invitedUsers ?? [];
+      return { response: response.data?.invitedUsers, success: true }; 
     } catch (error: any) {
       if (error.response) {
         if (error.response.status === 404) {
