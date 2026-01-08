@@ -141,4 +141,17 @@ export const scheduleApi = {
       throw error;
     }
   },
+  getScheduleById: async (scheduleId: string) => {
+    try {
+      const response = await api.get(`/schedule/getScheduleById/${scheduleId}`);
+      return response.data.schedule;
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(
+          error.response.data?.message || "Lấy thông tin lịch họp thất bại"
+        );
+      }
+      throw error;
+    }
+  },
 };
