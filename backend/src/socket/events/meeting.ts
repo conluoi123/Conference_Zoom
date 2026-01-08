@@ -66,6 +66,7 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
       socket.disconnect();
     }
     emails.forEach(async (email) => {
+      console.log(roomId);
       addInvitee(roomId, email);
       const message = await generateMeetingMessage(roomId, participantId);
       const notification = await createNotification(
