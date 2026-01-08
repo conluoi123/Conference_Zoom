@@ -359,6 +359,7 @@ function NotificationPage() {
                           {/* Action buttons for meeting invitations */}
                           {(() => {
                             const roomId = extractRoomId(notification.type);
+                            
                             const typePrefix = notification.type.split("-")[0];
 
                             // Meeting invitation buttons
