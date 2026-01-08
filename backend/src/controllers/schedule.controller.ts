@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   createScheduleOnDb,
   updateScheduleOnDb,
+  getSchedule
 } from "../services/schedule.services";
 import Schedule from "../models/schedule.model";
 import {
@@ -310,10 +311,24 @@ const getListSchedule = async (req: Request, res: Response) => {
   }
 };
 
+const getScheduleById = async (req: Request, res: Response) => {
+  try {
+    const schedule = await getSchedule(req.params.scheduleId);
+    if (!schedule) {
+      return res.status(404).json({ message: "Schedule not found" });
+    }
+    return res.status(200).json({ schedule });
+  } catch (error) {
+    console.error("Get Schedule error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 export {
   createSchedule,
   getListScheduleByHostId,
   updateSchedule,
   getUpcomingSchedules,
   getListSchedule,
+  getScheduleById,
 };
