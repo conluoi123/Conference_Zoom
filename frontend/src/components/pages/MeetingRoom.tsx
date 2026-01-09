@@ -874,27 +874,33 @@ export function MeetingRoom({
               {subtitles.length > 0 && isTranscripting && (
                 <SubtitleBar subtitles={subtitles} />
               )}
-              {/* THANH MEETING CONTROL (NÊN THÊM HIỆU ỨNG RÊ CHUỘT VÀO THÌ HIỆN) */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto">
-                <MeetingControls
-                  onLeaveMeeting={onLeaveMeeting}
-                  onToggleChat={toggleChatPanel}
-                  isChatOpen={isChatOpen}
-                  isOpen={isParticipantOpen}
-                  onOpenParticipant={toggleParticipantPanel}
-                  onTogglePip={togglePipMode}
-                  isPipActive={isPipActive}
-                  isHost={isHost}
-                  isBackgroundOpen={isBackgroundOpen}
-                  onToggleBackground={toggleBackgroundPanel}
-                  isSettingOpen={isSettingOpen}
-                  onOpenSettings={handleToggleSettings}
-                  isRecording={isRecording}
-                  onToggleRecording={handleRecording}
-                  isTranscripting={isTranscripting}
-                  onToggleTranscript={handleTranscript}
-                  onShareClick={() => setIsInviteModalOpen(true)}
-                />
+              {/* THANH MEETING CONTROL - Mac Dock Effect */}
+              <div className="fixed bottom-0 left-0 right-0 h-24 flex justify-center items-end pb-6 z-50 group transition-all duration-300">
+                {/* Hover trigger area with subtle gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-transparent group-hover:from-black/40 transition-all duration-300 pointer-events-none" />
+
+                {/* Control Bar Container */}
+                <div className="transform translate-y-10 opacity-0 scale-95 group-hover:translate-y-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-out cubic-bezier(0.4, 0, 0.2, 1)">
+                  <MeetingControls
+                    onLeaveMeeting={onLeaveMeeting}
+                    onToggleChat={toggleChatPanel}
+                    isChatOpen={isChatOpen}
+                    isOpen={isParticipantOpen}
+                    onOpenParticipant={toggleParticipantPanel}
+                    onTogglePip={togglePipMode}
+                    isPipActive={isPipActive}
+                    isHost={isHost}
+                    isBackgroundOpen={isBackgroundOpen}
+                    onToggleBackground={toggleBackgroundPanel}
+                    isSettingOpen={isSettingOpen}
+                    onOpenSettings={handleToggleSettings}
+                    isRecording={isRecording}
+                    onToggleRecording={handleRecording}
+                    isTranscripting={isTranscripting}
+                    onToggleTranscript={handleTranscript}
+                    onShareClick={() => setIsInviteModalOpen(true)}
+                  />
+                </div>
               </div>
               {totalPages > 1 && (
                 <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 scale-90">

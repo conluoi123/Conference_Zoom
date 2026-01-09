@@ -49,7 +49,8 @@ interface MeetingControlsProps {
   onToggleRecording: () => void;
   isRecording: boolean;
   onToggleTranscript: () => void;
-  isTranscripting: boolean
+  isTranscripting: boolean;
+  onShareClick: () => void;
 }
 
 export const MeetingControls = memo(({
@@ -70,6 +71,7 @@ export const MeetingControls = memo(({
   onToggleRecording,
   isTranscripting,
   onToggleTranscript,
+  onShareClick,
 }: MeetingControlsProps) => {
   const {
     leave,
@@ -114,8 +116,8 @@ export const MeetingControls = memo(({
         <button
           onClick={onClick}
           className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all hover:scale-105 w-9 h-9 md:w-10 md:h-10 rounded-full${variant === "danger"
-              ? "bg-red-600 hover:bg-red-700"
-              : "hover:bg-gray-700 text-white"
+            ? "bg-red-600 hover:bg-red-700"
+            : "hover:bg-gray-700 text-white"
             }`}
         >
           <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
@@ -151,7 +153,7 @@ export const MeetingControls = memo(({
             variant={localWebcamOn ? "default" : "danger"}
           />
           {/*  Chia sẻ */}
-          <ControlButton icon={Share2} label="Chia sẻ" />
+          <ControlButton icon={Share2} label="Chia sẻ" onClick={onShareClick} />
           <ControlButton
             onClick={onToggleChat}
             icon={MessageSquare}
