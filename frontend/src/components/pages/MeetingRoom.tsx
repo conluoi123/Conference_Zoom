@@ -390,7 +390,8 @@ export function MeetingRoom({
 
       // Webhook Configuration (Auto-sent to this URL when recording stops)
       // NOTE: Replace with your actual ngrok URL
-      const webhookUrl = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
+      const webhookUrl = import.meta.env.VITE_API_URL;
+      // const webhookUrl = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
 
       startRecording(webhookUrl, undefined, config, transcription);
     } catch (error) {

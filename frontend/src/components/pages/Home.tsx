@@ -5,7 +5,6 @@ import {
   Plus,
   Calendar,
   Circle,
-  Clock,
   X,
   ChevronLeft,
   ChevronRight,

@@ -343,8 +343,6 @@ function SchedulePage() {
                   )}
                 </div>
 
-                {/* SCROLLABLE LIST */}
-                {/* them vao o input de search theo roomId hoac title de loc lich hen */}
                 <div className="mb-3">
                   <Input
                     placeholder="Tìm lịch theo roomId hoặc tiêu đề..."

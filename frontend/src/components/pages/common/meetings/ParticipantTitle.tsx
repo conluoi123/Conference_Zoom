@@ -19,7 +19,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const screenShareRef = useRef<HTMLVideoElement>(null);
-
+  
   // 1. Xử lý Video Stream
   useEffect(() => {
     const videoElement = videoRef.current;
