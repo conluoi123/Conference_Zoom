@@ -238,9 +238,9 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
         avatar: user.avatar,
       },
     };
-    
+
     const encodedData = encodeURIComponent(JSON.stringify(data));
-    return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
+    return res.redirect(`${ENV.FRONTEND_URL}/home?data=${encodedData}`);
   } catch (err) {
     console.log(err);
     return res

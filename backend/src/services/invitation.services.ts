@@ -6,7 +6,7 @@ const createInvitation = async (scheduleId, roomId, email, expires) => {
     const invitation = await Invitation.create({
       scheduleId,
       email,
-      joinLink: "http://localhost:" + ENV.PORT + "/" + roomId,
+      joinLink: `${ENV.FRONTEND_URL}` + "/" + roomId,
       status: "pending",
       sentAt: new Date(),
       expiresAt: expires,
@@ -50,7 +50,7 @@ const getScheduleIdByInvitationId = async (invitationId: string) => {
     throw new Error("Lời mời đã hết hạn hoặc không tồn tại");
   }
   return invitation.scheduleId;
-}
+};
 
 const getInvitationStatus = async (invitationId: string) => {
   const invitation = await Invitation.findById(invitationId);
@@ -58,7 +58,7 @@ const getInvitationStatus = async (invitationId: string) => {
     return "expired";
   }
   return invitation.status;
-}
+};
 
 export {
   createInvitation,

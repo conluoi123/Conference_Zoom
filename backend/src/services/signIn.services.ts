@@ -160,8 +160,9 @@ async function outlookLogIn(accessToken, refreshToken, profile, done) {
     } else {
       const newUser = await createNewUser(
         email,
-        avatar ? avatar :
-          "https://res.cloudinary.com/dz9xfcbey/image/upload/f_auto,q_auto,w_400,h_400,c_fill,g_center/avatars/cb9trd7wuoebrlbdhjqj",
+        avatar
+          ? avatar
+          : "https://res.cloudinary.com/dz9xfcbey/image/upload/f_auto,q_auto,w_400,h_400,c_fill,g_center/avatars/cb9trd7wuoebrlbdhjqj",
         profile.displayName,
         "outlook",
         "refTokenTemp"
@@ -200,7 +201,7 @@ async function outlookLogInCallback(req: Request, res: Response) {
     },
   };
   const encodedData = encodeURIComponent(JSON.stringify(data));
-  return res.redirect(`http://localhost:5173/home?data=${encodedData}`);
+  return res.redirect(`${ENV.FRONTEND_URL}/home?data=${encodedData}`);
 }
 
 //GOOGLE
