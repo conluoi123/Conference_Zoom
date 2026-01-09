@@ -25,7 +25,6 @@ export function RecordingDetail() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareEmails, setShareEmails] = useState("");
 
-  // Get roomId from location state
   const roomId = location.state?.roomId || "";
 
   useEffect(() => {

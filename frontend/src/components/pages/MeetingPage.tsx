@@ -1,11 +1,11 @@
 import {
   Search,
-  Filter,
   Plus,
   Video,
   Calendar,
   Clock,
-  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { MainLayout } from "@/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,16 @@ import { toast } from "sonner";
 export default function MeetingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  const ITEMS_PER_PAGE = 3;
+  const [currentPage, setCurrentPage] = useState(1);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [allMeetings, setAllMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [searchText, setSearchText] = useState("");
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [meetings]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -49,7 +53,6 @@ export default function MeetingsPage() {
     fetchMeetings();
   }, [user?.id]);
 
-  // 🔎 SEARCH khi bấm Enter
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
 
@@ -107,6 +110,12 @@ export default function MeetingsPage() {
       toast.error(e?.message || "Lỗi khi tham gia phòng họp");
     }
   };
+  const totalPages = Math.ceil(meetings.length / ITEMS_PER_PAGE);
+
+  const paginatedMeetings = meetings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <MainLayout>
@@ -140,13 +149,6 @@ export default function MeetingsPage() {
                 className="pl-10 h-11 bg-white border-slate-200 focus-visible:ring-blue-500"
               />
             </div>
-            <Button
-              variant="outline"
-              className="h-11 px-4 gap-2 border-slate-200 text-slate-600"
-            >
-              <Filter className="w-4 h-4" />
-              Filter
-            </Button>
           </div>
 
           <h2 className="text-lg font-semibold text-slate-800">
@@ -154,7 +156,7 @@ export default function MeetingsPage() {
           </h2>
 
           {/* LIST */}
-          <div className="max-h-[500px] overflow-y-auto pr-2 space-y-4">
+          <div className="space-y-4">
             {loading && <p className="text-slate-500 text-sm">Loading...</p>}
 
             {!loading && meetings.length === 0 && (
@@ -162,7 +164,7 @@ export default function MeetingsPage() {
             )}
 
             {!loading &&
-              meetings.map((meeting: any) => {
+              paginatedMeetings.map((meeting: any) => {
                 const dateStr = new Date(meeting.startTime).toLocaleString();
 
                 return (
@@ -227,6 +229,31 @@ export default function MeetingsPage() {
                 );
               })}
           </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-3 mt-6">
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+
+              <span className="text-sm text-slate-600 font-medium">
+                Trang {currentPage} / {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>

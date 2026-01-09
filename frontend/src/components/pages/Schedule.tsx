@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Plus, Loader2, Calendar, X } from "lucide-react";
+import { ChevronLeft, Plus, Loader2, Calendar, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { MainLayout } from "@/layout/MainLayout";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
@@ -52,7 +52,8 @@ const formatTimeForInput = (date: Date) => {
 
 function SchedulePage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const ITEMS_PER_PAGE = 3;
+  const [currentPage, setCurrentPage] = useState(1);
   const [attendees, setAttendees] = useState<string[]>([]);
   const [emailInput, setEmailInput] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -86,6 +87,9 @@ function SchedulePage() {
   const roomIdValue = watch("roomId");
 
   // Load schedules on mount
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [schedules])
   useEffect(() => {
     loadSchedules();
   }, []);
@@ -255,7 +259,6 @@ function SchedulePage() {
       setEditingSchedule(null);
       setIsConfirmOpen(false);
       loadSchedules();
-      navigate("/home");
     } catch (error: any) {
       toast.error(error?.message || "Có lỗi xảy ra, vui lòng thử lại.");
     } finally {
@@ -308,7 +311,11 @@ function SchedulePage() {
     setIsRoomValid(null);
     setRoomError("");
   };
-
+  const totalPages = Math.ceil(schedules.length / ITEMS_PER_PAGE);
+  const paginatedSchedules = schedules.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto p-6">
@@ -353,7 +360,7 @@ function SchedulePage() {
                     </p>
                   )}
 
-                  {schedules
+                  {paginatedSchedules
                     .filter((s) => {
                       if (!searchText.trim()) return true;
                       const text = searchText.toLowerCase();
@@ -400,6 +407,31 @@ function SchedulePage() {
                       );
                     })}
                 </div>
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-3 mt-6">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+
+                    <span className="text-sm text-slate-600 font-medium">
+                      Trang {currentPage} / {totalPages}
+                    </span>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
