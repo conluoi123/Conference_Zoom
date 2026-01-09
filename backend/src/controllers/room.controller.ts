@@ -49,7 +49,6 @@ const userJoinRoom = async (req: Request, res: Response) => {
     if (room.type === "SCHEDULED") {
       const schedule = await latestSchedule(roomId);
       if(schedule[schedule.length - 1].hostId != peerId)
-      // console.log(schedule)
       if (!isDueSchedule(schedule))
         return res.status(403).json("Chưa đến thời gian vào phòng họp");
     }
@@ -92,7 +91,6 @@ const getInvietedUsersBySchedule = async (req: Request, res: Response) => {
     }
       
     const invitedUsers = await getRoomSheduleInvited(roomId, hostId);
-    console.log(invitedUsers)
     return res.status(200).json({ invitedUsers });
   } catch (error) {
     console.error("getInvietedUsersBySchedule error:", error);

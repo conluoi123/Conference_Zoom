@@ -30,7 +30,6 @@ async function createSchedule(req: Request, res: Response) {
     let room = "";
     if (roomId === "") {
       room = await createRoomOnVideoSDK();
-      console.log(`room id: ${room}`);
       await createRoomOnDatabase({
         roomId: room,
         peerId: hostId,
@@ -56,7 +55,6 @@ async function createSchedule(req: Request, res: Response) {
       null,
       duration
     );
-    console.log(schedule._id);
 
     if (!schedule) {
       return res.status(500).json({ message: "Failed to create schedule" });
@@ -123,7 +121,6 @@ async function getListScheduleByHostId(req: Request, res: Response) {
 
 async function updateSchedule(req: Request, res: Response) {
   try {
-    console.log(0);
     const { scheduleId, title, startTime, endTime, duration, emails } =
       req.body;
 
@@ -134,7 +131,6 @@ async function updateSchedule(req: Request, res: Response) {
       endTime,
       duration
     );
-    console.log(1);
     if (!updatedSchedule) {
       return res.status(404).json({ message: "Schedule not found" });
     }

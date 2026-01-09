@@ -24,7 +24,6 @@ function authenticateAccessToken(
     req.user = decoded;
     next();
   } catch (error) {
-    console.log("ACCESS TOKEN IS EXPIRED OR WRONG", error);
     return res
       .status(401)
       .json({ message: "ACCESS TOKEN IS EXPIRED OR WRONG" });

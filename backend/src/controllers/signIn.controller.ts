@@ -42,7 +42,6 @@ async function verifyEmail(req: Request, res: Response) {
   try {
     const { email, otp } = req.body;
     if (!email || !otp) {
-      console.log("Miss otp or email");
       return res.status(401).json({ error: "Miss otp or email" });
     }
     const isVerify = await supportVerifyOtp(email, otp);
@@ -148,7 +147,6 @@ function DirectGoogle(req: RequestWithUser, res: Response) {
     });
 
     const ggLoginURL = `${ENV.GOOGLE_LOGIN_URL}?${param.toString()}`;
-    console.log("Redirect URL:", ggLoginURL);
     return res.redirect(ggLoginURL);
   });
 }

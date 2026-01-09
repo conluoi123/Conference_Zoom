@@ -9,7 +9,6 @@ import User from "../models/user.model";
 async function refreshAccessToken(req: RequestWithUser, res: Response) {
   try {
     const refreshToken = req.cookies.refreshToken;
-    // console.log(`loi la reff ${refreshToken}`);
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token is wrong" });
     }
@@ -18,11 +17,9 @@ async function refreshAccessToken(req: RequestWithUser, res: Response) {
       .createHash("sha256")
       .update(refreshToken)
       .digest("hex");
-    console.log(hashRefreshToken);
     const user = await User.findOne({
       "refreshToken.refreshToken": hashRefreshToken,
     });
-    console.log(` loi la ${user}`)
     if (!user) {
       return res
         .status(401)

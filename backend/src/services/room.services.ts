@@ -145,7 +145,6 @@ const updateRoomOnDatabase = async (
   if (invited && invited.length > 0) {
     pushData.invited = { $each: invited };
   }
-  console.log(1)
   const finalUpdate: any = {};
   if (Object.keys(update).length > 0) finalUpdate.$set = update;
   if (Object.keys(pushData).length > 0) finalUpdate.$addToSet = pushData;

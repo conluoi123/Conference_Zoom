@@ -13,7 +13,6 @@ const videoSdkWebhook = async (req: Request, res: Response) => {
       throw new Error(`Không thể xác thực chữ ký`);
     }
     const { webhookType, data } = req.body;
-    console.log(`Webhook Event: ${webhookType}`);
 
     switch (webhookType) {
       case "session-started": {

@@ -13,8 +13,6 @@ const createRoomMiddleware = async (
 ) => {
   const { peerId, meetingType } = req.body;
 
-  console.log(peerId, meetingType);
-
   const user = await User.findOne({ _id: peerId });
 
   if (!peerId || !user) {

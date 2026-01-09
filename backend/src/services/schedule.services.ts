@@ -66,9 +66,7 @@ const isDueSchedule = (schedule: any) => {
 export { latestSchedule, isDueSchedule };
 
 const getScheduleInfo = async (scheduleId: string) => {
-  console.log(scheduleId)
   const schedule = await Schedule.findById(scheduleId);
-  console.log(schedule);
   if (!schedule) {
     throw new Error("Lịch hẹn đã bị hủy");
   }
@@ -85,7 +83,6 @@ const getScheduleToHandleCreate = async (roomId: string, start: Date) => {
     startTime: { $gte: startPlus },
     endTime: null,
   });
-  console.log(schedule);
   if (schedule) return false;
   return true;
 };

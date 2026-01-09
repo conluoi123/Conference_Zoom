@@ -15,8 +15,6 @@ const getUser = async (req: RequestWithUser, res: Response) => {
       displayName: user.displayName,
       avatar: user.avatar,
     };
-    console.log(data);
-    console.log(1111)
     return res.status(200).json({ data });
   } catch (error) {
     console.error("Error when get user");

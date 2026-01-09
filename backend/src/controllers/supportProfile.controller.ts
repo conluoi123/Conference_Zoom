@@ -27,7 +27,6 @@ async function saveAvatar(req: Request, res: Response) {
   try {
     const { userId, publicId } = req.body;
     if (!publicId) {
-      console.log("Miss public Id ");
       return res.status(400);
     }
     const optimizedUrl = `https://res.cloudinary.com/${ENV.CLOUDINARY_NAME}/image/upload/f_auto,q_auto,w_400,h_400,c_fill,g_center/${publicId}`;

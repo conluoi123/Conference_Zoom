@@ -97,7 +97,6 @@ async function supportSendOtp(email, otp) {
                     </body>
                     </html>`,
     });
-    console.log("SEND OTP SUCCESSFULLY!");
     return {
       success: true,
       message: "OTP sent successfully",

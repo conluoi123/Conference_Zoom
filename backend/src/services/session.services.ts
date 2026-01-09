@@ -52,9 +52,7 @@ const isInvitedForSession = async (roomId, peerId: string) => {
   if (!user) {
     throw new Error("Phát hiện truy cập bất thường");
   }
-  console.log(session);
   if (!session) {
-    // throw new Error("Phiên họp đã kết thúc");
     return false;
   }
   if (session.invited.includes(user.email)) return true;
