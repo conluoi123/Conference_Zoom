@@ -167,33 +167,21 @@ export const SocketListener = () => {
         isRead: boolean;
         sentAt: Date;
       }) => {
-        toast.custom((t) => (
-          <div
-            onClick={() => navigate("/notification")}
-            className="relative cursor-pointer rounded-lg bg-background p-4 shadow-lg hover:bg-muted"
-          >
-            {/* Nút đóng */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // ⛔ không navigate
-                toast.dismiss(t);
-              }}
-              className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-            >
-              ✕
-            </button>
-
-            <h4 className="font-medium">Lời mời lịch họp</h4>
-            <p className="text-sm text-muted-foreground mt-1">{data.content}</p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Gửi lúc:{" "}
-              {new Date(data.sentAt).toLocaleString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-                hour12: false,
-              })}
-            </p>
-          </div>
-        ));
+        toast.info("Lời mời lịch họp", {
+          description:
+            data.content +
+            ".\nGửi vào lúc: " +
+            new Date(data.sentAt).toLocaleString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour12: false,
+            }),
+          action: {
+            label: "Xem",
+            onClick: () => navigate(`/notification`),
+          },
+          closeButton: true,
+          duration: 8000,
+        });
 
         // Refresh notifications to get the new notification from server
         setTimeout(() => fetchNotifications(), 1000);
