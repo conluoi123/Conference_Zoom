@@ -9,7 +9,6 @@ import { OTPPage } from "./components/pages/OTPPage.tsx";
 import { HomePage } from "./components/pages/Home.tsx";
 import { MeetingPage } from "./components/pages/VideoSDK.tsx";
 import SchedulePage from "./components/pages/Schedule.tsx";
-// import { ProfileModal } from "./pages/ProfilePage/ProfileModal.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { NotificationProvider } from "./context/NotificationContext.tsx";
 import { PreJoinPage } from "./components/pages/PreJoinMeetingPage.tsx";

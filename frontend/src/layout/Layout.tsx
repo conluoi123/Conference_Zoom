@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { BiLogoZoom } from 'react-icons/bi';
 
 interface AuthLayoutProps {

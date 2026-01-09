@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Bell,
   ChevronLeft,
+  ChevronRight,
   Video,
   Users,
   Calendar,
@@ -17,7 +18,7 @@ import { toast } from "sonner";
 import { meetingAPI } from "@/services/meetingApi";
 import { socketService } from "@/services/socket";
 import { notificationService } from "@/services/notification";
-
+const ITEMS_PER_PAGE = 5;
 // Helper function to format relative time
 const formatRelativeTime = (dateString: string): string => {
   const date = new Date(dateString);
@@ -84,13 +85,16 @@ function NotificationPage() {
   const { notifications, markAsRead, isLoading } = useNotifications();
   const { user } = useAuth();
   const [filter, setFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [joiningMeetingId, setJoiningMeetingId] = useState<string | null>(null);
   const [invitationStatus, setInvitationStatus] = useState<
     Record<string, "accepted" | "declined" | "expired">
   >({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
   useEffect(() => {
     const fetchStatuses = async () => {
       setLoading(true);
@@ -118,11 +122,18 @@ function NotificationPage() {
     fetchStatuses();
   }, [notifications]);
 
-  const filteredNotifications = notifications.filter((notif) => {
+  const filteredNotifications = notifications.filter((n) => {
     if (filter === "all") return true;
-    if (filter === "unread") return !notif.isRead;
-    return notif.type.split("-")[0] === filter;
+    if (filter === "unread") return !n.isRead;
+    return n.type.split("-")[0] === filter;
   });
+
+  const totalPages = Math.ceil(filteredNotifications.length / ITEMS_PER_PAGE);
+
+  const paginatedNotifications = filteredNotifications.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleMarkAllAsRead = async () => {
     const unreadNotifications = notifications.filter((n) => !n.isRead);
@@ -214,7 +225,6 @@ function NotificationPage() {
     }
 
     try {
-      console.log(invitationId);
       socketService.respondToInvitation(invitationId, user.email, status);
       await markAsRead(notificationId);
 
@@ -317,7 +327,7 @@ function NotificationPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {filteredNotifications.map((notification) => (
+                  {paginatedNotifications.map((notification) => (
                     <div
                       key={notification._id}
                       onClick={() => {
@@ -359,7 +369,7 @@ function NotificationPage() {
                           {/* Action buttons for meeting invitations */}
                           {(() => {
                             const roomId = extractRoomId(notification.type);
-                            
+
                             const typePrefix = notification.type.split("-")[0];
 
                             // Meeting invitation buttons
@@ -495,6 +505,31 @@ function NotificationPage() {
                       </div>
                     </div>
                   ))}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-3 py-4">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((p) => p - 1)}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+
+                      <span className="text-sm text-gray-600">
+                        Trang {currentPage} / {totalPages}
+                      </span>
+
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

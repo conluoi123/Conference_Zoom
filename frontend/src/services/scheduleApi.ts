@@ -1,4 +1,3 @@
-import { success } from "zod";
 import api from "./service";
 interface ScheduleData {
   hostId: string;
@@ -19,7 +18,6 @@ export const scheduleApi = {
     try {
       const { hostId, roomId, title, startTime, duration, emails } =
         request || {};
-      console.log(hostId);
       const response = await api.post("/schedule/create", {
         hostId,
         roomId,
@@ -28,12 +26,10 @@ export const scheduleApi = {
         duration,
         emails,
       });
-      console.log(0);
       return response.data;
     } catch (error: any) {
       if (error.response) {
         if (error.response.status === 404) {
-          console.log(1);
           return {
             success: false,
             error: "Tài khoản không tồn tại",
