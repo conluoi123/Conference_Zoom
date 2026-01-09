@@ -15,6 +15,7 @@ import { MainLayout } from "../../layout/MainLayout";
 import { useAuth } from "../../context/AuthContext";
 import { meetingAPI } from "../../services/meetingApi";
 import { scheduleApi } from "@/services/scheduleApi";
+import { LoadingScreen } from "../ui/LoadingScreen";
 
 interface MeetingData {
   peerId?: string;
@@ -246,6 +247,10 @@ export function HomePage() {
   }, {});
 
   const selectedDateKey = getLocalDateKey(currentDay);
+
+  if (loading || loadingSchedule) {
+    return <LoadingScreen message="Đang tải trang chủ..." variant="light" />;
+  }
 
   return (
     <MainLayout>

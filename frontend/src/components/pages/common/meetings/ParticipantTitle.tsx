@@ -4,15 +4,16 @@ import { MicOff, Monitor } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export const ParticipantTile = React.memo(({ participantId }: { participantId: string }) => {
-  const { 
-    webcamStream, 
-    webcamOn, 
-    micStream, 
-    micOn, 
-    isLocal, 
+  const {
+    webcamStream,
+    webcamOn,
+    micStream,
+    micOn,
+    isLocal,
     displayName,
     screenShareStream,
     screenShareOn,
+    isActiveSpeaker, // VideoSDK provides this - true when participant is speaking
   } = useParticipant(participantId);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -22,7 +23,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   // 1. Xử lý Video Stream
   useEffect(() => {
     const videoElement = videoRef.current;
-    
+
     if (videoElement) {
       if (webcamOn && webcamStream) {
         // Tạo MediaStream mới từ track của VideoSDK
@@ -30,7 +31,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
         mediaStream.addTrack(webcamStream.track);
 
         videoElement.srcObject = mediaStream;
-        
+
         videoElement.play().catch((err) => {
           if (err.name !== "AbortError") {
             console.error("Video play error", err);
@@ -41,20 +42,19 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
         videoElement.srcObject = null;
       }
     }
-  }, [webcamStream, webcamOn, screenShareOn]); // Chỉ chạy lại khi stream hoặc trạng thái cam thay đổi
+  }, [webcamStream, webcamOn, screenShareOn]);
 
-  // 2. Xử lý Audio Stream (QUAN TRỌNG: Để nghe tiếng người khác)
+  // 2. Xử lý Audio Stream
   useEffect(() => {
     const audioElement = audioRef.current;
 
     if (audioElement) {
       if (micOn && micStream && !isLocal) {
-        // Chỉ phát âm thanh nếu mic bật VÀ KHÔNG PHẢI LÀ MÌNH (tránh vọng tiếng)
         const mediaStream = new MediaStream();
         mediaStream.addTrack(micStream.track);
 
         audioElement.srcObject = mediaStream;
-        
+
         audioElement.play().catch((err) => {
           if (err.name !== "AbortError") {
             console.error("Audio play error", err);
@@ -91,12 +91,50 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   const showWebcam = !showScreenShare && webcamOn && webcamStream;
   const showAvatar = !showScreenShare && !showWebcam;
   const { user } = useAuth();
+
+  // Speaking indicator - only show when actively speaking
+  const isSpeaking = isActiveSpeaker && micOn;
+
+  // Gradient color palette - 12 diverse colors
+  const gradientColors = [
+    'from-indigo-500 to-purple-600',
+    'from-blue-500 to-cyan-600',
+    'from-green-500 to-emerald-600',
+    'from-yellow-500 to-orange-600',
+    'from-red-500 to-pink-600',
+    'from-purple-500 to-fuchsia-600',
+    'from-teal-500 to-cyan-600',
+    'from-orange-500 to-red-600',
+    'from-pink-500 to-rose-600',
+    'from-violet-500 to-purple-600',
+    'from-sky-500 to-blue-600',
+    'from-lime-500 to-green-600',
+  ];
+
+  // Hash function
+  const hashString = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  };
+
+  const gradientClass = gradientColors[hashString(participantId) % gradientColors.length];
+
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-800 aspect-video ring-1 ring-white/10">
+    <div className={`relative w-full h-full overflow-hidden bg-gray-800 aspect-video transition-all duration-300 ${isSpeaking
+      ? 'ring-2 ring-green-500 shadow-lg shadow-green-500/50 rounded-2xl'
+      : showWebcam
+        ? 'ring-1 ring-blue-400/40 rounded-2xl'
+        : 'ring-1 ring-white/10 rounded-2xl'
+      }`}>
       {/* Audio luôn phát (ẩn) */}
       <audio ref={audioRef} autoPlay playsInline controls={false} />
 
-      {/* 1. SCREEN SHARE (Ưu tiên cao nhất) */}
+      {/* 1. SCREEN SHARE */}
       {showScreenShare && (
         <>
           <video
@@ -121,15 +159,27 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
           autoPlay
           playsInline
           muted={true}
-          className="w-full h-full object-cover transform scale-x-[-1]"
+          className="w-full h-full object-cover transform scale-x-[-1] rounded-2xl"
         />
       )}
 
       {/* 3. AVATAR (fallback) */}
       {showAvatar && (
-        <div className="flex items-center justify-center h-full bg-gradient-to-br from-indigo-500 to-purple-600">
+        <div className={`flex items-center justify-center h-full bg-gradient-to-br ${gradientClass} relative`}>
+          {/* Pulsing wave rings when speaking */}
+          {isSpeaking && (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-white/20 animate-ping" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center animation-delay-150">
+                <div className="w-28 h-28 rounded-full bg-white/10 animate-ping" />
+              </div>
+            </>
+          )}
+
           {user?.avatar ? (
-            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white">
+            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white z-10">
               <img
                 src={user.avatar}
                 alt="Profile"
@@ -137,7 +187,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
               />
             </div>
           ) : (
-            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white">
+            <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white z-10">
               {displayName?.charAt(0).toUpperCase() || "?"}
             </div>
           )}

@@ -26,7 +26,7 @@ export const SettingsPanel = ({
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="w-80 h-full bg-gray-900 border-l border-white/10 flex flex-col shadow-2xl z-40"
+      className="w-80 h-full bg-[#202124] border-l border-white/10 flex flex-col shadow-2xl z-40"
     >
       {/* Header */}
       <div className="p-4 border-b border-white/10 flex justify-between items-center bg-gray-900/50">
@@ -52,9 +52,9 @@ export const SettingsPanel = ({
               <p className="text-[10px] text-gray-500">Cho phép mọi người nói</p>
             </div>
           </div>
-          <Switch 
-            checked={roomSettings.allowMic} 
-            onCheckedChange={(val) => onUpdateSettings("allowMic", val)} 
+          <Switch
+            checked={roomSettings.allowMic}
+            onCheckedChange={(val) => onUpdateSettings("allowMic", val)}
           />
         </div>
 
@@ -67,9 +67,9 @@ export const SettingsPanel = ({
               <p className="text-[10px] text-gray-500">Cho phép dùng webcam</p>
             </div>
           </div>
-          <Switch 
-            checked={roomSettings.allowWebcam} 
-            onCheckedChange={(val) => onUpdateSettings("allowWebcam", val)} 
+          <Switch
+            checked={roomSettings.allowWebcam}
+            onCheckedChange={(val) => onUpdateSettings("allowWebcam", val)}
           />
         </div>
 
@@ -82,9 +82,9 @@ export const SettingsPanel = ({
               <p className="text-[10px] text-gray-500">Cho phép trò chuyện</p>
             </div>
           </div>
-          <Switch 
-            checked={roomSettings.allowChat} 
-            onCheckedChange={(val) => onUpdateSettings("allowChat", val)} 
+          <Switch
+            checked={roomSettings.allowChat}
+            onCheckedChange={(val) => onUpdateSettings("allowChat", val)}
           />
         </div>
       </div>

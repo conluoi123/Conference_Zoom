@@ -194,9 +194,10 @@ class SocketService {
   }
 
   onRecordingShared(callback: (data: {
-    roomId: string;
-    sessionId: string;
-    message: string
+    type: string;
+    content: string;
+    isRead: boolean;
+    sentAt: string;
   }) => void) {
     this.socket?.on("notification:recording", callback);
   }

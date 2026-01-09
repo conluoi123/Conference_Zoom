@@ -101,7 +101,9 @@ function RecordingPage() {
 
   const onSelectRecording = (record: Recording) => {
     // Chúng ta cần cả sessionId (định danh duy nhất cuộc họp) và roomId (để phân quyền)
-    navigate(`/recordings/${record.sessionId}?roomId=${record.roomId}`);
+    navigate(`/recordings/${record.sessionId}`, {
+      state: { roomId: record.roomId }
+    });
   };
   return (
     <MainLayout>

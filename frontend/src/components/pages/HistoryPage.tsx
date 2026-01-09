@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { sessionAPI, type SessionHistory } from "@/services/sessionApi";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
 function HistoryPage() {
     const navigate = useNavigate();
@@ -47,6 +48,11 @@ function HistoryPage() {
             state: { roomId: session.roomId, sessionId: session.sessionId },
         });
     };
+
+    // Show loading screen while fetching data
+    if (loading) {
+        return <LoadingScreen message="Đang tải lịch sử cuộc họp..." />;
+    }
 
     return (
         <MainLayout>

@@ -96,16 +96,32 @@ export const SocketListener = () => {
 
       // Listen for recording shared notifications
       const handleRecordingShared = (data: {
-        roomId: string;
-        sessionId: string;
-        message: string;
+        type: string;
+        content: string;
+        isRead: boolean;
+        sentAt: string;
       }) => {
         console.log("📹 Recording shared notification:", data);
+
+        // Parse roomId from content: "Bạn được chia sẻ bản ghi cho cuộc họp:ROOM_ID"
+        const roomIdMatch = data.content.match(/cuộc họp:(.+)$/);
+        const roomId = roomIdMatch ? roomIdMatch[1].trim() : "";
+
+        // Parse sessionId from type: "recording-SESSION_ID"
+        const sessionId = data.type.replace("recording-", "");
         toast.info("Bản ghi mới được chia sẻ", {
-          description: data.message,
+          description: data.content,
           action: {
             label: "Xem ngay",
-            onClick: () => navigate(`/recordings/${data.sessionId}`),
+            onClick: () => {
+              if (sessionId && roomId) {
+                navigate(`/recordings/${sessionId}`, {
+                  state: { roomId }
+                });
+              } else {
+                console.error("Missing sessionId or roomId:", { sessionId, roomId });
+              }
+            },
           },
           cancel: {
             label: "Đóng",
