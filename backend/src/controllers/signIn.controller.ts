@@ -18,8 +18,8 @@ import axios from "axios";
 import { authenticateEmail } from "../middlewares/signIn.middleware";
 
 interface RequestWithUser extends Request {
-  user: any;
-  session: any;
+  user?: any;
+  session?: any;
 }
 async function sendOtp(req: Request, res: Response) {
   try {
