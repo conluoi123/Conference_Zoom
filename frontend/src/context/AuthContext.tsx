@@ -59,14 +59,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await api.post("/auth/logout");
       if (res.status === 200) {
-        setUser(null);
+        setUser({
+          id: "",
+          email: user?.email || "",
+          displayName: user?.displayName || "",
+          avatar: user?.avatar || "",
+        });
         setIsLoading(true)
       }
     } catch (error) {
       console.error("Xoa cookie khong thanh cong", error);
       return;
     } finally {
-      setIsLoading(false)
+      setTimeout(() => {
+        setUser(null);
+        setIsLoading(false);
+      }, 1000);
     }
   };
 
