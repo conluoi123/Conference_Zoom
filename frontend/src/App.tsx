@@ -26,8 +26,12 @@ export default function App() {
 
   useEffect(() => {
     const check = async () => {
-      const flag = await AuthService.checkRefreshToken();
-      setTarget(flag ? "/home" : "/login");
+      try {
+        const flag = await AuthService.checkRefreshToken();
+        setTarget(flag ? "/home" : "/login");
+      } catch (error) {
+        setTarget("/login")
+      }
     };
 
     check();

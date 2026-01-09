@@ -248,7 +248,7 @@ export function HomePage() {
   // const selectedDateKey = getLocalDateKey(currentDay);
 
   if (loading || loadingSchedule) {
-    return <LoadingScreen message="Đang tải trang chủ..." variant="light" />;
+    return <LoadingScreen message="" variant="light" />;
   }
 
   return (

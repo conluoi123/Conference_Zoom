@@ -6,7 +6,7 @@ interface LoadingScreenProps {
 }
 
 export const LoadingScreen = ({
-    message = "Đang tải...",
+    message = "...",
     variant = "light"
 }: LoadingScreenProps) => {
     const bgColor = variant === "light" ? "bg-gray-100" : "bg-gray-900";

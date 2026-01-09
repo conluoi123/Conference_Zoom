@@ -1,11 +1,10 @@
-import api from "./service";
+import axios from "axios";
 const AuthService = {
     checkRefreshToken: async() => {
         try {
-            const data = await api.post("/auth/refreshToken/check");
+            const data = await axios.post("/auth/refreshToken/check");
             return data.data.flag;
         } catch (error) {
-            console.log(error)
         }
     }
 }
