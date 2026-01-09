@@ -1,3 +1,4 @@
+import { success } from "zod";
 import api from "./service";
 interface ScheduleData {
   hostId: string;
@@ -53,7 +54,7 @@ export const scheduleApi = {
         hostId,
         roomId,
       });
-      return response.data?.invitedUsers ?? [];
+      return { response: response.data?.invitedUsers, success: true }; 
     } catch (error: any) {
       if (error.response) {
         if (error.response.status === 404) {
@@ -135,6 +136,19 @@ export const scheduleApi = {
       if (error.response) {
         throw new Error(
           error.response.data?.message || "Cập nhật lịch họp thất bại"
+        );
+      }
+      throw error;
+    }
+  },
+  getScheduleById: async (scheduleId: string) => {
+    try {
+      const response = await api.get(`/schedule/getScheduleById/${scheduleId}`);
+      return response.data.schedule;
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(
+          error.response.data?.message || "Lấy thông tin lịch họp thất bại"
         );
       }
       throw error;

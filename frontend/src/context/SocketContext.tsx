@@ -9,7 +9,13 @@ export const SocketListener = () => {
   const { user, isLoading } = useAuth();
   const { fetchNotifications } = useNotifications();
   const navigate = useNavigate();
-
+  const extractRoomId = (type: string): string | null => {
+    const parts = type.split("-");
+    if (parts.length >= 2 && parts[0] === "meeting") {
+      return parts.slice(1).join("-"); // Handle roomId with dashes
+    }
+    return null;
+  };
   useEffect(() => {
     //  Chỉ kết nối khi đã có user và không đang loading
     if (!isLoading && user?.email) {
@@ -17,9 +23,13 @@ export const SocketListener = () => {
       socketService.connect(user.email);
 
       //  Đăng ký listener cho meeting invitation
-      const handleMeetingInvite = (data: { message: string; roomId: string }) => {
+      const handleMeetingInvite = (data: {
+        type: string;
+        content: string;
+        isRead: boolean;
+        sentAt: Date;
+      }) => {
         console.log("🔔 [GUEST] Nhận được lời mời họp!", data);
-
         const handleJoin = async () => {
           if (!user?.id) {
             toast.error("Vui lòng đăng nhập để tham gia");
@@ -29,9 +39,10 @@ export const SocketListener = () => {
           try {
             // Import meetingAPI at top of file
             const { meetingAPI } = await import("@/services/meetingApi");
-
+            const roomId = extractRoomId(data.type) || "";
+            // console.log(data.type.split("-"));
             const room = await meetingAPI.joinMeeting({
-              roomId: data.roomId,
+              roomId,
               peerId: user.id,
             });
 
@@ -40,10 +51,10 @@ export const SocketListener = () => {
               return;
             }
 
-            navigate(`/meeting/${data.roomId}`, {
+            navigate(`/meeting/${roomId}`, {
               state: {
                 token: room.token,
-                roomId: data.roomId,
+                roomId,
                 hostId: room.hostId,
                 displayName: user.displayName || "Guest",
                 settings: room.settings || {
@@ -62,14 +73,20 @@ export const SocketListener = () => {
         };
 
         toast.info("Lời mời họp mới", {
-          description: data.message,
+          description:
+            data.content +
+            ".\nGửi vào lúc: " +
+            new Date(data.sentAt).toLocaleString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour12: false,
+            }),
           action: {
             label: "Tham gia",
             onClick: handleJoin,
           },
           cancel: {
             label: "Đóng",
-            onClick: () => { },
+            onClick: () => {},
           },
           duration: 10000,
         });
@@ -85,7 +102,7 @@ export const SocketListener = () => {
           description: message,
           cancel: {
             label: "Đóng",
-            onClick: () => { },
+            onClick: () => {},
           },
           duration: 8000,
         });
@@ -109,7 +126,7 @@ export const SocketListener = () => {
           },
           cancel: {
             label: "Đóng",
-            onClick: () => { },
+            onClick: () => {},
           },
           duration: 10000,
         });

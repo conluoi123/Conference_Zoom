@@ -33,5 +33,15 @@ export const notificationService = {
             console.error("Lỗi đánh dấu đã đọc: ", err);
             throw err;
         }
+    },
+
+    getStatusToNotify: async (notificationId: string): Promise<string> => {
+        try {
+            const response = await api.post("/notifications/statusInvitation", { notificationId });
+            return response.data.status
+        } catch (err) {
+            console.error("Lỗi đánh dấu đã đọc: ", err);
+            throw err;
+        }
     }
 };

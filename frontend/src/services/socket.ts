@@ -125,6 +125,7 @@ class SocketService {
     }
 
     console.log(`📨 Mời ${emails.length} người vào phòng ${roomId}`);
+    console.log(roomId);
     this.socket.emit("meeting:invite", { roomId, participantId, emails });
   }
 
@@ -134,12 +135,16 @@ class SocketService {
   }
 
   respondToInvitation(
-    scheduleId: string,
+    invitationId: string,
     email: string,
     status: "accepted" | "declined"
   ) {
     if (!this.socket?.connected) return;
-    this.socket.emit("notification:invitation", { scheduleId, email, status });
+    this.socket.emit("notification:invitation", {
+      invitationId,
+      email,
+      status,
+    });
   }
 
   // ============ LISTENERS ============
@@ -164,7 +169,7 @@ class SocketService {
     
   */
   onMeetingInviteNotification(
-    callback: (data: { message: string; roomId: string }) => void
+    callback: (data: { type: string; content: string; isRead: boolean, sentAt: Date }) => void
   ) {
     this.socket?.on("notification:meeting", callback);
   }
@@ -178,7 +183,12 @@ class SocketService {
   }
 
   // ============ RECORDING EVENTS ============
-  shareRecording(userId: string, roomId: string, sessionId: string, emails: string[]) {
+  shareRecording(
+    userId: string,
+    roomId: string,
+    sessionId: string,
+    emails: string[]
+  ) {
     if (!this.socket?.connected) {
       console.error("❌ Socket chưa kết nối");
       return;
@@ -193,11 +203,13 @@ class SocketService {
     this.socket.emit("recording:share", userId, roomId, sessionId, emails);
   }
 
-  onRecordingShared(callback: (data: {
-    roomId: string;
-    sessionId: string;
-    message: string
-  }) => void) {
+  onRecordingShared(
+    callback: (data: {
+      roomId: string;
+      sessionId: string;
+      message: string;
+    }) => void
+  ) {
     this.socket?.on("notification:recording", callback);
   }
 

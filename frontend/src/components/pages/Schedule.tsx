@@ -67,6 +67,7 @@ function SchedulePage() {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
+  const [searchText, setSearchText] = useState("");
 
   const {
     register,
@@ -108,7 +109,7 @@ function SchedulePage() {
             });
             return {
               ...schedule,
-              emails: roomData.invited || [], // emails come from room
+              emails: roomData.response.invited || [], // emails come from room
             };
           } catch {
             return {
@@ -145,23 +146,31 @@ function SchedulePage() {
   const handleCheckRoom = async (roomId: string) => {
     setRoomError("");
     setIsRoomValid(null);
-    if (!roomId.trim() || !user) return;
-
+    if (!roomId.trim() || !user) {
+      setRoomError("");
+      return;
+    }
     try {
       setCheckingRoom(true);
       const res = await scheduleApi.getInvitedUserInRoom({
         hostId: user.id,
         roomId,
       });
-      const list = res.invited || [];
-      setAttendees((prev) => {
-        const merged = [...prev];
-        list.forEach((email: string) => {
-          if (!merged.includes(email)) merged.push(email);
+      console.log(res);
+      if (!res.success) {
+        setRoomError("Phòng họp không tồn tại hoặc bạn không phải host");
+        setIsRoomValid(false);
+      } else {
+        const list = res.response.invited || [];
+        setAttendees((prev) => {
+          const merged = [...prev];
+          list.forEach((email: string) => {
+            if (!merged.includes(email)) merged.push(email);
+          });
+          return merged;
         });
-        return merged;
-      });
-      setIsRoomValid(true);
+        setIsRoomValid(true);
+      }
     } catch {
       setRoomError("Phòng họp không tồn tại hoặc bạn không phải host");
       setIsRoomValid(false);
@@ -277,7 +286,7 @@ function SchedulePage() {
           hostId: user.id,
           roomId: schedule.roomId,
         });
-        setAttendees(roomData.invited || []);
+        setAttendees(roomData.response.invited || []);
         setIsRoomValid(true);
         setRoomError("");
       } catch {
@@ -328,6 +337,15 @@ function SchedulePage() {
                 </div>
 
                 {/* SCROLLABLE LIST */}
+                {/* them vao o input de search theo roomId hoac title de loc lich hen */}
+                <div className="mb-3">
+                  <Input
+                    placeholder="Tìm lịch theo roomId hoặc tiêu đề..."
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
+                </div>
+
                 <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-2 space-y-3">
                   {schedules.length === 0 && !loadingSchedules && (
                     <p className="text-gray-500 text-center py-8 text-sm">
@@ -335,43 +353,52 @@ function SchedulePage() {
                     </p>
                   )}
 
-                  {schedules.map((schedule) => {
-                    const startTime = new Date(schedule.startTime);
-                    const dateStr = formatDateForInput(startTime);
-                    const timeStr = formatTimeForInput(startTime);
+                  {schedules
+                    .filter((s) => {
+                      if (!searchText.trim()) return true;
+                      const text = searchText.toLowerCase();
+                      return (
+                        s?.title?.toLowerCase().includes(text) ||
+                        s?.roomId?.toLowerCase().includes(text)
+                      );
+                    })
+                    .map((schedule) => {
+                      const startTime = new Date(schedule.startTime);
+                      const dateStr = formatDateForInput(startTime);
+                      const timeStr = formatTimeForInput(startTime);
 
-                    return (
-                      <div
-                        key={schedule._id}
-                        className={`border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                          editingSchedule?._id === schedule._id
-                            ? "ring-2 ring-blue-500 bg-blue-50"
-                            : ""
-                        }`}
-                        onClick={() => handleEditSchedule(schedule)}
-                      >
-                        <h3 className="font-semibold text-sm mb-2">
-                          {schedule.title}
-                        </h3>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <p>
-                            📅 {dateStr} | ⏰ {timeStr}
-                          </p>
-                          <p>⏱️ {schedule.duration} phút</p>
-                          {schedule.roomId && (
-                            <p className="font-mono text-xs truncate">
-                              🏠 {schedule.roomId}
+                      return (
+                        <div
+                          key={schedule._id}
+                          className={`border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                            editingSchedule?._id === schedule._id
+                              ? "ring-2 ring-blue-500 bg-blue-50"
+                              : ""
+                          }`}
+                          onClick={() => handleEditSchedule(schedule)}
+                        >
+                          <h3 className="font-semibold text-sm mb-2">
+                            {schedule.title}
+                          </h3>
+                          <div className="text-xs text-gray-600 space-y-1">
+                            <p>
+                              📅 {dateStr} | ⏰ {timeStr}
                             </p>
-                          )}
-                          {schedule.emails && schedule.emails.length > 0 && (
-                            <p className="text-blue-600">
-                              👥 {schedule.emails.length} người
-                            </p>
-                          )}
+                            <p>⏱️ {schedule.duration} phút</p>
+                            {schedule.roomId && (
+                              <p className="font-mono text-xs truncate">
+                                🏠 {schedule.roomId}
+                              </p>
+                            )}
+                            {schedule.emails && schedule.emails.length > 0 && (
+                              <p className="text-blue-600">
+                                👥 {schedule.emails.length} người
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
@@ -404,31 +431,36 @@ function SchedulePage() {
                   className="space-y-4"
                 >
                   {/* ROOM ID */}
-                  <div>
-                    <label className="block mb-2 font-medium text-sm">
-                      Room ID (tùy chọn)
-                    </label>
-                    <Input
-                      {...register("roomId")}
-                      placeholder="Để trống để tạo phòng mới"
-                      disabled={!!editingSchedule}
-                    />
-                    {checkingRoom && (
-                      <p className="text-blue-500 text-xs mt-1">
-                        🔍 Đang kiểm tra phòng…
-                      </p>
-                    )}
-                    {isRoomValid && (
-                      <p className="text-green-500 text-xs mt-1">
-                        ✔ Phòng hợp lệ — bạn là host
-                      </p>
-                    )}
-                    {roomError && (
-                      <p className="text-red-500 text-xs mt-1">
-                        ❌ {roomError}
-                      </p>
-                    )}
-                  </div>
+
+                  {editingSchedule ? (
+                    <div>
+                      <label className="block mb-2 font-medium text-sm">
+                        Room ID
+                      </label>
+                      <Input
+                        {...register("roomId")}
+                        placeholder="Để trống để tạo phòng mới"
+                        disabled={!!editingSchedule}
+                      />
+                      {checkingRoom && (
+                        <p className="text-blue-500 text-xs mt-1">
+                          🔍 Đang kiểm tra phòng…
+                        </p>
+                      )}
+                      {isRoomValid && (
+                        <p className="text-green-500 text-xs mt-1">
+                          ✔ Phòng hợp lệ — bạn là host
+                        </p>
+                      )}
+                      {roomError && (
+                        <p className="text-red-500 text-xs mt-1">
+                          ❌ {roomError}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <></>
+                  )}
 
                   {/* TITLE */}
                   <div>
