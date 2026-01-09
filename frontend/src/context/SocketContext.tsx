@@ -21,7 +21,7 @@ export const SocketListener = () => {
     if (!isLoading && user?.email) {
       console.log("🔌 SocketListener: Kết nối socket cho", user.email);
       socketService.connect(user.email);
-
+      
       //  Đăng ký listener cho meeting invitation
       const handleMeetingInvite = (data: {
         type: string;
@@ -71,7 +71,6 @@ export const SocketListener = () => {
             toast.error("Không thể tham gia phòng họp");
           }
         };
-
         toast.info("Lời mời họp mới", {
           description:
             data.content +
@@ -96,10 +95,21 @@ export const SocketListener = () => {
       };
 
       // Listen for schedule reminders
-      const handleScheduleNotification = (message: string) => {
-        console.log("🔔 Received schedule notification:", message);
+      const handleScheduleNotification = (data: {
+        type: string;
+        content: string;
+        isRead: boolean;
+        sentAt: Date;
+      }) => {
+        console.log("🔔 Received schedule notification:", data.content);
         toast.info("Nhắc nhở lịch họp", {
-          description: message,
+          description:
+            data.content +
+            ".\nGửi vào lúc: " +
+            new Date(data.sentAt).toLocaleString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour12: false,
+            }),
           cancel: {
             label: "Đóng",
             onClick: () => {},
@@ -135,9 +145,41 @@ export const SocketListener = () => {
         setTimeout(() => fetchNotifications(), 1000);
       };
 
+      const handleScheduleInvitedNotification = (data: {
+        type: string;
+        content: string;
+        isRead: boolean;
+        sentAt: Date;
+      }) => {
+        toast.info("Lời mời lịch họp", {
+          description:
+            data.content +
+            ".\nGửi vào lúc: " +
+            new Date(data.sentAt).toLocaleString("vi-VN", {
+              timeZone: "Asia/Ho_Chi_Minh",
+              hour12: false,
+            }),
+          action: {
+            label: "Xem Thông báo",
+            onClick: () => navigate(`/notification`),
+          },
+          cancel: {
+            label: "Đóng",
+            onClick: () => {},
+          },
+          duration: 8000,
+        });
+
+        // Refresh notifications to get the new notification from server
+        setTimeout(() => fetchNotifications(), 1000);
+      };
+
       socketService.onMeetingInviteNotification(handleMeetingInvite);
       socketService.onScheduleNotification(handleScheduleNotification);
       socketService.onRecordingShared(handleRecordingShared);
+      socketService.onScheduleInviteNotification(
+        handleScheduleInvitedNotification
+      );
 
       // ✅ Cleanup khi unmount
       return () => {

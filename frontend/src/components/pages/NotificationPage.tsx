@@ -97,26 +97,36 @@ function NotificationPage() {
   }, [filter]);
   useEffect(() => {
     const fetchStatuses = async () => {
+      const invitationNotifs = notifications.filter((n) =>
+        n.type.startsWith("invitation")
+      );
+
+      if (invitationNotifs.length === 0) return;
+
       setLoading(true);
-      for (const n of notifications) {
-        if (n.type.startsWith("invitation")) {
-          try {
-            type StatusType = "accepted" | "declined" | "expired";
 
-            const status = (await notificationService.getStatusToNotify(
-              n._id
-            )) as StatusType;
+      try {
+        const results = await Promise.all(
+          invitationNotifs.map(async (n) => {
+            const status = await notificationService.getStatusToNotify(n._id);
+            return [n._id, status] as const;
+          })
+        );
 
-            setInvitationStatus((prev) => ({
-              ...prev,
-              [n._id]: status,
-            }));
-          } catch (error) {
-            console.log("Loi, " + error);
-          }
-        }
+        const statusMap: Record<string, any> = {};
+        results.forEach(([id, status]) => {
+          statusMap[id] = status;
+        });
+
+        setInvitationStatus((prev) => ({
+          ...prev,
+          ...statusMap,
+        }));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchStatuses();

@@ -4,6 +4,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import ProtectedLoginRoute from "./routes/ProtectedLoginRoute.tsx";
 import { LoginPage } from "./components/pages/LoginPage.tsx";
 import { OTPPage } from "./components/pages/OTPPage.tsx";
 import { HomePage } from "./components/pages/Home.tsx";
@@ -20,7 +21,6 @@ import { SocketListener } from "./context/SocketContext.tsx";
 import NotificationPage from "./components/pages/NotificationPage.tsx";
 import { AuthService } from "./services/authApi.ts";
 import { useEffect, useState } from "react";
-import ProtectedRoute from "./routes/ProtectedRoute.tsx";
 export default function App() {
   const [target, setTarget] = useState<string | null>(null);
 
@@ -42,65 +42,26 @@ export default function App() {
           <Toaster position="bottom-right" richColors />
           <Routes>
             <Route path="/" element={<Navigate to={`${target}`} replace />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/login"
+              element={
+                <ProtectedLoginRoute flag={target === "/login"}>
+                  <LoginPage />
+                </ProtectedLoginRoute>
+              }
+            />
             <Route path="/otp" element={<OTPPage />} />
             <Route path="/home" element={<HomePage />} />
-            <Route
-              path="/meeting/:roomId"
-              element={
-                <ProtectedRoute>
-                  <MeetingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/pre-join"
-              element={
-                <ProtectedRoute>
-                  <PreJoinPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/schedule"
-              element={
-                <ProtectedRoute>
-                  <SchedulePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/meet"
-              element={
-                <ProtectedRoute>
-                  <MeetingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/history"
-              element={
-                <ProtectedRoute>
-                  <HistoryPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/meeting/:roomId" element={<MeetingPage />} />
+            <Route path="/pre-join" element={<PreJoinPage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/meet" element={<MeetingsPage />} />
+            <Route path="/history" element={<HistoryPage />} />
             <Route
               path="/recordings/:sessionId"
-              element={
-                <ProtectedRoute>
-                  <RecordingDetail />
-                </ProtectedRoute>
-              }
+              element={<RecordingDetail />}
             />
-            <Route
-              path="/notification"
-              element={
-                <ProtectedRoute>
-                  <NotificationPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/notification" element={<NotificationPage />} />
             {/* <Route path="/settings/profile" element={<ProfileModal onClose={() => {}} chosenPage="profile"/>} />
             <Route path="/settings/notifications" element={<ProfileModal onClose={() => {}} chosenPage="notifications"/>} /> */}
             {/* <Route path="/settings/privacy" element={<ProfileModal onClose={() => {}} chosenPage="privacy"/>} />

@@ -169,12 +169,35 @@ class SocketService {
     
   */
   onMeetingInviteNotification(
-    callback: (data: { type: string; content: string; isRead: boolean, sentAt: Date }) => void
+    callback: (data: {
+      type: string;
+      content: string;
+      isRead: boolean;
+      sentAt: Date;
+    }) => void
   ) {
     this.socket?.on("notification:meeting", callback);
   }
 
-  onScheduleNotification(callback: (message: string) => void) {
+  onScheduleInviteNotification(
+    callback: (data: {
+      type: string;
+      content: string;
+      isRead: boolean;
+      sentAt: Date;
+    }) => void
+  ) {
+    this.socket?.on("notification:invitations", callback);
+  }
+
+  onScheduleNotification(
+    callback: (data: {
+      type: string;
+      content: string;
+      isRead: boolean;
+      sentAt: Date;
+    }) => void
+  ) {
     this.socket?.on("notification:schedule", callback);
   }
 
@@ -225,6 +248,7 @@ class SocketService {
   offNotificationEvents() {
     this.socket?.off("notification:schedule");
     this.socket?.off("notification:meeting");
+    this.socket?.off("notification:invitations")
     this.socket?.off("notification:recording");
   }
 
@@ -234,6 +258,4 @@ class SocketService {
   }
 }
 
-
 export const socketService = new SocketService();
-
