@@ -28,10 +28,7 @@ export function RecordingDetail() {
   // Get roomId from location state
   const roomId = location.state?.roomId || "";
 
-  console.log("🔍 RecordingDetail mounted:", { sessionId, roomId, locationState: location.state });
-
   useEffect(() => {
-    console.log("🔄 useEffect triggered:", { sessionId, roomId });
     if (sessionId) {
       if (!roomId) {
         console.warn("⚠️ Missing roomId!");
@@ -39,7 +36,6 @@ export function RecordingDetail() {
         setLoading(false);
         return;
       }
-      console.log("✅ Calling fetchRecordings...");
       fetchRecordings();
     }
   }, [sessionId, roomId]);
@@ -48,9 +44,7 @@ export function RecordingDetail() {
     try {
       setLoading(true);
       setError("");
-      console.log("📹 Fetching recordings for:", { roomId, sessionId });
       const urls = await recordingAPI.getSessionRecordings(roomId, sessionId!);
-      console.log("✅ Recordings fetched:", urls);
       setRecordingUrls(urls);
     } catch (err: any) {
       console.error("❌ Error fetching recordings:", err);

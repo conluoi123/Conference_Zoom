@@ -114,7 +114,6 @@ export function HomePage() {
         const res = await scheduleApi.getListSchedule({
           userId: user.id,
         });
-        console.log(res)
         setSchedules(res || []);
       } catch (err) {
         console.error(err);
@@ -134,7 +133,6 @@ export function HomePage() {
       try {
         const decodedData = decodeURIComponent(dataParam);
         const userData = JSON.parse(decodedData);
-        console.log("OAuth login data:", userData);
         if (userData.accessToken && userData.user) {
           login(
             {
@@ -368,22 +366,7 @@ export function HomePage() {
                   </div>
                   <div className="text-left">
                     <p className="text-gray-900 font-medium mb-1">History</p>
-                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                to="/history"
-                className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"
-              >
-                <div className="flex gap-4">
-                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-gray-900 font-medium mb-1">History</p>
-                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
+                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp và bản ghi</p>
                   </div>
                 </div>
               </Link>
@@ -439,7 +422,6 @@ export function HomePage() {
                   );
                   const dateKey = getLocalDateKey(dateObj);
                   const hasMeeting = schedulesByDate[dateKey]?.length > 0;
-                  console.log(hasMeeting)
                   const isSelected =
                     currentDay.getDate() === day &&
                     currentDay.getMonth() === currentMonth.getMonth() &&

@@ -214,7 +214,6 @@ function NotificationPage() {
     }
 
     try {
-      console.log(invitationId);
       socketService.respondToInvitation(invitationId, user.email, status);
       await markAsRead(notificationId);
 

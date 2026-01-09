@@ -94,7 +94,6 @@ export function MeetingRoom({
               <button
                 onClick={() => {
                   allow(); // Duyệt qua SDK
-                  console.log("Chấp nhận vào rrooom");
                   setJoinRequests((prev) =>
                     prev.filter((req) => req.participantId !== participantId)
                   );
@@ -107,7 +106,6 @@ export function MeetingRoom({
               <button
                 onClick={() => {
                   deny(); // Từ chối qua SDK
-                  console.log("Đang gửi lệnh từ chối cho:", participantId);
                   setJoinRequests((prev) =>
                     prev.filter((req) => req.participantId !== participantId)
                   );
@@ -126,7 +124,6 @@ export function MeetingRoom({
     // bắt gói trả về
     onEntryResponded: (...args: any[]) => {
       const decision = args[1];
-      console.log("Phản hồi nhận được là: ", decision);
       if (decision === "denied") {
         toast.error("Yêu cầu tham gia cuộc họp bị từ chối");
         onLeaveMeeting();
@@ -150,7 +147,6 @@ export function MeetingRoom({
         // tránh thông báo khi người vào là chính mình
         return;
       }
-      console.log("Có người tham gia mới");
       toast.success(`${participant.displayName} đã tham gia cuộc họp`, {
         description: "Vừa mới vào phòng họp",
         duration: 3000,
@@ -165,11 +161,9 @@ export function MeetingRoom({
       });
     },
     onRecordingStarted: async () => {
-      console.log("🔴 Ghi hình đã bắt đầu");
       setIsRecording(true);
 
       try {
-        console.log("📊 Meeting info:", { meetingId, roomId });
 
         // Sử dụng roomId làm sessionId (chúng giống nhau)
         const sessionId = meetingId || roomId;
@@ -179,14 +173,6 @@ export function MeetingRoom({
           toast.error("Lỗi: Không có sessionId");
           return;
         }
-
-        // Gọi API để lưu recording vào database
-        await api.post("/rooms/recordings/start", {
-          sessionId: sessionId,
-          roomId: roomId,
-        });
-
-        console.log("✅ Recording saved to database");
         toast.success("Đã bắt đầu ghi hình");
       } catch (error: any) {
         console.error("Failed to save recording:", error);
@@ -196,7 +182,6 @@ export function MeetingRoom({
       }
     },
     onRecordingStopped: () => {
-      console.log("⏹️ Ghi hình đã dừng");
       setIsRecording(false);
     },
   });
@@ -224,11 +209,9 @@ export function MeetingRoom({
   // Join socket room when meeting is joined
   useEffect(() => {
     if (joined === "JOINED" && user?.displayName && socketService.isConnected()) {
-      console.log(`🚪 Joining socket room: ${roomId}`);
       socketService.joinMeetingRoom(roomId, user.displayName);
 
       return () => {
-        console.log(`🚪 Leaving socket room: ${roomId}`);
         socketService.leaveMeetingRoom(roomId, user.displayName);
       };
     }
@@ -274,7 +257,6 @@ export function MeetingRoom({
         const processor = new VirtualBackgroundProcessor();
         await processor.init();
         processorRef.current = processor;
-        console.log("✅ Processor Ready");
       }
     };
 
@@ -335,7 +317,6 @@ export function MeetingRoom({
     type: "none" | "blur" | "image",
     imageUrl?: string
   ) => {
-    console.log("Selected background:", type, imageUrl);
     setBgConfig({ type, url: imageUrl });
     setIsBackgroundOpen(false);
   };
@@ -343,13 +324,23 @@ export function MeetingRoom({
   //==================================Recording=======================================
   const [isRecording, setIsRecording] = useState(false);
   const handleRecording = () => {
-    console.log("Recording click");
     if (isRecording) {
       stopRecording();
       return;
     }
     try {
-      const config = {
+      type Config = {
+        layout: {
+          type: "GRID" | "SPOTLIGHT" | "SIDEBAR";
+          priority: "SPEAKER" | "PIN";
+          gridSize: number;
+        };
+        orientation: "landscape" | "portrait";
+        theme: "DARK" | "DEFAULT" | "LIGHT";
+        quality: "high" | "low" | "med";
+        mode: "video-and-audio" | "audio";
+      };
+      const config: Config = {
         // Layout Configuration
         layout: {
           type: "GRID", // "SPOTLIGHT" | "SIDEBAR",  Default : "GRID"
@@ -381,9 +372,9 @@ export function MeetingRoom({
 
       // Webhook Configuration (Auto-sent to this URL when recording stops)
       // NOTE: Replace with your actual ngrok URL
-      const webhookUrl = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
-
-      startRecording(webhookUrl, null, config, transcription);
+      const webhookUrl = import.meta.env.VITE_API_URL;
+      console.log(webhookUrl)
+      startRecording(webhookUrl, undefined, config, transcription);
     } catch (error) {
       console.error("Recording error:", error);
       toast.error("Có lỗi khi ghi hình");
@@ -477,7 +468,6 @@ export function MeetingRoom({
 
   // ====================================== HÌNH TRONG HÌNH ===============================\\
   const togglePipMode = async () => {
-    console.log("Toggle PiP");
 
     // Nếu đang PiP thì thoát
     if (document.pictureInPictureElement) {
@@ -548,13 +538,11 @@ export function MeetingRoom({
 
       // ===== 5. Event PiP =====
       pipVideo.addEventListener("enterpictureinpicture", () => {
-        console.log("Entered PiP");
         setIsPipActive(true);
         requestAnimationFrame(drawCanvas);
       });
 
       pipVideo.addEventListener("leavepictureinpicture", () => {
-        console.log("Left PiP");
         setIsPipActive(false);
         pipWinDowRef.current = null;
       });
@@ -624,7 +612,6 @@ export function MeetingRoom({
   // Listen for settings updates from host
   useEffect(() => {
     const handleSettingsUpdate = (newSettings: any) => {
-      console.log("📢 Received settings update:", newSettings);
       setRoomSettings(newSettings);
 
       // Only enforce for non-host participants

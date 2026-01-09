@@ -55,7 +55,6 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       await logIn.outsideLogin("google");
-      console.log("Login with Google");
     } catch (error) {
       console.error("Google login error:", error);
     }
@@ -64,7 +63,6 @@ export function LoginPage() {
   const handleOutlookLogin = async () => {
     try {
       await logIn.outsideLogin("outlook");
-      console.log("Login with Outlook");
     } catch (error) {
       console.error("Outlook login error:", error);
     }

@@ -23,7 +23,6 @@ export const profileAPI = {
   getUserProfile: async (request?: RequestProfileData) => {
     try {
       const { userId } = request || {};
-      console.log(userId);
       const response = await api.get(`/${userId}/info`, {
         params: {
           userId,
@@ -86,7 +85,6 @@ export const profileAPI = {
     try {
       const signature = await api.get("/signature");
       if (!signature) {
-        console.log("Lấy chữ kí thất bại");
         return;
       }
       return signature.data;
