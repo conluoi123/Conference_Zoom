@@ -31,7 +31,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
@@ -58,13 +57,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout");
+      const res = await api.post("/auth/logout");
+      if (res.status === 200) {
+        setUser(null);
+        setIsLoading(true)
+      }
     } catch (error) {
       console.error("Xoa cookie khong thanh cong", error);
       return;
+    } finally {
+      setIsLoading(false)
     }
-    setUser(null);
-    navigate("/login");
   };
 
   const updateUser = (userData: Partial<User>) => {
