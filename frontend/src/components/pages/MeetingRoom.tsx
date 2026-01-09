@@ -31,6 +31,7 @@ import LoadMeeting from "./common/meetings/LoadMeeting";
 import InviteModal from "./common/meetings/InviteModal";
 import { SettingsPanel } from "./common/meetings/SettingPanel";
 import { socketService } from "@/services/socket";
+import api from "@/services/service";
 interface MeetingRoomProps {
   roomId: string;
   isHost: boolean;

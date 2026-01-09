@@ -120,7 +120,7 @@ export function RecordingDetail() {
           </button>
           <div className="flex-1">
             <h2 className="font-bold text-gray-900 line-clamp-1">
-              Bản ghi: {record.roomId}
+              {/* Bản ghi: {record.roomId} */}
             </h2>
           </div>
         </div>
