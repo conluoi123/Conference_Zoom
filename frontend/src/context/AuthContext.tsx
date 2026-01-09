@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        setIsLoading(true);
         await refreshUser();
       } catch (err) {
         console.log("Không có phiên đăng nhập cũ");

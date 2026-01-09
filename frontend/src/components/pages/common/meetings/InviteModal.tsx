@@ -15,7 +15,7 @@ import {
 function InviteModal({ open, onOpenChange, roomId, currentUserId }: any) {
   const [emailInput, setEmailInput] = useState("");
   const [emailList, setEmailList] = useState<string[]>([]);
-
+  console.log(roomId)
   // thêm email vào danh sách chờ
   const addEmail = () => {
     const email = emailInput.trim(); // xóa kí tự thừa
@@ -40,6 +40,7 @@ function InviteModal({ open, onOpenChange, roomId, currentUserId }: any) {
     }
     if(finalEmails.length===0) return; 
     // 2. Gọi socket 
+    console.log(roomId)
     socketService.inviteByEmail(roomId, currentUserId, finalEmails); 
     toast.success(`Đã gửi lời mời tới ${finalEmails.length} người`);
     // 3. Reset lại form 

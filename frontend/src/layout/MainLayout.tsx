@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Header } from "./Header";
 import { ProfileMenu } from "../components/pages/ProfilePage";
 import { ProfileModal } from "../components/pages/ProfilePageModal";

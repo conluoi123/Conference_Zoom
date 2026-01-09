@@ -28,7 +28,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const [notifications, setNotifications] = useState<INotification[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { user, isLoading: authLoading } = useAuth();
-
     // Define fetchNotifications first before using it in useEffect
     const fetchNotifications = useCallback(async () => {
         if (!user?.email || !user?.id) {
@@ -93,6 +92,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
 
     const addNotification = (notification: INotification) => {
+        toast("Có thông báo mới");
         setNotifications((prev) => [notification, ...prev]);
     };
 

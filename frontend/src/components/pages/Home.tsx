@@ -134,7 +134,6 @@ export function HomePage() {
       try {
         const decodedData = decodeURIComponent(dataParam);
         const userData = JSON.parse(decodedData);
-        console.log("OAuth login data:", userData);
         if (userData.accessToken && userData.user) {
           login(
             {
@@ -246,7 +245,7 @@ export function HomePage() {
     return acc;
   }, {});
 
-  const selectedDateKey = getLocalDateKey(currentDay);
+  // const selectedDateKey = getLocalDateKey(currentDay);
 
   if (loading || loadingSchedule) {
     return <LoadingScreen message="Đang tải trang chủ..." variant="light" />;
@@ -372,22 +371,7 @@ export function HomePage() {
                   </div>
                   <div className="text-left">
                     <p className="text-gray-900 font-medium mb-1">History</p>
-                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                to="/history"
-                className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"
-              >
-                <div className="flex gap-4">
-                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-gray-900 font-medium mb-1">History</p>
-                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp</p>
+                    <p className="text-gray-500 text-sm">Lịch sử cuộc họp và bản ghi</p>
                   </div>
                 </div>
               </Link>
@@ -443,7 +427,6 @@ export function HomePage() {
                   );
                   const dateKey = getLocalDateKey(dateObj);
                   const hasMeeting = schedulesByDate[dateKey]?.length > 0;
-
                   const isSelected =
                     currentDay.getDate() === day &&
                     currentDay.getMonth() === currentMonth.getMonth() &&
@@ -452,11 +435,11 @@ export function HomePage() {
                   return (
                     <button
                       key={day}
-                      className={`h-9 rounded-lg text-sm font-medium transition-colors ${isSelected
+                      className={`relative h-9 rounded-lg text-sm font-medium transition-colors ${isSelected
                         ? "bg-blue-600 text-white"
                         : "text-gray-700 hover:bg-gray-100"
                         }`}
-                      onClick={() =>
+                      onClick={() => {
                         setCurrentDay(
                           new Date(
                             currentMonth.getFullYear(),
@@ -464,6 +447,10 @@ export function HomePage() {
                             day
                           )
                         )
+                        setOpenModal(true);
+                        if(hasMeeting)
+                        setModalMeetings(schedulesByDate[dateKey]);
+                      }
                       }
                     >
                       {day}
@@ -567,8 +554,8 @@ export function HomePage() {
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-lg w-[480px] max-w-[90vw]">
               {/* Header */}
-              <div className="bg-orange-100 px-4 py-3 rounded-t-2xl flex justify-between items-center">
-                <p className="font-semibold text-gray-800">
+              <div className="bg-blue-500 px-4 py-3 rounded-t-2xl flex justify-between items-center">
+                <p className="font-semibold text-black">
                   Lịch họp ngày {currentDay.toLocaleDateString("vi-VN")}
                 </p>
                 <button
