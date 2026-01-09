@@ -7,7 +7,7 @@
       "es2016",
       "dom"
     ],
-    "sourceMap": true,
+    "sourceMap": false,
     "skipLibCheck": true, 
     "outDir": "dist",
     "rootDir": "src",

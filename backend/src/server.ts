@@ -32,7 +32,7 @@ import agenda, { startAgenda } from "./configs/agenda";
 import scheduleRouter from "./routes/schedule.routes";
 import { recordingRoutes } from "./routes/recording.routes";
 
-const PORT = ENV.PORT || 8080;
+const PORT = ENV.PORT || 10000;
 const app = express();
 
 app.use(
