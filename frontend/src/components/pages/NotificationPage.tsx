@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { meetingAPI } from "@/services/meetingApi";
 import { socketService } from "@/services/socket";
 import { notificationService } from "@/services/notification";
+import LoadingScreen from "../ui/LoadingScreen";
 const ITEMS_PER_PAGE = 5;
 // Helper function to format relative time
 const formatRelativeTime = (dateString: string): string => {
@@ -131,7 +132,9 @@ function NotificationPage() {
 
     fetchStatuses();
   }, [notifications]);
-
+  if (loading) {
+    return <LoadingScreen message="" variant="light" />;
+  }
   const filteredNotifications = notifications.filter((n) => {
     if (filter === "all") return true;
     if (filter === "unread") return !n.isRead;

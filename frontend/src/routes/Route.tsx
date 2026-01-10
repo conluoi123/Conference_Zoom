@@ -16,20 +16,17 @@ import NotificationPage from "../components/pages/NotificationPage.tsx";
 import { useNavigate } from "react-router-dom";
 export default function AppRoutes() {
   const [target, setTarget] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { isLogout } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     const check = async () => {
       const flag = await AuthService.checkRefreshToken();
       setTarget(flag ? "/home" : "/login");
-      if (target === "/login") {
-        navigate("/login");
-      } else {
-        navigate("home");
-      }
+      if(isLogout)
+      navigate(`${target}`)
     };
     check();
-  }, [user, target]);
+  }, [isLogout, target]);
 
   if (!target) return null;
   return (

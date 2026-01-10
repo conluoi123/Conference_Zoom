@@ -32,7 +32,9 @@ function HistoryPage() {
             fetchHistory();
         }
     }, [user]);
-
+    if (loading) {
+      return <LoadingScreen message="" variant="light" />;
+    }
     // Reset page when search/filter changes
     useEffect(() => {
         setCurrentPage(1);
