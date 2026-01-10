@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { sessionAPI, type SessionHistory } from "@/services/sessionApi";
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import LoadingScreen from "@/components/ui/LoadingScreen";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -32,7 +32,6 @@ function HistoryPage() {
             fetchHistory();
         }
     }, [user]);
-
     // Reset page when search/filter changes
     useEffect(() => {
         setCurrentPage(1);
@@ -78,7 +77,7 @@ function HistoryPage() {
 
     // Show loading screen while fetching data
     if (loading) {
-        return <LoadingScreen message="Đang tải lịch sử cuộc họp..." variant="light" />;
+        return <LoadingScreen message="" variant="light" />;
     }
 
     return (

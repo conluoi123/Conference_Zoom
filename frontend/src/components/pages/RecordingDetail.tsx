@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { recordingAPI } from "@/services/recordingApi";
 import { socketService } from "@/services/socket";
-
+import { LoadingScreen } from "../ui/LoadingScreen";
 export function RecordingDetail() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
@@ -26,7 +26,9 @@ export function RecordingDetail() {
   const [shareEmails, setShareEmails] = useState("");
 
   const roomId = location.state?.roomId || "";
-
+  if (loading) {
+    return <LoadingScreen message="" variant="light" />;
+  }
   useEffect(() => {
     if (sessionId) {
       if (!roomId) {
