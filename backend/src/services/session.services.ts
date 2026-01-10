@@ -39,9 +39,10 @@ const findProgressingSession = async (roomId: string) => {
 };
 
 const addInvitee = async (roomId, email: string) => {
-  const session = await findProgressingSession(roomId);
-  session.invited.push(email);
-  await session.save();
+  await Session.updateOne(
+    { roomId: roomId },
+    { $addToSet: { invited: email } }
+  );
 };
 
 const isInvitedForSession = async (roomId, peerId: string) => {

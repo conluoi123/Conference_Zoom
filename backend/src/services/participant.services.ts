@@ -1,5 +1,7 @@
 import Participant from "../models/participant.model";
+import User from "../models/user.model";
 import { findRoomOnDatabase } from "./room.services";
+import { findProgressingSession } from "./session.services";
 
 const onParticipantJoined = async (data) => {
   try {
@@ -69,7 +71,7 @@ const getMeetingHistory = async (participantId: string) => {
         sessionId: data.sessionId,
         title: room?.title || "Cuộc họp",
         start: data.joinTime,
-        hasRecording: recordings.length > 0
+        hasRecording: recordings.length > 0,
       };
     })
   );
@@ -77,4 +79,24 @@ const getMeetingHistory = async (participantId: string) => {
   return roomInfo;
 };
 
-export { onParticipantJoined, onParticipantLeft, getMeetingHistory };
+const isAlreadyJoined = async (roomId, email: string) => {
+  const session = await findProgressingSession(roomId);
+  const user = await User.findOne({ email: email });
+  if (!user) {
+    throw new Error("Người dùng chưa đăng ký");
+  }
+  const participant = await Participant.findOne({
+    participantId: user._id,
+    sessionId: session.sessionId,
+    roomId: roomId,
+  });
+  if (!participant || participant.leaveTime === null) return false;
+  return true;
+};
+
+export {
+  onParticipantJoined,
+  onParticipantLeft,
+  getMeetingHistory,
+  isAlreadyJoined,
+};

@@ -8,81 +8,93 @@ import {
   createNotification,
   generateMeetingMessage,
 } from "../../services/notification.services";
+import { isAlreadyJoined } from "../../services/participant.services";
 
 export const meetingSocketHandler = (io: Server, socket: Socket) => {
   socket.on("meeting:join", async ({ roomId, participantName }) => {
-    /*
+    try {
+      /*
       Khi 1 participant vào phòng sẽ có webhook từ videoSDK trả về dữ liệu participant
       Xong sẽ thiết lập kết nối socketIO với người dùng.
       Vào socket phòng {roomId} với participantName
       Và thông báo đến cả phòng là có người tên gì vào phòng.
     */
-    console.log(`${participantName} vừa tham gia phòng họp ${roomId}`);
-    socket.join(roomId);
-    socket
-      .to(roomId)
-      .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
-    const chat = await getChat(roomId);
-    console.log(chat);
-    socket.emit("meeting:chat-history", chat);
+      console.log(`${participantName} vừa tham gia phòng họp ${roomId}`);
+      socket.join(roomId);
+      socket
+        .to(roomId)
+        .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
+      const chat = await getChat(roomId);
+      console.log(chat);
+      socket.emit("meeting:chat-history", chat);
+    } catch (error) {
+      console.log(error);
+    }
   });
 
   //Nhắn tin trong phòng họp
   socket.on(
     "meeting:chat",
     ({ roomId, participantId, participantName, content, avatar }) => {
-      console.log(
-        `${participantName} vừa chat "${content}" trong phòng họp ${roomId}`
-      );
+      try {
+        const newMessage = {
+          avatar: avatar,
+          participantName: participantName,
+          participantId: participantId,
+          content: content,
+          timestamp: new Date(Date.now()),
+        };
 
-      const newMessage = {
-        avatar: avatar,
-        participantName: participantName,
-        participantId: participantId,
-        content: content,
-        timestamp: new Date(Date.now()),
-      };
+        io.to(roomId).emit("meeting:chat", newMessage);
 
-      io.to(roomId).emit("meeting:chat", newMessage);
-
-      insertNewMessage(roomId, newMessage);
+        insertNewMessage(roomId, newMessage);
+      } catch (error) {
+        console.log(error);
+      }
     }
   );
 
   //Chỉnh sửa settings cho phòng họp
   socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
-    if (!isHost(roomId, participantId)) {
-      console.log("Truy cập không xác định");
-      socket.disconnect();
+    try {
+      if (!isHost(roomId, participantId)) {
+        console.log("Truy cập không xác định");
+        socket.disconnect();
+      }
+      updateRoomOnDatabase(roomId, participantId, null, settings, null);
+    } catch (error) {
+      console.log(error);
     }
-    updateRoomOnDatabase(roomId, participantId, null, settings, null);
   });
 
   //Mời khi đang họp
   socket.on("meeting:invite", ({ roomId, participantId, emails }) => {
-    console.log("📨 [DEBUG] Nhận sự kiện 'meeting:invite'");
-    if (!isHost(roomId, participantId)) {
-      console.log("Truy cập không xác định");
-      socket.disconnect();
-    }
-    emails.forEach(async (email) => {
-      console.log(roomId);
-      addInvitee(roomId, email);
-      const message = await generateMeetingMessage(roomId, participantId);
-      const notification = await createNotification(
-        email,
-        `meeting-${roomId}`,
-        message
-      );
-      const { type, content, isRead, sentAt } = notification;
-      io.to(email).emit("notification:meeting", {
-        type,
-        content,
-        isRead,
-        sentAt,
+    try {
+      if (!isHost(roomId, participantId)) {
+        console.log("Truy cập không xác định");
+        socket.disconnect();
+      }
+      emails.forEach(async (email) => {
+        if (!isAlreadyJoined(roomId, email)) {
+          addInvitee(roomId, email);
+          const message = await generateMeetingMessage(roomId, participantId);
+          const notification = await createNotification(
+            email,
+            `meeting-${roomId}`,
+            message
+          );
+          const { type, content, isRead, sentAt } = notification;
+          io.to(email).emit("notification:meeting", {
+            type,
+            content,
+            isRead,
+            sentAt,
+          });
+        }
       });
-      console.log(`   - ✅ Đã bắn sự kiện 'notification:meeting' tới ${email}`);
-    });
+    } catch (error) {
+      console.log(error);
+    }
   });
 
   //Rời phòng họp
