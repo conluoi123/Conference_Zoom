@@ -77,7 +77,7 @@ function HistoryPage() {
 
     // Show loading screen while fetching data
     if (loading) {
-        return <LoadingScreen message="..." variant="light" />;
+        return <LoadingScreen message="" variant="light" />;
     }
 
     return (

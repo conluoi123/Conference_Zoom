@@ -127,19 +127,19 @@ export default function MeetingsPage() {
       } finally {
         setTimeout(() => {
           setLoadingPage(false);
-        }, 500);
+        }, 800);
       }
     } else {
       setTimeout(() => {
         setLoadingPage(false);
-      }, 500);
+      }, 800);
     }
   }, [user]);
 
   return (
     <>
       {loadingPage ? (
-        <LoadingScreen />
+        <LoadingScreen message="" variant="light" />
       ) : (
         <MainLayout>
           <div className="min-h-screen bg-slate-50/50 p-6 md:p-10">

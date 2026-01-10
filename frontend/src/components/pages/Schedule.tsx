@@ -331,18 +331,18 @@ function SchedulePage() {
       } finally {
         setTimeout(() => {
           setLoadingPage(false);
-        }, 500);
+        }, 800);
       }
     } else {
       setTimeout(() => {
         setLoadingPage(false);
-      }, 500);
+      }, 800);
     }
   },[user])
   return (
     <>
       {loadingPage ? (
-        <LoadingScreen />
+        <LoadingScreen message="" variant="light" />
       ) : (
         <MainLayout>
           <div className="max-w-7xl mx-auto p-6">
