@@ -7,17 +7,16 @@ const env_1 = require("../configs/env");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const transporter = nodemailer_1.default.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
+    port: 465,
+    secure: true,
     auth: {
         user: env_1.ENV.EMAIL_USER,
         pass: env_1.ENV.EMAIL_PASS,
     },
-    family: 4,
 });
 transporter.verify((error, success) => {
     if (error) {
-        console.error("Email config error. Check HOST, PORT, and APP PASSWORD:", error.message);
+        console.error("Email config error. Check HOST, PORT, and APP PASSWORD:", error);
     }
     else {
         console.log("Email server is ready. Using host:", 465);
