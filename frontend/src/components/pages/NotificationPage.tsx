@@ -132,9 +132,6 @@ function NotificationPage() {
 
     fetchStatuses();
   }, [notifications]);
-  if (loading) {
-    return <LoadingScreen message="" variant="light" />;
-  }
   const filteredNotifications = notifications.filter((n) => {
     if (filter === "all") return true;
     if (filter === "unread") return !n.isRead;
@@ -253,303 +250,337 @@ function NotificationPage() {
       toast.error("Có lỗi xảy ra khi phản hồi lời mời");
     }
   };
-
+  const [loadingPage, setLoadingPage] = useState(true);
+  useEffect(() => {
+    if (!user) {
+      try {
+        setLoadingPage(true);
+      } catch (error) {
+        console.error;
+      } finally {
+        setTimeout(() => {
+          setLoadingPage(false);
+        }, 500);
+      }
+    } else {
+      setTimeout(() => {
+        setLoadingPage(false);
+      }, 500);
+    }
+  }, [user]);
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-slate-50/50 p-6 md:p-12">
-        <div className="max-w-5xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="space-y-4">
-            <Link
-              to="/home"
-              className="flex items-center gap-4 text-blue-600 font-medium hover:text-blue-900 transition-colors"
-            >
-              <ChevronLeft className="w-6 h-6" />
-              <p className="text-xl">Quay lại trang chủ</p>
-            </Link>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Thông báo</h1>
-                <p className="text-gray-600 mt-1">
-                  {notifications.filter((n) => !n.isRead).length} thông báo chưa
-                  đọc
-                </p>
-              </div>
-              {notifications.some((n) => !n.isRead) && (
-                <Button
-                  onClick={handleMarkAllAsRead}
-                  variant="outline"
-                  className="gap-2"
+    <>
+      {loadingPage ? (
+        <LoadingScreen />
+      ) : (
+        <MainLayout>
+          <div className="min-h-screen bg-slate-50/50 p-6 md:p-12">
+            <div className="max-w-5xl mx-auto space-y-8">
+              {/* Header */}
+              <div className="space-y-4">
+                <Link
+                  to="/home"
+                  className="flex items-center gap-4 text-blue-600 font-medium hover:text-blue-900 transition-colors"
                 >
-                  <CheckCheck className="w-4 h-4" />
-                  Đánh dấu tất cả đã đọc
-                </Button>
-              )}
-            </div>
-          </div>
+                  <ChevronLeft className="w-6 h-6" />
+                  <p className="text-xl">Quay lại trang chủ</p>
+                </Link>
 
-          {/* Filters */}
-          <div className="space-y-6">
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { value: "all", label: "Tất cả" },
-                { value: "unread", label: "Chưa đọc" },
-                { value: "meeting", label: "Họp" },
-                { value: "invitation", label: "Lời mời" },
-                { value: "schedule", label: "Lịch hẹn" },
-              ].map((filterOption) => (
-                <Button
-                  key={filterOption.value}
-                  variant={
-                    filter === filterOption.value ? "default" : "outline"
-                  }
-                  onClick={() => setFilter(filterOption.value)}
-                  className="min-w-[100px]"
-                >
-                  {filterOption.label}
-                </Button>
-              ))}
-            </div>
-
-            {/* Main content */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  Đang tải thông báo .....
-                </div>
-              ) : isLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-              ) : filteredNotifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 px-4">
-                  <Bell className="w-16 h-16 text-gray-300 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Không có thông báo
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {filter === "all"
-                      ? "Bạn chưa có thông báo nào"
-                      : filter === "unread"
-                      ? "Bạn đã đọc hết thông báo"
-                      : `Không có thông báo loại ${getNotificationTitle(
-                          filter
-                        )}`}
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  {paginatedNotifications.map((notification) => (
-                    <div
-                      key={notification._id}
-                      onClick={() => {
-                        if (!notification.isRead) {
-                          markAsRead(notification._id);
-                        }
-                      }}
-                      className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
-                        !notification.isRead ? "bg-blue-50/30" : ""
-                      }`}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      Thông báo
+                    </h1>
+                    <p className="text-gray-600 mt-1">
+                      {notifications.filter((n) => !n.isRead).length} thông báo
+                      chưa đọc
+                    </p>
+                  </div>
+                  {notifications.some((n) => !n.isRead) && (
+                    <Button
+                      onClick={handleMarkAllAsRead}
+                      variant="outline"
+                      className="gap-2"
                     >
-                      <div className="flex gap-4">
-                        <div className="shrink-0 mt-1">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {getNotificationTitle(notification.type)}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {formatRelativeTime(notification.sentAt)}
-                              </p>
+                      <CheckCheck className="w-4 h-4" />
+                      Đánh dấu tất cả đã đọc
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="space-y-6">
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: "all", label: "Tất cả" },
+                    { value: "unread", label: "Chưa đọc" },
+                    { value: "meeting", label: "Họp" },
+                    { value: "invitation", label: "Lời mời" },
+                    { value: "schedule", label: "Lịch hẹn" },
+                  ].map((filterOption) => (
+                    <Button
+                      key={filterOption.value}
+                      variant={
+                        filter === filterOption.value ? "default" : "outline"
+                      }
+                      onClick={() => setFilter(filterOption.value)}
+                      className="min-w-[100px]"
+                    >
+                      {filterOption.label}
+                    </Button>
+                  ))}
+                </div>
+
+                {/* Main content */}
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                      Đang tải thông báo .....
+                    </div>
+                  ) : isLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : filteredNotifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 px-4">
+                      <Bell className="w-16 h-16 text-gray-300 mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Không có thông báo
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {filter === "all"
+                          ? "Bạn chưa có thông báo nào"
+                          : filter === "unread"
+                          ? "Bạn đã đọc hết thông báo"
+                          : `Không có thông báo loại ${getNotificationTitle(
+                              filter
+                            )}`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {paginatedNotifications.map((notification) => (
+                        <div
+                          key={notification._id}
+                          onClick={() => {
+                            if (!notification.isRead) {
+                              markAsRead(notification._id);
+                            }
+                          }}
+                          className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
+                            !notification.isRead ? "bg-blue-50/30" : ""
+                          }`}
+                        >
+                          <div className="flex gap-4">
+                            <div className="shrink-0 mt-1">
+                              {getNotificationIcon(notification.type)}
                             </div>
-                            {!notification.isRead && (
-                              <div className="flex items-center gap-2">
-                                <span className="w-3 h-3 bg-blue-600 rounded-full"></span>
-                                <span className="text-sm font-medium text-blue-600">
-                                  Mới
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-gray-700 leading-relaxed mb-3">
-                            {notification.content}
-                          </p>
-
-                          {/* Action buttons for meeting invitations */}
-                          {(() => {
-                            const roomId = extractRoomId(notification.type);
-
-                            const typePrefix = notification.type.split("-")[0];
-
-                            // Meeting invitation buttons
-                            if (typePrefix === "meeting" && roomId) {
-                              return (
-                                <div className="flex gap-3 mt-4">
-                                  <Button
-                                    onClick={(e) =>
-                                      handleJoinMeeting(
-                                        e,
-                                        roomId,
-                                        notification._id
-                                      )
-                                    }
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                    size="sm"
-                                    disabled={
-                                      joiningMeetingId === notification._id
-                                    }
-                                  >
-                                    {joiningMeetingId === notification._id ? (
-                                      <>
-                                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        Đang tham gia...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Video className="w-4 h-4 mr-2" />
-                                        Tham gia
-                                      </>
-                                    )}
-                                  </Button>
-                                  <Button
-                                    onClick={(e) =>
-                                      handleDeclineMeeting(e, notification._id)
-                                    }
-                                    variant="outline"
-                                    className="border-gray-300 hover:bg-gray-100"
-                                    size="sm"
-                                    disabled={
-                                      joiningMeetingId === notification._id
-                                    }
-                                  >
-                                    <X className="w-4 h-4 mr-2" />
-                                    Từ chối
-                                  </Button>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-4 mb-2">
+                                <div>
+                                  <h3 className="text-lg font-semibold text-gray-900">
+                                    {getNotificationTitle(notification.type)}
+                                  </h3>
+                                  <p className="text-sm text-gray-500 mt-1">
+                                    {formatRelativeTime(notification.sentAt)}
+                                  </p>
                                 </div>
-                              );
-                            }
+                                {!notification.isRead && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-3 h-3 bg-blue-600 rounded-full"></span>
+                                    <span className="text-sm font-medium text-blue-600">
+                                      Mới
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-gray-700 leading-relaxed mb-3">
+                                {notification.content}
+                              </p>
 
-                            {
-                              /* Action buttons for schedule invitations */
-                            }
-                            if (
-                              typePrefix === "invitation" &&
-                              notification.type.split("-")[1]!
-                            ) {
-                              return (
-                                <div className="flex gap-3 mt-4">
-                                  {invitationStatus[notification._id] ===
-                                  "accepted" ? (
-                                    <p className="text-green-600 font-semibold">
-                                      Bạn đã đồng ý tham gia ✔
-                                    </p>
-                                  ) : invitationStatus[notification._id] ===
-                                    "declined" ? (
-                                    <p className="text-gray-500">
-                                      Bạn đã từ chối lời mời ❌
-                                    </p>
-                                  ) : invitationStatus[notification._id] ===
-                                    "expired" ? (
-                                    <p className="text-gray-500">
-                                      Lời mời đã hết hạn
-                                    </p>
-                                  ) : (
-                                    <>
+                              {/* Action buttons for meeting invitations */}
+                              {(() => {
+                                const roomId = extractRoomId(notification.type);
+
+                                const typePrefix =
+                                  notification.type.split("-")[0];
+
+                                // Meeting invitation buttons
+                                if (typePrefix === "meeting" && roomId) {
+                                  return (
+                                    <div className="flex gap-3 mt-4">
                                       <Button
                                         onClick={(e) =>
-                                          handleInvitationResponse(
+                                          handleJoinMeeting(
                                             e,
-                                            notification._id,
-                                            notification.type.split("-")[1]!,
-                                            "accepted"
+                                            roomId,
+                                            notification._id
                                           )
                                         }
-                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white"
                                         size="sm"
+                                        disabled={
+                                          joiningMeetingId === notification._id
+                                        }
                                       >
-                                        <CheckCheck className="w-4 h-4 mr-2" />
-                                        Đồng ý
+                                        {joiningMeetingId ===
+                                        notification._id ? (
+                                          <>
+                                            <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Đang tham gia...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Video className="w-4 h-4 mr-2" />
+                                            Tham gia
+                                          </>
+                                        )}
                                       </Button>
-
                                       <Button
                                         onClick={(e) =>
-                                          handleInvitationResponse(
+                                          handleDeclineMeeting(
                                             e,
-                                            notification._id,
-                                            notification.type.split("-")[1]!,
-                                            "declined"
+                                            notification._id
                                           )
                                         }
                                         variant="outline"
                                         className="border-gray-300 hover:bg-gray-100"
                                         size="sm"
+                                        disabled={
+                                          joiningMeetingId === notification._id
+                                        }
                                       >
                                         <X className="w-4 h-4 mr-2" />
                                         Từ chối
                                       </Button>
-                                    </>
-                                  )}
-                                </div>
-                              );
-                            }
+                                    </div>
+                                  );
+                                }
 
-                            // Recording notification button
-                            if (typePrefix === "recording") {
-                              return (
-                                <div className="flex gap-3 mt-4">
-                                  <Button
-                                    onClick={() => navigate("/history")}
-                                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                                    size="sm"
-                                  >
-                                    <Video className="w-4 h-4 mr-2" />
-                                    Xem bản ghi
-                                  </Button>
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
+                                {
+                                  /* Action buttons for schedule invitations */
+                                }
+                                if (
+                                  typePrefix === "invitation" &&
+                                  notification.type.split("-")[1]!
+                                ) {
+                                  return (
+                                    <div className="flex gap-3 mt-4">
+                                      {invitationStatus[notification._id] ===
+                                      "accepted" ? (
+                                        <p className="text-green-600 font-semibold">
+                                          Bạn đã đồng ý tham gia ✔
+                                        </p>
+                                      ) : invitationStatus[notification._id] ===
+                                        "declined" ? (
+                                        <p className="text-gray-500">
+                                          Bạn đã từ chối lời mời ❌
+                                        </p>
+                                      ) : invitationStatus[notification._id] ===
+                                        "expired" ? (
+                                        <p className="text-gray-500">
+                                          Lời mời đã hết hạn
+                                        </p>
+                                      ) : (
+                                        <>
+                                          <Button
+                                            onClick={(e) =>
+                                              handleInvitationResponse(
+                                                e,
+                                                notification._id,
+                                                notification.type.split(
+                                                  "-"
+                                                )[1]!,
+                                                "accepted"
+                                              )
+                                            }
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                            size="sm"
+                                          >
+                                            <CheckCheck className="w-4 h-4 mr-2" />
+                                            Đồng ý
+                                          </Button>
+
+                                          <Button
+                                            onClick={(e) =>
+                                              handleInvitationResponse(
+                                                e,
+                                                notification._id,
+                                                notification.type.split(
+                                                  "-"
+                                                )[1]!,
+                                                "declined"
+                                              )
+                                            }
+                                            variant="outline"
+                                            className="border-gray-300 hover:bg-gray-100"
+                                            size="sm"
+                                          >
+                                            <X className="w-4 h-4 mr-2" />
+                                            Từ chối
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  );
+                                }
+
+                                // Recording notification button
+                                if (typePrefix === "recording") {
+                                  return (
+                                    <div className="flex gap-3 mt-4">
+                                      <Button
+                                        onClick={() => navigate("/history")}
+                                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                                        size="sm"
+                                      >
+                                        <Video className="w-4 h-4 mr-2" />
+                                        Xem bản ghi
+                                      </Button>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                  {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-3 py-4">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage((p) => p - 1)}
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
+                      ))}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-3 py-4">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage((p) => p - 1)}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </Button>
 
-                      <span className="text-sm text-gray-600">
-                        Trang {currentPage} / {totalPages}
-                      </span>
+                          <span className="text-sm text-gray-600">
+                            Trang {currentPage} / {totalPages}
+                          </span>
 
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage((p) => p + 1)}
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage((p) => p + 1)}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </MainLayout>
+        </MainLayout>
+      )}
+    </>
   );
 }
 
