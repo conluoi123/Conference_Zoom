@@ -78,6 +78,7 @@ function SchedulePage() {
     reset,
     watch,
     setValue,
+    clearErrors,
   } = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: {
@@ -93,7 +94,7 @@ function SchedulePage() {
   }, [schedules])
   useEffect(() => {
     loadSchedules();
-  }, []);
+  }, [user]);
 
   const loadSchedules = async () => {
     if (!user?.id) return;
@@ -269,6 +270,9 @@ function SchedulePage() {
 
   // ==================== EDIT SCHEDULE ====================
   const handleEditSchedule = async (schedule: any) => {
+    clearErrors();
+    setRoomError("");
+    setEmailError("");
     const startDateTime = new Date(schedule.startTime);
 
     // Use helper functions for consistent formatting
@@ -327,18 +331,18 @@ function SchedulePage() {
       } finally {
         setTimeout(() => {
           setLoadingPage(false);
-        }, 500);
+        }, 800);
       }
     } else {
       setTimeout(() => {
         setLoadingPage(false);
-      }, 500);
+      }, 800);
     }
   },[user])
   return (
     <>
       {loadingPage ? (
-        <LoadingScreen />
+        <LoadingScreen message="" variant="light" />
       ) : (
         <MainLayout>
           <div className="max-w-7xl mx-auto p-6">
