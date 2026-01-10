@@ -6,6 +6,7 @@ import User from "../models/user.model";
 import { Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import { resend } from "../configs/resend";
 interface RequestWithUser extends Request {
   user: any;
   session: any;
@@ -29,8 +30,8 @@ async function supportSendOtp(email, otp) {
     if (cntAttempts == 1) {
       await redisClient.expire(otp_attempt_pre + email, 300);
     }
-    await transporter.sendMail({
-      from: ENV.EMAIL_FROM,
+    await resend.emails.send({
+      from: "ZUS CONFERENCE ZOOM <onboarding@resend.dev>",
       to: email,
       subject: "[ZUS CONFERENCE VIDEO SYSTEM] - OTP CODE",
       html: `<!DOCTYPE html>

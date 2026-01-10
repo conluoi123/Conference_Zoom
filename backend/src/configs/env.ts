@@ -27,6 +27,7 @@ const ENV = {
   CLOUDINARY_SECRET_KEY: process.env.CLOUDINARY_SECRET_KEY,
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
   BACKEND_URL: process.env.BACKEND_URL,
+  RESEND_EMAIL_API_KEY: process.env.RESEND_EMAIL_API_KEY,
 };
 
 export { ENV };
