@@ -47,7 +47,7 @@ const userSchema = new mongoose_1.Schema({
     isActive: { type: Boolean },
     createdAt: { type: Date, default: () => new Date() },
     refreshToken: {
-        refreshToken: { type: String, required: true },
+        refreshToken: { type: String, required: true, unique: true },
         expiredTime: { type: Date, required: true },
     },
     accountType: {
@@ -64,4 +64,3 @@ const userSchema = new mongoose_1.Schema({
 });
 const User = mongoose_1.default.model("User", userSchema);
 exports.default = User;
-//# sourceMappingURL=user.model.js.map

@@ -76,4 +76,3 @@ const isValidToReschedule = (req, res, next) => __awaiter(void 0, void 0, void 0
     }
 });
 exports.isValidToReschedule = isValidToReschedule;
-//# sourceMappingURL=schedule.middleware.js.map

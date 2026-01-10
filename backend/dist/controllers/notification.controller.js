@@ -52,4 +52,3 @@ const getStatusToNotify = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.getStatusToNotify = getStatusToNotify;
-//# sourceMappingURL=notification.controller.js.map

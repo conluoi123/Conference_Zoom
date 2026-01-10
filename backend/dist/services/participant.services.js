@@ -75,4 +75,3 @@ const getMeetingHistory = (participantId) => __awaiter(void 0, void 0, void 0, f
     return roomInfo;
 });
 exports.getMeetingHistory = getMeetingHistory;
-//# sourceMappingURL=participant.services.js.map

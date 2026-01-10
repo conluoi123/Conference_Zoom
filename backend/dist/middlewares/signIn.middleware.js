@@ -8,4 +8,3 @@ function authenticateEmail(email) {
     }
     return true;
 }
-//# sourceMappingURL=signIn.middleware.js.map

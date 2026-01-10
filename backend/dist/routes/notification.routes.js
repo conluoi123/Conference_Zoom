@@ -10,4 +10,3 @@ const notificationRoutes = (app) => {
     app.use("/", router);
 };
 exports.default = notificationRoutes;
-//# sourceMappingURL=notification.routes.js.map

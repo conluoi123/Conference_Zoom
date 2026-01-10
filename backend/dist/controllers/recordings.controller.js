@@ -32,4 +32,3 @@ const getSessionRecord = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.getSessionRecord = getSessionRecord;
-//# sourceMappingURL=recordings.controller.js.map

@@ -60,4 +60,3 @@ const sessionSchema = new mongoose_1.Schema({
 });
 const Session = mongoose_1.default.model("Session", sessionSchema);
 exports.default = Session;
-//# sourceMappingURL=session.model.js.map

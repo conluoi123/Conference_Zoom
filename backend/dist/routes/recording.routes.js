@@ -10,4 +10,3 @@ const recordingRoutes = (app) => {
     app.use("/recordings", router);
 };
 exports.recordingRoutes = recordingRoutes;
-//# sourceMappingURL=recording.routes.js.map

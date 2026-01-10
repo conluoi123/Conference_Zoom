@@ -8,4 +8,3 @@ const logoutRouter = (app) => {
     app.use("/auth", router);
 };
 exports.default = logoutRouter;
-//# sourceMappingURL=logout.routes.js.map

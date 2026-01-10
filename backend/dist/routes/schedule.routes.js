@@ -15,4 +15,3 @@ const scheduleRouter = (app) => {
     app.use("/schedule", router);
 };
 exports.default = scheduleRouter;
-//# sourceMappingURL=schedule.routes.js.map

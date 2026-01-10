@@ -67,7 +67,7 @@ function createSchedule(req, res) {
                 const { type, content, isRead, sentAt } = notification;
                 //Bắn thông báo
                 const io = (0, socketHandler_1.getIO)();
-                io.to(email).emit("notification:invitation", {
+                io.to(email).emit("notification:invitations", {
                     type,
                     content,
                     isRead,
@@ -128,7 +128,7 @@ function updateSchedule(req, res) {
                     const notification = yield (0, notification_services_1.createNotification)(email, `invitation-${id}`, message);
                     const { type, content, isRead, sentAt } = notification;
                     const io = (0, socketHandler_1.getIO)();
-                    io.to(email).emit("notification:invitation", {
+                    io.to(email).emit("notification:invitations", {
                         type,
                         content,
                         isRead,
@@ -242,4 +242,3 @@ const getScheduleById = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getScheduleById = getScheduleById;
-//# sourceMappingURL=schedule.controller.js.map

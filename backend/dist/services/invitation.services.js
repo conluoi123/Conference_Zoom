@@ -68,4 +68,3 @@ const getInvitationStatus = (invitationId) => __awaiter(void 0, void 0, void 0, 
     return invitation.status;
 });
 exports.getInvitationStatus = getInvitationStatus;
-//# sourceMappingURL=invitation.services.js.map

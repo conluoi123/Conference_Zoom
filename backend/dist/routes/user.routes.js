@@ -17,4 +17,3 @@ const userRoutes = (app) => {
     app.use("", router);
 };
 exports.userRoutes = userRoutes;
-//# sourceMappingURL=user.routes.js.map

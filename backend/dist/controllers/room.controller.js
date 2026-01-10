@@ -83,4 +83,3 @@ const getInvietedUsersBySchedule = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.getInvietedUsersBySchedule = getInvietedUsersBySchedule;
-//# sourceMappingURL=room.controller.js.map

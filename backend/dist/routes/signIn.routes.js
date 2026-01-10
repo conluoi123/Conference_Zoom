@@ -44,4 +44,3 @@ const signInRouter = (app) => {
     app.use("/auth", callbackRouter);
 };
 exports.signInRouter = signInRouter;
-//# sourceMappingURL=signIn.routes.js.map

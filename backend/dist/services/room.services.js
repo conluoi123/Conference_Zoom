@@ -181,4 +181,3 @@ const getRoomSheduleInvited = (roomId, hostId) => __awaiter(void 0, void 0, void
     return invitedUser;
 });
 exports.getRoomSheduleInvited = getRoomSheduleInvited;
-//# sourceMappingURL=room.services.js.map

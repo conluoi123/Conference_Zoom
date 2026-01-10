@@ -60,4 +60,3 @@ const roomSchema = new mongoose_1.Schema({
 // 3. Export Model
 const Room = mongoose_1.default.model("Room", roomSchema);
 exports.default = Room;
-//# sourceMappingURL=room.model.js.map

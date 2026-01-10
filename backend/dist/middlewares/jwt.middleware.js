@@ -29,4 +29,3 @@ function authenticateAccessToken(req, res, next) {
             .json({ message: "ACCESS TOKEN IS EXPIRED OR WRONG" });
     }
 }
-//# sourceMappingURL=jwt.middleware.js.map

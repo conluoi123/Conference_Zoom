@@ -28,4 +28,3 @@ redisClient.on('error', (err) => {
         console.log("Failed to connect to Redis: ERROR", error);
     }
 }))();
-//# sourceMappingURL=redisUpstash.js.map

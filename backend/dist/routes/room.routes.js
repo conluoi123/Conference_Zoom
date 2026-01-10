@@ -28,4 +28,3 @@ const roomRoutes = (app) => {
     app.use("/rooms", router);
 };
 exports.default = roomRoutes;
-//# sourceMappingURL=room.routes.js.map

@@ -44,4 +44,3 @@ const getChat = (roomId) => __awaiter(void 0, void 0, void 0, function* () {
     return chat.chat;
 });
 exports.getChat = getChat;
-//# sourceMappingURL=chat.services.js.map

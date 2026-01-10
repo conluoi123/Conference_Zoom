@@ -62,9 +62,7 @@ const notificationSocketHandler = (io, socket, agenda) => {
     socket.on("notification:invitation", (_a) => __awaiter(void 0, [_a], void 0, function* ({ invitationId, email, status }) {
         try {
             const scheduleId = yield (0, invitation_services_1.getScheduleIdByInvitationId)(invitationId);
-            console.log(0);
             const schedule = yield (0, schedule_services_1.getScheduleInfo)(scheduleId);
-            console.log(schedule);
             if (!(0, invitation_services_1.updateInvitationStatus)(scheduleId, email, status)) {
                 throw new Error("Lời mời đã hết hạn");
             }
@@ -90,4 +88,3 @@ const notificationSocketHandler = (io, socket, agenda) => {
     }));
 };
 exports.notificationSocketHandler = notificationSocketHandler;
-//# sourceMappingURL=notification.js.map

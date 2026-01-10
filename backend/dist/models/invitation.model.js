@@ -59,4 +59,3 @@ const invitationSchema = new mongoose_1.Schema({
 });
 const Invitation = mongoose_1.default.model("Invitation", invitationSchema);
 exports.default = Invitation;
-//# sourceMappingURL=invitation.model.js.map

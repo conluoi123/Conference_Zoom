@@ -39,4 +39,3 @@ const joinRoomMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0,
     next();
 });
 exports.joinRoomMiddleware = joinRoomMiddleware;
-//# sourceMappingURL=room.middleware.js.map

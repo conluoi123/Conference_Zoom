@@ -33,4 +33,3 @@ const ENV = {
     BACKEND_URL: process.env.BACKEND_URL,
 };
 exports.ENV = ENV;
-//# sourceMappingURL=env.js.map

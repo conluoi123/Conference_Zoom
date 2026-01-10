@@ -46,4 +46,3 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.logout = logout;
-//# sourceMappingURL=logout.controller.js.map

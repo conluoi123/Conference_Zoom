@@ -23,4 +23,3 @@ transporter.verify((error, success) => {
     }
 });
 exports.default = transporter;
-//# sourceMappingURL=nodeMailer.js.map

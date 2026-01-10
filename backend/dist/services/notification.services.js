@@ -92,4 +92,3 @@ const getInvitationStatusByNotification = (notificationId) => __awaiter(void 0, 
     return status;
 });
 exports.getInvitationStatusByNotification = getInvitationStatusByNotification;
-//# sourceMappingURL=notification.services.js.map

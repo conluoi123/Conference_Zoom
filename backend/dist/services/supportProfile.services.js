@@ -26,4 +26,3 @@ function saveUrl(optimizedUrl, userId) {
         return 1;
     });
 }
-//# sourceMappingURL=supportProfile.services.js.map

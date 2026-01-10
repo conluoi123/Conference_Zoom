@@ -35,4 +35,3 @@ const userMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
     next();
 });
 exports.userMiddleware = userMiddleware;
-//# sourceMappingURL=user.middleware.js.map

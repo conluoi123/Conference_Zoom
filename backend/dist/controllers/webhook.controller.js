@@ -76,4 +76,3 @@ const verifySignature = (req) => __awaiter(void 0, void 0, void 0, function* () 
     return false;
 });
 exports.default = videoSdkWebhook;
-//# sourceMappingURL=webhook.controller.js.map

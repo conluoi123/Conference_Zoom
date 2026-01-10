@@ -36,4 +36,3 @@ const startAgenda = () => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.startAgenda = startAgenda;
 exports.default = agenda;
-//# sourceMappingURL=agenda.js.map

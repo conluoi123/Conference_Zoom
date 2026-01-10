@@ -11,4 +11,3 @@ const webHook = (app) => {
     app.use("/", router);
 };
 exports.default = webHook;
-//# sourceMappingURL=webhook.routes.js.map

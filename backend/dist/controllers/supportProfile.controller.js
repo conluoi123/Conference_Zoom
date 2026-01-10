@@ -57,4 +57,3 @@ function saveAvatar(req, res) {
         }
     });
 }
-//# sourceMappingURL=supportProfile.controller.js.map

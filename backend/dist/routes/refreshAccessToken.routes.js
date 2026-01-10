@@ -6,10 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.refreshTokenRouter = void 0;
 const express_1 = require("express");
 const refreshAccessToken_services_1 = __importDefault(require("../services/refreshAccessToken.services"));
+const refreshAccessToken_services_2 = require("../services/refreshAccessToken.services");
 const refreshTokenRouter = (app) => {
     const router = (0, express_1.Router)();
+    router.post("/refreshToken/check", refreshAccessToken_services_2.isExistsRefreshToken);
     router.post("/refreshToken", refreshAccessToken_services_1.default);
     app.use("/auth", router);
 };
 exports.refreshTokenRouter = refreshTokenRouter;
-//# sourceMappingURL=refreshAccessToken.routes.js.map

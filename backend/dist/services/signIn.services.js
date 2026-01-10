@@ -207,17 +207,7 @@ function outlookLogInCallback(req, res) {
             maxAge: 15 * 24 * 3600 * 1000,
             path: "/",
         });
-        const data = {
-            accessToken: accessToken,
-            user: {
-                userId: user._id,
-                email: user.email,
-                displayName: user.displayName,
-                avatar: user.avatar,
-            },
-        };
-        const encodedData = encodeURIComponent(JSON.stringify(data));
-        return res.redirect(`${env_1.ENV.FRONTEND_URL}/home?data=${encodedData}`);
+        return res.redirect(`${env_1.ENV.FRONTEND_URL}/home`);
     });
 }
 //GOOGLE
@@ -280,4 +270,3 @@ function createRefreshTokenAndStorageInDb(user) {
         return refToken;
     });
 }
-//# sourceMappingURL=signIn.services.js.map

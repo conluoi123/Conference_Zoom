@@ -49,4 +49,3 @@ const recordSchema = new mongoose_1.Schema({
 });
 const Record = mongoose_1.default.model("Record", recordSchema);
 exports.default = Record;
-//# sourceMappingURL=recording.model.js.map

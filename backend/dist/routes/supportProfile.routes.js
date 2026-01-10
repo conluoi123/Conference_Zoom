@@ -11,4 +11,3 @@ const supportProfileRouter = (app) => {
     app.use("", router);
 };
 exports.supportProfileRouter = supportProfileRouter;
-//# sourceMappingURL=supportProfile.routes.js.map
