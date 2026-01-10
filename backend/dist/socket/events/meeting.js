@@ -14,65 +14,84 @@ const chat_services_1 = require("../../services/chat.services");
 const room_services_1 = require("../../services/room.services");
 const session_services_1 = require("../../services/session.services");
 const notification_services_1 = require("../../services/notification.services");
+const participant_services_1 = require("../../services/participant.services");
 const meetingSocketHandler = (io, socket) => {
     socket.on("meeting:join", (_a) => __awaiter(void 0, [_a], void 0, function* ({ roomId, participantName }) {
-        /*
-          Khi 1 participant vào phòng sẽ có webhook từ videoSDK trả về dữ liệu participant
-          Xong sẽ thiết lập kết nối socketIO với người dùng.
-          Vào socket phòng {roomId} với participantName
-          Và thông báo đến cả phòng là có người tên gì vào phòng.
-        */
-        console.log(`${participantName} vừa tham gia phòng họp ${roomId}`);
-        socket.join(roomId);
-        socket
-            .to(roomId)
-            .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
-        const chat = yield (0, chat_services_1.getChat)(roomId);
-        console.log(chat);
-        socket.emit("meeting:chat-history", chat);
+        try {
+            /*
+            Khi 1 participant vào phòng sẽ có webhook từ videoSDK trả về dữ liệu participant
+            Xong sẽ thiết lập kết nối socketIO với người dùng.
+            Vào socket phòng {roomId} với participantName
+            Và thông báo đến cả phòng là có người tên gì vào phòng.
+          */
+            console.log(`${participantName} vừa tham gia phòng họp ${roomId}`);
+            socket.join(roomId);
+            socket
+                .to(roomId)
+                .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
+            const chat = yield (0, chat_services_1.getChat)(roomId);
+            console.log(chat);
+            socket.emit("meeting:chat-history", chat);
+        }
+        catch (error) {
+            console.log(error);
+        }
     }));
     //Nhắn tin trong phòng họp
     socket.on("meeting:chat", ({ roomId, participantId, participantName, content, avatar }) => {
-        console.log(`${participantName} vừa chat "${content}" trong phòng họp ${roomId}`);
-        const newMessage = {
-            avatar: avatar,
-            participantName: participantName,
-            participantId: participantId,
-            content: content,
-            timestamp: new Date(Date.now()),
-        };
-        io.to(roomId).emit("meeting:chat", newMessage);
-        (0, chat_services_1.insertNewMessage)(roomId, newMessage);
+        try {
+            const newMessage = {
+                avatar: avatar,
+                participantName: participantName,
+                participantId: participantId,
+                content: content,
+                timestamp: new Date(Date.now()),
+            };
+            io.to(roomId).emit("meeting:chat", newMessage);
+            (0, chat_services_1.insertNewMessage)(roomId, newMessage);
+        }
+        catch (error) {
+            console.log(error);
+        }
     });
     //Chỉnh sửa settings cho phòng họp
     socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
-        if (!(0, room_services_1.isHost)(roomId, participantId)) {
-            console.log("Truy cập không xác định");
-            socket.disconnect();
+        try {
+            if (!(0, room_services_1.isHost)(roomId, participantId)) {
+                console.log("Truy cập không xác định");
+                socket.disconnect();
+            }
+            (0, room_services_1.updateRoomOnDatabase)(roomId, participantId, null, settings, null);
         }
-        (0, room_services_1.updateRoomOnDatabase)(roomId, participantId, null, settings, null);
+        catch (error) {
+            console.log(error);
+        }
     });
     //Mời khi đang họp
     socket.on("meeting:invite", ({ roomId, participantId, emails }) => {
-        console.log("📨 [DEBUG] Nhận sự kiện 'meeting:invite'");
-        if (!(0, room_services_1.isHost)(roomId, participantId)) {
-            console.log("Truy cập không xác định");
-            socket.disconnect();
+        try {
+            if (!(0, room_services_1.isHost)(roomId, participantId)) {
+                console.log("Truy cập không xác định");
+                socket.disconnect();
+            }
+            emails.forEach((email) => __awaiter(void 0, void 0, void 0, function* () {
+                if (!(0, participant_services_1.isAlreadyJoined)(roomId, email)) {
+                    (0, session_services_1.addInvitee)(roomId, email);
+                    const message = yield (0, notification_services_1.generateMeetingMessage)(roomId, participantId);
+                    const notification = yield (0, notification_services_1.createNotification)(email, `meeting-${roomId}`, message);
+                    const { type, content, isRead, sentAt } = notification;
+                    io.to(email).emit("notification:meeting", {
+                        type,
+                        content,
+                        isRead,
+                        sentAt,
+                    });
+                }
+            }));
         }
-        emails.forEach((email) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log(roomId);
-            (0, session_services_1.addInvitee)(roomId, email);
-            const message = yield (0, notification_services_1.generateMeetingMessage)(roomId, participantId);
-            const notification = yield (0, notification_services_1.createNotification)(email, `meeting-${roomId}`, message);
-            const { type, content, isRead, sentAt } = notification;
-            io.to(email).emit("notification:meeting", {
-                type,
-                content,
-                isRead,
-                sentAt,
-            });
-            console.log(`   - ✅ Đã bắn sự kiện 'notification:meeting' tới ${email}`);
-        }));
+        catch (error) {
+            console.log(error);
+        }
     });
     //Rời phòng họp
     socket.on("meeting:leave", ({ roomId, participantName }) => {

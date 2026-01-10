@@ -49,9 +49,7 @@ const findProgressingSession = (roomId) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.findProgressingSession = findProgressingSession;
 const addInvitee = (roomId, email) => __awaiter(void 0, void 0, void 0, function* () {
-    const session = yield findProgressingSession(roomId);
-    session.invited.push(email);
-    yield session.save();
+    yield session_model_1.default.updateOne({ roomId: roomId }, { $addToSet: { invited: email } });
 });
 exports.addInvitee = addInvitee;
 const isInvitedForSession = (roomId, peerId) => __awaiter(void 0, void 0, void 0, function* () {
