@@ -5,9 +5,10 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: ENV.EMAIL_USER,
+    pass: ENV.EMAIL_PASS,
   },
+  family: 4,
 });
 transporter.verify((error, success) => {
   if (error) {
