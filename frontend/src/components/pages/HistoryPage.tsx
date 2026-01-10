@@ -160,7 +160,7 @@ function HistoryPage() {
                                     >
                                         <div>
                                             <h3 className="font-semibold text-lg text-gray-900">
-                                                {session.roomId || "Cuộc họp"}
+                                                {`${session.title} : ${session.roomId}` || "Cuộc họp"}
                                             </h3>
                                             <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                                                 <Calendar className="w-4 h-4" />
