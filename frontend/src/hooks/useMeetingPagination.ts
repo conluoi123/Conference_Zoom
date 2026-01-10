@@ -1,4 +1,4 @@
-import React , {useState, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 
 export const useMeetingPagination = (totalParicipantIds: string[], itemsPerPage: number) => {
     const [currentPage, setCurrentPage] = useState(1); 

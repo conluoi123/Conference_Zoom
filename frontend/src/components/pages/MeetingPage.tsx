@@ -79,6 +79,7 @@ export default function MeetingsPage() {
     if (now < start) {
       toast.info(
         "Cuộc họp này chưa tới giờ bắt đầu. Vui lòng quay lại đúng lịch hẹn nhé!"
+        
       );
       return;
     }

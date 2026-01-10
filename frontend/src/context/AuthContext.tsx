@@ -31,11 +31,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const initAuth = async () => {
       try {
+        setIsLoading(true);
         await refreshUser();
       } catch (err) {
         console.log("Không có phiên đăng nhập cũ");
@@ -57,13 +57,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout");
+      const res = await api.post("/auth/logout");
+      if (res.status === 200) {
+        setUser({
+          id: "",
+          email: user?.email || "",
+          displayName: user?.displayName || "",
+          avatar: user?.avatar || "",
+        });
+        setIsLoading(true)
+      }
     } catch (error) {
       console.error("Xoa cookie khong thanh cong", error);
       return;
+    } finally {
+      setTimeout(() => {
+        setUser(null);
+        setIsLoading(false);
+      }, 1000);
     }
-    setUser(null);
-    navigate("/login");
   };
 
   const updateUser = (userData: Partial<User>) => {

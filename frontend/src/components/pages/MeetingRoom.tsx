@@ -47,14 +47,12 @@ export function MeetingRoom({
   const [showWelcome, setShowWelcome] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isParticipantOpen, setIsParticipantOpen] = useState(false);
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
+  const [isBackgroundOpen, setIsBackgroundOpen] = useState(false);
   const [joined, setJoined] = useState<"JOINING" | "JOINED">("JOINING");
   const [joinedRequest, setJoinRequests] = useState<any[]>([]);
   // triển khai thêm state để bật chế độ hình trong hình
   const [isPipActive, setIsPipActive] = useState(false);
-  const pipWinDowRef = useRef<HTMLVideoElement | null>(null);
-
-  const [isBackgroundOpen, setIsBackgroundOpen] = useState(false);
-
   const [bgConfig, setBgConfig] = useState<{
     type: "none" | "blur" | "image";
     url?: string;
@@ -69,6 +67,7 @@ export function MeetingRoom({
     localParticipant,
     meetingId,
     presenterId,
+    activeSpeakerId,
     muteMic,
     disableWebcam,
     changeWebcam,
@@ -94,6 +93,7 @@ export function MeetingRoom({
               <button
                 onClick={() => {
                   allow(); // Duyệt qua SDK
+                  console.log("Chấp nhận vào rrooom");
                   setJoinRequests((prev) =>
                     prev.filter((req) => req.participantId !== participantId)
                   );
@@ -106,6 +106,7 @@ export function MeetingRoom({
               <button
                 onClick={() => {
                   deny(); // Từ chối qua SDK
+                  console.log("Đang gửi lệnh từ chối cho:", participantId);
                   setJoinRequests((prev) =>
                     prev.filter((req) => req.participantId !== participantId)
                   );
@@ -124,6 +125,7 @@ export function MeetingRoom({
     // bắt gói trả về
     onEntryResponded: (...args: any[]) => {
       const decision = args[1];
+      console.log("Phản hồi nhận được là: ", decision);
       if (decision === "denied") {
         toast.error("Yêu cầu tham gia cuộc họp bị từ chối");
         onLeaveMeeting();
@@ -147,6 +149,7 @@ export function MeetingRoom({
         // tránh thông báo khi người vào là chính mình
         return;
       }
+      console.log("Có người tham gia mới");
       toast.success(`${participant.displayName} đã tham gia cuộc họp`, {
         description: "Vừa mới vào phòng họp",
         duration: 3000,
@@ -161,9 +164,11 @@ export function MeetingRoom({
       });
     },
     onRecordingStarted: async () => {
+      console.log("🔴 Ghi hình đã bắt đầu");
       setIsRecording(true);
 
       try {
+        console.log("📊 Meeting info:", { meetingId, roomId });
 
         // Sử dụng roomId làm sessionId (chúng giống nhau)
         const sessionId = meetingId || roomId;
@@ -173,6 +178,14 @@ export function MeetingRoom({
           toast.error("Lỗi: Không có sessionId");
           return;
         }
+
+        // Gọi API để lưu recording vào database
+        await api.post("/rooms/recordings/start", {
+          sessionId: sessionId,
+          roomId: roomId,
+        });
+
+        console.log("✅ Recording saved to database");
         toast.success("Đã bắt đầu ghi hình");
       } catch (error: any) {
         console.error("Failed to save recording:", error);
@@ -182,6 +195,7 @@ export function MeetingRoom({
       }
     },
     onRecordingStopped: () => {
+      console.log("⏹️ Ghi hình đã dừng");
       setIsRecording(false);
     },
   });
@@ -209,9 +223,11 @@ export function MeetingRoom({
   // Join socket room when meeting is joined
   useEffect(() => {
     if (joined === "JOINED" && user?.displayName && socketService.isConnected()) {
+      console.log(`🚪 Joining socket room: ${roomId}`);
       socketService.joinMeetingRoom(roomId, user.displayName);
 
       return () => {
+        console.log(`🚪 Leaving socket room: ${roomId}`);
         socketService.leaveMeetingRoom(roomId, user.displayName);
       };
     }
@@ -226,8 +242,13 @@ export function MeetingRoom({
   };
 
   const toggleParticipantPanel = () => {
-    setIsParticipantOpen(!isParticipantOpen);
-    if (isChatOpen) onToggleChat(); // đóng nếu chat mở
+    const nextState = !isParticipantOpen;
+    setIsParticipantOpen(nextState);
+    if (nextState) {
+      if (isChatOpen) setIsChatOpen(false);
+      if (isSettingOpen) setIsSettingOpen(false);
+      if (isBackgroundOpen) setIsBackgroundOpen(false);
+    }
   };
   // const toggleChatPanel = () => {
   //   onToggleChat();
@@ -235,20 +256,25 @@ export function MeetingRoom({
   // };
   // 1. Memoize hàm toggle chat
   const toggleChatPanel = useCallback(() => {
-    onToggleChat(); // Gọi hàm từ props của cha
-    if (isParticipantOpen) setIsParticipantOpen(false);
-  }, [onToggleChat, isParticipantOpen]);
+    const nextState = !isChatOpen;
+    setIsChatOpen(nextState);
+    if (nextState) {
+      if (isParticipantOpen) setIsParticipantOpen(false);
+      if (isSettingOpen) setIsSettingOpen(false);
+      if (isBackgroundOpen) setIsBackgroundOpen(false);
+    }
+  }, [isChatOpen, isParticipantOpen, isSettingOpen, isBackgroundOpen]);
 
   // 2. Tương tự cho hàm đóng chat (nếu cần truyền riêng)
-  const handleCloseChat = useCallback(() => {
-    if (isChatOpen) onToggleChat();
-  }, [isChatOpen, onToggleChat]);
-
   //======================================Virtual background========================================
   const toggleBackgroundPanel = () => {
-    setIsBackgroundOpen(!isBackgroundOpen);
-    if (isChatOpen) onToggleChat();
-    if (isParticipantOpen) setIsParticipantOpen(false);
+    const nextState = !isBackgroundOpen;
+    setIsBackgroundOpen(nextState);
+    if (nextState) {
+      if (isChatOpen) setIsChatOpen(false);
+      if (isParticipantOpen) setIsParticipantOpen(false);
+      if (isSettingOpen) setIsSettingOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -257,6 +283,7 @@ export function MeetingRoom({
         const processor = new VirtualBackgroundProcessor();
         await processor.init();
         processorRef.current = processor;
+        console.log("✅ Processor Ready");
       }
     };
 
@@ -317,6 +344,7 @@ export function MeetingRoom({
     type: "none" | "blur" | "image",
     imageUrl?: string
   ) => {
+    console.log("Selected background:", type, imageUrl);
     setBgConfig({ type, url: imageUrl });
     setIsBackgroundOpen(false);
   };
@@ -324,23 +352,13 @@ export function MeetingRoom({
   //==================================Recording=======================================
   const [isRecording, setIsRecording] = useState(false);
   const handleRecording = () => {
+    console.log("Recording click");
     if (isRecording) {
       stopRecording();
       return;
     }
     try {
-      type Config = {
-        layout: {
-          type: "GRID" | "SPOTLIGHT" | "SIDEBAR";
-          priority: "SPEAKER" | "PIN";
-          gridSize: number;
-        };
-        orientation: "landscape" | "portrait";
-        theme: "DARK" | "DEFAULT" | "LIGHT";
-        quality: "high" | "low" | "med";
-        mode: "video-and-audio" | "audio";
-      };
-      const config: Config = {
+      const config = {
         // Layout Configuration
         layout: {
           type: "GRID", // "SPOTLIGHT" | "SIDEBAR",  Default : "GRID"
@@ -362,7 +380,7 @@ export function MeetingRoom({
         // landscape : Record the meeting in horizontally
         // portrait : Record the meeting in vertically (Best for mobile view)
         orientation: "landscape", // "portrait",  Default : "landscape"
-      };
+      } as const;
 
       // Post Transcription Configuration
       const transcription = {
@@ -373,7 +391,8 @@ export function MeetingRoom({
       // Webhook Configuration (Auto-sent to this URL when recording stops)
       // NOTE: Replace with your actual ngrok URL
       const webhookUrl = import.meta.env.VITE_API_URL;
-      console.log(webhookUrl)
+      // const webhookUrl = "https://eudaemonistically-metallographical-kasha.ngrok-free.dev";
+
       startRecording(webhookUrl, undefined, config, transcription);
     } catch (error) {
       console.error("Recording error:", error);
@@ -468,75 +487,138 @@ export function MeetingRoom({
 
   // ====================================== HÌNH TRONG HÌNH ===============================\\
   const togglePipMode = async () => {
-
-    // Nếu đang PiP thì thoát
     if (document.pictureInPictureElement) {
       await document.exitPictureInPicture();
       return;
     }
 
-    // Kiểm tra hỗ trợ
     if (!("pictureInPictureEnabled" in document)) {
       toast.error("Trình duyệt của bạn không hỗ trợ PiP");
       return;
     }
 
     try {
-      // ===== 1. Tạo canvas =====
       const source = document.createElement("canvas");
-      source.width = 568;
-      source.height = 320;
+      source.width = 640;
+      source.height = 360;
       const ctx = source.getContext("2d");
       if (!ctx) return;
 
-      // ===== 2. Tạo video cầu nối PiP =====
       const pipVideo = document.createElement("video");
       pipVideo.autoplay = true;
       pipVideo.muted = true;
       pipVideo.playsInline = true;
       pipVideo.srcObject = source.captureStream(30);
 
-      pipWinDowRef.current = pipVideo;
-
-      // ===== 3. Vẽ frame đầu tiên (QUAN TRỌNG) =====
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, source.width, source.height);
-
-      // ===== 4. Hàm vẽ canvas liên tục =====
       const drawCanvas = () => {
         if (!ctx) return;
+        if (!document.pictureInPictureElement && !pipVideo.paused) {
+          // Nếu chưa vào PiP mà video đang play thì vẫn cho vẽ 1 lần để có frame mồi
+        } else if (!document.pictureInPictureElement) {
+          return;
+        }
 
-        // Lấy video KHÔNG bao gồm pipVideo
-        const videos = Array.from(document.querySelectorAll("video")).filter(
-          (v) => v !== pipVideo && v.readyState >= 2
-        );
-
-        ctx.fillStyle = "#000";
+        // Clear background
+        ctx.fillStyle = "#111827"; // bg-gray-900
         ctx.fillRect(0, 0, source.width, source.height);
 
-        const count = Math.min(videos.length, 4);
+        // Get participants to show (same as current grid)
+        const participantsToShow = visible.length > 0 ? visible : [localParticipant?.id].filter(Boolean);
+        const count = participantsToShow.length;
+
         const rows = count > 2 ? 2 : 1;
         const cols = count > 1 ? 2 : 1;
+        const cellW = source.width / cols;
+        const cellH = source.height / rows;
 
-        videos.slice(0, 4).forEach((v, i) => {
+        participantsToShow.forEach((pId, i) => {
+          const participant = participants.get(pId as string) || (pId === localParticipant?.id ? localParticipant : null);
+          if (!participant) return;
+
           const r = Math.floor(i / cols);
           const c = i % cols;
+          const x = c * cellW;
+          const y = r * cellH;
 
-          ctx.drawImage(
-            v,
-            c * (source.width / cols),
-            r * (source.height / rows),
-            source.width / cols,
-            source.height / rows
-          );
+          // Draw Border for active speaker
+          if (pId === activeSpeakerId) {
+            ctx.strokeStyle = "#22c55e"; // green-500
+            ctx.lineWidth = 4;
+            ctx.strokeRect(x + 5, y + 5, cellW - 10, cellH - 10);
+          }
+
+          // Try to find video element (prioritize screenshare)
+          let videoElement = document.querySelector(`video[data-participant-id="${pId}"][data-type="screenshare"]`) as HTMLVideoElement;
+          let isScreenShare = !!videoElement;
+
+          if (!videoElement) {
+            videoElement = document.querySelector(`video[data-participant-id="${pId}"][data-type="webcam"]`) as HTMLVideoElement;
+          }
+
+          if (videoElement && (participant.webcamOn || isScreenShare) && videoElement.readyState >= 2) {
+            // Draw Video
+            ctx.save();
+            // Mirror local participant ONLY for webcam
+            if (pId === localParticipant?.id && !isScreenShare) {
+              ctx.translate(x + cellW, y);
+              ctx.scale(-1, 1);
+              ctx.drawImage(videoElement, 0, 0, cellW, cellH);
+            } else {
+              // Fit keeping aspect ratio for screen share
+              if (isScreenShare) {
+                const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
+                const cellAspect = cellW / cellH;
+                let drawW = cellW;
+                let drawH = cellH;
+                let drawX = x;
+                let drawY = y;
+
+                if (videoAspect > cellAspect) {
+                  drawH = cellW / videoAspect;
+                  drawY = y + (cellH - drawH) / 2;
+                } else {
+                  drawW = cellH * videoAspect;
+                  drawX = x + (cellW - drawW) / 2;
+                }
+                ctx.drawImage(videoElement, drawX, drawY, drawW, drawH);
+              } else {
+                ctx.drawImage(videoElement, x, y, cellW, cellH);
+              }
+            }
+            ctx.restore();
+          } else {
+            // Draw Avatar Fallback
+            const colors = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+            const colorIdx = Math.abs(pId.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)) % colors.length;
+
+            ctx.fillStyle = colors[colorIdx];
+            ctx.beginPath();
+            const centerX = x + cellW / 2;
+            const centerY = y + cellH / 2;
+            const radius = Math.min(cellW, cellH) / 4;
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Initials
+            ctx.fillStyle = "white";
+            ctx.font = `bold ${radius}px Sans-Serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(participant.displayName.charAt(0).toUpperCase(), centerX, centerY);
+          }
+
+          // Draw Name Label
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          ctx.fillRect(x + 10, y + cellH - 30, ctx.measureText(participant.displayName).width + 20, 20);
+          ctx.fillStyle = "white";
+          ctx.font = "12px Sans-Serif";
+          ctx.textAlign = "left";
+          ctx.fillText(participant.displayName, x + 20, y + cellH - 15);
         });
 
-        if (document.pictureInPictureElement) {
-          requestAnimationFrame(drawCanvas);
-        }
+        requestAnimationFrame(drawCanvas);
       };
 
-      // ===== 5. Event PiP =====
       pipVideo.addEventListener("enterpictureinpicture", () => {
         setIsPipActive(true);
         requestAnimationFrame(drawCanvas);
@@ -544,22 +626,13 @@ export function MeetingRoom({
 
       pipVideo.addEventListener("leavepictureinpicture", () => {
         setIsPipActive(false);
-        pipWinDowRef.current = null;
       });
 
-      // ===== 6. Play + request PiP (SAU KHI CÓ FRAME) =====
       await pipVideo.play();
-
-      // delay 1 tick để browser render frame canvas
-      setTimeout(async () => {
-        try {
-          await pipVideo.requestPictureInPicture();
-        } catch (e) {
-          console.error("requestPictureInPicture failed", e);
-        }
-      }, 100);
+      await pipVideo.requestPictureInPicture();
     } catch (err) {
       console.error("PiP Error:", err);
+      toast.error("Không thể mở Hình trong hình");
     }
   };
   // ======================================= BỐ CỤC KHI CÓ NG SHARE ===========================\\
@@ -595,11 +668,14 @@ export function MeetingRoom({
     allowWebcam: true,
     allowChat: true,
   });
-  const [isSettingOpen, setIsSettingOpen] = useState(false);
   const handleToggleSettings = () => {
-    setIsSettingOpen(!isSettingOpen);
-    if (isChatOpen) onToggleChat();
-    if (isParticipantOpen) setIsParticipantOpen(false);
+    const nextState = !isSettingOpen;
+    setIsSettingOpen(nextState);
+    if (nextState) {
+      if (isChatOpen) setIsChatOpen(false);
+      if (isParticipantOpen) setIsParticipantOpen(false);
+      if (isBackgroundOpen) setIsBackgroundOpen(false);
+    }
   };
   // cặp {key,value} để khỏi viết cho ba nút -> gộp lại thành một nút
   const onUpdateSettings = (key: string, value: boolean) => {
@@ -612,6 +688,7 @@ export function MeetingRoom({
   // Listen for settings updates from host
   useEffect(() => {
     const handleSettingsUpdate = (newSettings: any) => {
+      console.log("📢 Received settings update:", newSettings);
       setRoomSettings(newSettings);
 
       // Only enforce for non-host participants
@@ -643,9 +720,9 @@ export function MeetingRoom({
   }, [muteMic, disableWebcam, localParticipant, isHost]);
   //=========================================== RETURN =========================================
   return (
-    <div className="bg-gray-950 h-screen w-screen flex flex-col overflow-hidden text-white">
+    <div className="bg-gray-900 h-screen w-screen flex flex-col overflow-hidden text-white">
       {/* Header */}
-      <MeetingHeader roomId={roomId} onLeave={onLeaveMeeting} />
+      <MeetingHeader roomId={roomId} onLeave={onLeaveMeeting} isRecording={isRecording} />
       {/* Màn hình khi JOINED thành công */}
       {joined === "JOINED" && (
         <>
@@ -771,7 +848,6 @@ export function MeetingRoom({
                       roomId={meetingId}
                       currentUserId={user?.id}
                     />
-                    
                     <button
                       onClick={() => setIsInviteModalOpen(true)}
                       className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-medium hover:bg-blue-700 transition-all mb-4"
@@ -799,26 +875,33 @@ export function MeetingRoom({
               {subtitles.length > 0 && isTranscripting && (
                 <SubtitleBar subtitles={subtitles} />
               )}
-              {/* THANH MEETING CONTROL (NÊN THÊM HIỆU ỨNG RÊ CHUỘT VÀO THÌ HIỆN) */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-auto">
-                <MeetingControls
-                  onLeaveMeeting={onLeaveMeeting}
-                  onToggleChat={toggleChatPanel}
-                  isChatOpen={isChatOpen}
-                  isOpen={isParticipantOpen}
-                  onOpenParticipant={toggleParticipantPanel}
-                  onTogglePip={togglePipMode}
-                  isPipActive={isPipActive}
-                  isHost={isHost}
-                  isBackgroundOpen={isBackgroundOpen}
-                  onToggleBackground={toggleBackgroundPanel}
-                  isSettingOpen={isSettingOpen}
-                  onOpenSettings={handleToggleSettings}
-                  isRecording={isRecording}
-                  onToggleRecording={handleRecording}
-                  isTranscripting={isTranscripting}
-                  onToggleTranscript={handleTranscript}
-                />
+              {/* THANH MEETING CONTROL - Mac Dock Effect */}
+              <div className="fixed bottom-0 left-0 right-0 h-24 flex justify-center items-end pb-6 z-50 group transition-all duration-300">
+                {/* Hover trigger area with subtle gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-transparent group-hover:from-black/40 transition-all duration-300 pointer-events-none" />
+
+                {/* Control Bar Container */}
+                <div className="transform translate-y-10 opacity-0 scale-95 group-hover:translate-y-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-out cubic-bezier(0.4, 0, 0.2, 1)">
+                  <MeetingControls
+                    onLeaveMeeting={onLeaveMeeting}
+                    onToggleChat={toggleChatPanel}
+                    isChatOpen={isChatOpen}
+                    isOpen={isParticipantOpen}
+                    onOpenParticipant={toggleParticipantPanel}
+                    onTogglePip={togglePipMode}
+                    isPipActive={isPipActive}
+                    isHost={isHost}
+                    isBackgroundOpen={isBackgroundOpen}
+                    onToggleBackground={toggleBackgroundPanel}
+                    isSettingOpen={isSettingOpen}
+                    onOpenSettings={handleToggleSettings}
+                    isRecording={isRecording}
+                    onToggleRecording={handleRecording}
+                    isTranscripting={isTranscripting}
+                    onToggleTranscript={handleTranscript}
+                    onShareClick={() => setIsInviteModalOpen(true)}
+                  />
+                </div>
               </div>
               {totalPages > 1 && (
                 <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 scale-90">
@@ -915,6 +998,14 @@ export function MeetingRoom({
                   onSelectBackground={handleSelectBackground}
                 />
               )}
+
+              {/* Invite Modal */}
+              <InviteModal
+                open={isInViteModalOpen}
+                onOpenChange={setIsInviteModalOpen}
+                roomId={meetingId}
+                currentUserId={user?.id}
+              />
             </AnimatePresence>
           </main>
         </>

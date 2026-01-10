@@ -4,14 +4,14 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 
 interface JoinRequest {
-  participantId: string; 
-  name: string; 
-  deny: () => void; 
-  allow : () => void; 
+  participantId: string;
+  name: string;
+  deny: () => void;
+  allow: () => void;
 }
 interface ParticipantPanelProps {
   onClose: () => void;
-  joinedRequest : JoinRequest[]; 
+  joinedRequest: JoinRequest[];
   setJoinRequests: React.Dispatch<React.SetStateAction<JoinRequest[]>>; // hàm cập nhật state
   hostId: string;
 }
@@ -22,16 +22,46 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, host
   // Chuyển Map thành mảng để dễ render
   const allParticipants = Array.from(participants.values());
   // xử lí phần request join 
-  const handleAction = (id:string, action : 'allow' | 'deny') => {
-    const request = joinedRequest.find(req => req.participantId===id); 
-    if(request) {
-      if(action ==='allow') request.allow();
-      else {request.deny()};
+  const handleAction = (id: string, action: 'allow' | 'deny') => {
+    const request = joinedRequest.find(req => req.participantId === id);
+    if (request) {
+      if (action === 'allow') request.allow();
+      else { request.deny() };
       //xử lí xong thì pop ra khỏi hàng đợi
       setJoinRequests(prev => prev.filter(req => req.participantId !== id));
     }
   }
   const { user } = useAuth();
+
+  // Gradient color palette - same as ParticipantTile
+  const gradientColors = [
+    'from-indigo-500 to-purple-600',
+    'from-blue-500 to-cyan-600',
+    'from-green-500 to-emerald-600',
+    'from-yellow-500 to-orange-600',
+    'from-red-500 to-pink-600',
+    'from-purple-500 to-fuchsia-600',
+    'from-teal-500 to-cyan-600',
+    'from-orange-500 to-red-600',
+    'from-pink-500 to-rose-600',
+    'from-violet-500 to-purple-600',
+    'from-sky-500 to-blue-600',
+    'from-lime-500 to-green-600',
+  ];
+
+  const hashString = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  };
+
+  const getGradientClass = (participantId: string) => {
+    return gradientColors[hashString(participantId) % gradientColors.length];
+  };
   return (
     <motion.div
       initial={{ x: "100%" }}
@@ -50,34 +80,34 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, host
 
       {/* Search (Tùy chọn - Giống Meet) */}
       <div className="p-4">
-        <input 
-          type="text" 
-          placeholder="Tìm người" 
+        <input
+          type="text"
+          placeholder="Tìm người"
           className="w-full bg-gray-800 border-none rounded-lg p-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none text-gray-300"
         />
       </div>
 
       {/* Participant List */}
       <div className="flex-1 overflow-y-auto px-2">
-        {joinedRequest.length >0 &&(
+        {joinedRequest.length > 0 && (
           <div className="mb-4 bg-blue-600/5 border-b border-blue-600/20">
             <p className="text-[11px] font-bold px-4 py-2">
               Đang chờ duyệt {joinedRequest.length}
             </p>
-            {joinedRequest.map((req)=> (
+            {joinedRequest.map((req) => (
               <div key={req.participantId} className="flex items-center gap-3 px-4 py-3 bg-blue-600/10">
                 <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
                   {req.name.charAt(0).toUpperCase()}
                 </div>
                 <span className="flex-1 text-sm font-medium truncate text-white">{req.name}</span>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => handleAction(req.participantId, 'allow')}
                     className="p-1.5 bg-blue-600 hover:bg-blue-500 rounded-md text-white transition-colors"
                   >
                     <Check size={14} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleAction(req.participantId, 'deny')}
                     className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded-md text-white transition-colors"
                   >
@@ -90,7 +120,7 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, host
           </div>
         )}
         <p className="text-xs font-medium text-gray-400 px-3 py-2 uppercase tracking-wider">Trong cuộc họp</p>
-        
+
         {allParticipants.map((participant) => {
           // Lấy trạng thái Mic và Camera của từng người
           const isMicOn = participant.micOn;
@@ -103,15 +133,15 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, host
             >
               {/* Avatar */}
               {user?.avatar ? (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-inner">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getGradientClass(participant.id)} flex items-center justify-center font-bold text-white shadow-inner`}>
                   <img
                     src={user.avatar}
                     alt="Profile"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-inner">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getGradientClass(participant.id)} flex items-center justify-center font-bold text-white shadow-inner`}>
                   {participant.displayName.charAt(0).toUpperCase()}
                 </div>
               )}

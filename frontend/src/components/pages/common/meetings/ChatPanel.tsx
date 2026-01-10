@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from "react";
 import { X, Send } from "lucide-react";
-import {socketService} from "@/services/socket";
+import { socketService } from "@/services/socket";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 
@@ -33,19 +33,19 @@ const ChatPanel = memo(function ChatPanel({
   avatar,
 }: ChatPanelProps) {
   console.log("🔄 ChatPanel RENDER"); // Debug log
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  
+
   const hasJoinedRef = useRef(false);
 
   // ============ SETUP LISTENERS ============
   useEffect(() => {
     console.log("🎬 ChatPanel useEffect - Setup listeners");
-    
+
     const formatMessage = (data: any): Message => ({
       id: data.id || crypto.randomUUID(),
       avatar: data.avatar,
@@ -83,7 +83,7 @@ const ChatPanel = memo(function ChatPanel({
     return () => {
       console.log("🧹 ChatPanel cleanup");
       socketService.offMeetingEvents();
-      
+
       if (hasJoinedRef.current) {
         socketService.leaveMeetingRoom(roomId, participantName);
         hasJoinedRef.current = false;
@@ -131,11 +131,11 @@ const ChatPanel = memo(function ChatPanel({
   // ============ RENDER ============
   return (
     <motion.div
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
+      initial={{ x: "100%", opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: "100%", opacity: 0 }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
-      className="h-full w-96 bg-gray-800 shadow-2xl flex flex-col border-l border-gray-700"
+      className="w-96 bg-[#202124] border-l border-gray-700 flex flex-col h-full shadow-2xl z-40"
     >
       {/* Header */}
       <div className="bg-gray-900 px-6 py-4 flex items-center justify-between border-b border-gray-700 shadow-sm">
@@ -162,22 +162,19 @@ const ChatPanel = memo(function ChatPanel({
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex w-full ${
-                message.isLocal ? "justify-end" : "justify-start"
-              }`}
+              className={`flex w-full ${message.isLocal ? "justify-end" : "justify-start"
+                }`}
             >
               <div
-                className={`flex max-w-[80%] gap-3 ${
-                  message.isLocal ? "flex-row-reverse" : "flex-row"
-                }`}
+                className={`flex max-w-[80%] gap-3 ${message.isLocal ? "flex-row-reverse" : "flex-row"
+                  }`}
               >
                 {/* Avatar */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm ${
-                    message.isLocal
-                      ? "bg-gradient-to-br from-blue-500 to-blue-600"
-                      : "bg-gradient-to-br from-purple-500 to-purple-600"
-                  }`}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm ${message.isLocal
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600"
+                    : "bg-gradient-to-br from-purple-500 to-purple-600"
+                    }`}
                 >
                   <img
                     src={message.isLocal ? user?.avatar : message.avatar}
@@ -188,16 +185,14 @@ const ChatPanel = memo(function ChatPanel({
 
                 {/* Message Content */}
                 <div
-                  className={`flex flex-col ${
-                    message.isLocal ? "items-end" : "items-start"
-                  }`}
+                  className={`flex flex-col ${message.isLocal ? "items-end" : "items-start"
+                    }`}
                 >
                   {/* Name + Time */}
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className={`text-xs font-medium ${
-                        message.isLocal ? "text-blue-400" : "text-gray-300"
-                      }`}
+                      className={`text-xs font-medium ${message.isLocal ? "text-blue-400" : "text-gray-300"
+                        }`}
                     >
                       {message.isLocal ? "Bạn" : message.participantName}
                     </span>
@@ -208,11 +203,10 @@ const ChatPanel = memo(function ChatPanel({
 
                   {/* Message Bubble */}
                   <div
-                    className={`px-4 py-2 rounded-2xl break-words text-sm shadow-sm ${
-                      message.isLocal
-                        ? "bg-blue-600 text-white rounded-tr-sm"
-                        : "bg-gray-700 text-gray-100 rounded-tl-sm"
-                    }`}
+                    className={`px-4 py-2 rounded-2xl break-words text-sm shadow-sm ${message.isLocal
+                      ? "bg-blue-600 text-white rounded-tr-sm"
+                      : "bg-gray-700 text-gray-100 rounded-tl-sm"
+                      }`}
                   >
                     {message.content}
                   </div>
