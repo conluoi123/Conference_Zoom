@@ -28,6 +28,7 @@ const ENV = {
   CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
   BACKEND_URL: process.env.BACKEND_URL,
   RESEND_EMAIL_API_KEY: process.env.RESEND_EMAIL_API_KEY,
+  BREVO_API_KEY: process.env.BREVO_API_KEY,
 };
 
 export { ENV };

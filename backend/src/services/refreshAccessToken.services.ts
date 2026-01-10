@@ -45,12 +45,6 @@ async function refreshAccessToken(req: RequestWithUser, res: Response) {
 
 export async function isExistsRefreshToken(req: Request, res: Response) {
   try {
-    console.log("========== REFRESH TOKEN DEBUG ==========");
-    console.log("1. Raw cookie header:", req.headers.cookie);
-    console.log("2. req.cookies object:", req.cookies);
-    console.log("3. req.cookies.refreshToken:", req.cookies.refreshToken);
-    console.log("4. Type of refreshToken:", typeof req.cookies.refreshToken);
-    console.log("5. All headers:", JSON.stringify(req.headers, null, 2));
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
       console.log(refreshToken);

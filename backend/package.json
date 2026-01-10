@@ -31,6 +31,7 @@
     "passport-microsoft": "^2.1.0",
     "redis": "^5.10.0",
     "resend": "^6.7.0",
+    "sib-api-v3-sdk": "^8.5.0",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

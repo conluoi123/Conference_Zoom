@@ -30,8 +30,8 @@ async function supportSendOtp(email, otp) {
     if (cntAttempts == 1) {
       await redisClient.expire(otp_attempt_pre + email, 300);
     }
-    await resend.emails.send({
-      from: "ZUS CONFERENCE ZOOM <onboarding@resend.dev>",
+    await transporter.sendMail({
+      from: `${ENV.EMAIL_FROM}`,
       to: email,
       subject: "[ZUS CONFERENCE VIDEO SYSTEM] - OTP CODE",
       html: `<!DOCTYPE html>
