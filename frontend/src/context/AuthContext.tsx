@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         await refreshUser();
       } catch (err) {
-        console.log("Không có phiên đăng nhập cũ");
+        console.log("User not authenticated");
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     try {
       const res = await api.get("/auth/me");
-
+      console.log("refresh user success");
       const { userId, email, displayName, avatar } = res.data.data;
       const token = getAccessToken();
 
@@ -94,9 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (err) {
       console.log("refresh user failed");
-    } finally {
-      setIsLoading(false);
-    }
+      throw err;
+    } 
   };
 
   const value: AuthContextType = {

@@ -247,11 +247,10 @@ export function HomePage() {
   }, {});
 
   // const selectedDateKey = getLocalDateKey(currentDay);
-
   if (loading || loadingSchedule) {
     return <LoadingScreen message="" variant="light" />;
   }
-
+  
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">

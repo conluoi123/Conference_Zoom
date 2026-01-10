@@ -14,6 +14,7 @@ import HistoryPage from "../components/pages/HistoryPage.tsx";
 import { RecordingDetail } from "../components/pages/RecordingDetail.tsx";
 import NotificationPage from "../components/pages/NotificationPage.tsx";
 import { useNavigate } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute.tsx";
 export default function AppRoutes() {
   const [target, setTarget] = useState<string | null>(null);
   const { isLogout } = useAuth();
@@ -21,13 +22,16 @@ export default function AppRoutes() {
   useEffect(() => {
     const check = async () => {
       const flag = await AuthService.checkRefreshToken();
+      console.log(2);
       setTarget(flag ? "/home" : "/login");
-      if(isLogout)
-      navigate(`${target}`)
+      if (isLogout) {
+        console.log(target)
+        navigate(`${target}`);
+      }
     };
     check();
   }, [isLogout, target]);
-
+  console.log(target);
   if (!target) return null;
   return (
     <Routes>
@@ -40,8 +44,16 @@ export default function AppRoutes() {
           </ProtectedLoginRoute>
         }
       />
+
       <Route path="/otp" element={<OTPPage />} />
-      <Route path="/home" element={<HomePage />} />
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/meeting/:roomId" element={<MeetingPage />} />
       <Route path="/pre-join" element={<PreJoinPage />} />
       <Route path="/schedule" element={<SchedulePage />} />

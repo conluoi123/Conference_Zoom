@@ -10,7 +10,8 @@ export default function ProtectedLoginRoute({
   flag,
 }: ProtectedLoginRouteProps) {
   if (flag === true) {
-    return <Navigate to="/home" />;
+    console.log(5)
+    return <Navigate to="/home" replace />;
   }
 
   return children;

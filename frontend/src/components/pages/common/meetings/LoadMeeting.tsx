@@ -1,5 +1,3 @@
-import React from 'react';
-
 const LoadMeeting = ({ message = "Đang tải thông tin cuộc họp..."}) => {
   return (
     <div className="bg-gray-900 flex flex-col items-center justify-center min-h-screen z-50 fixed inset-0">
