@@ -80,7 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     try {
       const res = await api.get("/auth/me");
-      console.log("refresh user success");
       const { userId, email, displayName, avatar } = res.data.data;
       const token = getAccessToken();
 
