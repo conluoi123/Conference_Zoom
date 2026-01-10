@@ -50,12 +50,18 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
   );
 
   //Chỉnh sửa settings cho phòng họp
-  socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
-    if (!isHost(roomId, participantId)) {
+  socket.on("meeting:settings", async ({ roomId, participantId, settings }) => {
+    const hostCheck = await isHost(roomId, participantId);
+    if (!hostCheck) {
       console.log("Truy cập không xác định");
       socket.disconnect();
+      return;
     }
-    updateRoomOnDatabase(roomId, participantId, null, settings, null);
+    
+    // Lưu vào DB
+    await updateRoomOnDatabase(roomId, participantId, null, settings, null);
+    // Broadcast cho tất cả người trong phòng (kể cả host)
+    io.to(roomId).emit("meeting:settings_updated", settings);
   });
 
   //Mời khi đang họp
