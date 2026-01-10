@@ -33,7 +33,7 @@ const userSchema: Schema<IUser> = new Schema({
   isActive: { type: Boolean },
   createdAt: { type: Date, default: () => new Date() },
   refreshToken: {
-    refreshToken: { type: String, required: true },
+    refreshToken: { type: String, required: true, unique: true },
     expiredTime: { type: Date, required: true },
   },
   accountType: {

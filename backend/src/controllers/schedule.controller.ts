@@ -80,7 +80,7 @@ async function createSchedule(req: Request, res: Response) {
       const { type, content, isRead, sentAt } = notification;
       //Bắn thông báo
       const io = getIO();
-      io.to(email).emit("notification:invitation", {
+      io.to(email).emit("notification:invitations", {
         type,
         content,
         isRead,
@@ -165,7 +165,7 @@ async function updateSchedule(req: Request, res: Response) {
         const { type, content, isRead, sentAt } = notification;
 
         const io = getIO();
-        io.to(email).emit("notification:invitation", {
+        io.to(email).emit("notification:invitations", {
           type,
           content,
           isRead,

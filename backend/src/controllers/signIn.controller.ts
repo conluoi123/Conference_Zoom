@@ -229,18 +229,7 @@ async function SignInWithGG(req: RequestWithUser, res: Response) {
       path: "/",
     });
 
-    const data = {
-      accessToken: accessToken,
-      user: {
-        userId: user._id,
-        email: user.email,
-        displayName: user.displayName,
-        avatar: user.avatar,
-      },
-    };
-
-    const encodedData = encodeURIComponent(JSON.stringify(data));
-    return res.redirect(`${ENV.FRONTEND_URL}/home?data=${encodedData}`);
+    return res.redirect(`${ENV.FRONTEND_URL}/home`);
   } catch (err) {
     console.log(err);
     return res

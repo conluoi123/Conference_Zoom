@@ -42,4 +42,35 @@ async function refreshAccessToken(req: RequestWithUser, res: Response) {
       .json({ message: "ACCESS TOKEN IS EXPIRED OR WRONG" });
   }
 }
+
+export async function isExistsRefreshToken(req: RequestWithUser, res: Response) {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ message: "Refresh token is wrong", flag: false });
+    }
+
+    const hashRefreshToken = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+    const user = await User.findOne({
+      "refreshToken.refreshToken": hashRefreshToken,
+    });
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "refresh token is expired or wrong", flag: false });
+    }
+    
+    return res.status(200).json({ flag: true });
+  } catch (error) {
+    console.log("REFRESH TOKEN IS EXPIRED OR NOT EXISTS", error);
+    return res
+      .status(401)
+      .json({ message: "REFRESH TOKEN IS EXPIRED OR NOT EXISTS", flag: false });
+  }
+}
 export default refreshAccessToken

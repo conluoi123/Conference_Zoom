@@ -66,9 +66,7 @@ const notificationSocketHandler = (
     async ({ invitationId, email, status }) => {
       try {
         const scheduleId = await getScheduleIdByInvitationId(invitationId);
-        console.log(0);
         const schedule = await getScheduleInfo(scheduleId);
-        console.log(schedule);
         if (!updateInvitationStatus(scheduleId, email, status)) {
           throw new Error("Lời mời đã hết hạn");
         }
