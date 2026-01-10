@@ -24,6 +24,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => void;
+  isLogout: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +32,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [isLogout, setIsLogout] = useState(false);
+  const navigate = useNavigate();
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -51,30 +53,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
   const login = (userData: User, token: string) => {
+    setIsLogout(false);
     setUser(userData);
     setAccessToken(token);
   };
 
   const logout = async () => {
     try {
-      const res = await api.post("/auth/logout");
-      if (res.status === 200) {
-        setUser({
-          id: "",
-          email: user?.email || "",
-          displayName: user?.displayName || "",
-          avatar: user?.avatar || "",
-        });
-        setIsLoading(true)
-      }
+      await api.post("/auth/logout");
     } catch (error) {
       console.error("Xoa cookie khong thanh cong", error);
-      return;
     } finally {
-      setTimeout(() => {
-        setUser(null);
-        setIsLoading(false);
-      }, 1000);
+      setUser(null);
+      setIsLoading(false);
+      setIsLogout(true);
+      navigate("/login");
     }
   };
 
@@ -114,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     updateUser,
     refreshUser,
+    isLogout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

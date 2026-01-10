@@ -85,7 +85,9 @@ export function HomePage() {
   const [modalMeetings, setModalMeetings] = useState<any[]>([]);
   const [loadingSchedule, setLoadingSchedule] = useState(true);
   const [loading, setLoading] = useState(true);
-
+  // if (!user) {
+  //   navigate("/login");
+  // }
   useEffect(() => {
     if (!user?.id) return;
 

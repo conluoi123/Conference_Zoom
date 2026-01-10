@@ -17,6 +17,7 @@ import { meetingAPI } from "@/services/meetingApi";
 import { scheduleApi } from "@/services/scheduleApi";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import LoadingScreen from "../ui/LoadingScreen";
 
 export default function MeetingsPage() {
   const { user } = useAuth();
@@ -31,7 +32,9 @@ export default function MeetingsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [meetings]);
-
+  if (loading) {
+    return <LoadingScreen message="" variant="light" />;
+  }
   useEffect(() => {
     if (!user?.id) return;
 
