@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Response, Request } from "express";
 import { RequestWithUser } from "../controllers/signIn.controller";
 import crypto from "crypto";
 import {
@@ -43,10 +43,11 @@ async function refreshAccessToken(req: RequestWithUser, res: Response) {
   }
 }
 
-export async function isExistsRefreshToken(req: RequestWithUser, res: Response) {
+export async function isExistsRefreshToken(req: Request, res: Response) {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
+      console.log(refreshToken);
       return res
         .status(401)
         .json({ message: "Refresh token is wrong", flag: false });
@@ -60,6 +61,7 @@ export async function isExistsRefreshToken(req: RequestWithUser, res: Response) 
       "refreshToken.refreshToken": hashRefreshToken,
     });
     if (!user) {
+      console.log(1);
       return res
         .status(401)
         .json({ message: "refresh token is expired or wrong", flag: false });

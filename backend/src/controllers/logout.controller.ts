@@ -6,6 +6,7 @@ export const logout = async (req: Request, res: Response) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
+      console.log(refreshToken)
       return res.status(401).json({ message: "Refresh token is not valid" });
     }
     const hashRefreshToken = crypto
