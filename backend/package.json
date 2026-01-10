@@ -8,7 +8,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsc && nodemon dist/server.js",
-    "start": "node dist/server.js",
+    "start": "tsc && node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

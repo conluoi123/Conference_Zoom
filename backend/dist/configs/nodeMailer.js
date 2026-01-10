@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const env_1 = require("../configs/env");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const transporter = nodemailer_1.default.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
     auth: {
         user: env_1.ENV.EMAIL_USER,
         pass: env_1.ENV.EMAIL_PASS,
