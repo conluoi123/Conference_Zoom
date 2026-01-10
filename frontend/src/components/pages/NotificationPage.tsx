@@ -91,8 +91,26 @@ function NotificationPage() {
   const [invitationStatus, setInvitationStatus] = useState<
     Record<string, "accepted" | "declined" | "expired">
   >({});
+  
+  // Initialize meeting status from localStorage
+  const [meetingStatus, setMeetingStatus] = useState<
+    Record<string, "joined" | "declined">
+  >(() => {
+    try {
+      const saved = localStorage.getItem("meetingStatus");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // Save meeting status to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("meetingStatus", JSON.stringify(meetingStatus));
+  }, [meetingStatus]);
   useEffect(() => {
     setCurrentPage(1);
   }, [filter]);
@@ -181,6 +199,12 @@ function NotificationPage() {
       // Mark notification as read
       await markAsRead(notificationId);
 
+      // Mark meeting as joined
+      setMeetingStatus((prev) => ({
+        ...prev,
+        [notificationId]: "joined",
+      }));
+
       // Navigate to meeting with token
       navigate(`/meeting/${roomId}`, {
         state: {
@@ -214,11 +238,31 @@ function NotificationPage() {
 
   const handleDeclineMeeting = async (
     e: React.MouseEvent,
-    notificationId: string
+    notificationId: string,
+    roomId: string
   ) => {
     e.stopPropagation();
-    await markAsRead(notificationId);
-    toast.success("Đã từ chối lời mời");
+
+    if (!user?.email) {
+      toast.error("Bạn cần đăng nhập để phản hồi lời mời");
+      return;
+    }
+
+    try {
+      // Notify backend about decline
+      socketService.respondToMeetingInvitation(roomId, user.email, "declined");
+      
+      await markAsRead(notificationId);
+      
+      setMeetingStatus((prev) => ({
+        ...prev,
+        [notificationId]: "declined",
+      }));
+      
+      toast.success("Đã từ chối lời mời");
+    } catch (err) {
+      toast.error("Có lỗi xảy ra khi từ chối lời mời");
+    }
   };
 
   const handleInvitationResponse = async (
@@ -410,50 +454,63 @@ function NotificationPage() {
                                 if (typePrefix === "meeting" && roomId) {
                                   return (
                                     <div className="flex gap-3 mt-4">
-                                      <Button
-                                        onClick={(e) =>
-                                          handleJoinMeeting(
-                                            e,
-                                            roomId,
-                                            notification._id
-                                          )
-                                        }
-                                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                                        size="sm"
-                                        disabled={
-                                          joiningMeetingId === notification._id
-                                        }
-                                      >
-                                        {joiningMeetingId ===
-                                        notification._id ? (
-                                          <>
-                                            <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            Đang tham gia...
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Video className="w-4 h-4 mr-2" />
-                                            Tham gia
-                                          </>
-                                        )}
-                                      </Button>
-                                      <Button
-                                        onClick={(e) =>
-                                          handleDeclineMeeting(
-                                            e,
-                                            notification._id
-                                          )
-                                        }
-                                        variant="outline"
-                                        className="border-gray-300 hover:bg-gray-100"
-                                        size="sm"
-                                        disabled={
-                                          joiningMeetingId === notification._id
-                                        }
-                                      >
-                                        <X className="w-4 h-4 mr-2" />
-                                        Từ chối
-                                      </Button>
+                                      {meetingStatus[notification._id] === "joined" ? (
+                                        <p className="text-green-600 font-semibold">
+                                          Bạn đã tham gia cuộc họp ✔
+                                        </p>
+                                      ) : meetingStatus[notification._id] === "declined" ? (
+                                        <p className="text-gray-500">
+                                          Bạn đã từ chối lời mời 
+                                        </p>
+                                      ) : (
+                                        <>
+                                          <Button
+                                            onClick={(e) =>
+                                              handleJoinMeeting(
+                                                e,
+                                                roomId,
+                                                notification._id
+                                              )
+                                            }
+                                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                                            size="sm"
+                                            disabled={
+                                              joiningMeetingId === notification._id
+                                            }
+                                          >
+                                            {joiningMeetingId ===
+                                            notification._id ? (
+                                              <>
+                                                <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Đang tham gia...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Video className="w-4 h-4 mr-2" />
+                                                Tham gia
+                                              </>
+                                            )}
+                                          </Button>
+                                          <Button
+                                            onClick={(e) =>
+                                              handleDeclineMeeting(
+                                                e,
+                                                notification._id,
+                                                roomId
+                                              )
+                                            }
+                                            variant="outline"
+                                            className="border-gray-300 hover:bg-gray-100"
+                                            size="sm"
+                                            disabled={
+                                              joiningMeetingId === notification._id
+                                            }
+                                          >
+                                            <X className="w-4 h-4 mr-2" />
+                                            Từ chối
+                                          </Button>
+                                        </>
+                                      )}
                                     </div>
                                   );
                                 }
@@ -470,12 +527,12 @@ function NotificationPage() {
                                       {invitationStatus[notification._id] ===
                                       "accepted" ? (
                                         <p className="text-green-600 font-semibold">
-                                          Bạn đã đồng ý tham gia ✔
+                                          Bạn đã đồng ý tham gia 
                                         </p>
                                       ) : invitationStatus[notification._id] ===
                                         "declined" ? (
                                         <p className="text-gray-500">
-                                          Bạn đã từ chối lời mời ❌
+                                          Bạn đã từ chối lời mời 
                                         </p>
                                       ) : invitationStatus[notification._id] ===
                                         "expired" ? (

@@ -13,7 +13,7 @@ export default function App() {
       <AuthProvider>
         <NotificationProvider>
           <SocketListener />
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="bottom-right" richColors closeButton />
           <AppRoutes />
         </NotificationProvider>
       </AuthProvider>

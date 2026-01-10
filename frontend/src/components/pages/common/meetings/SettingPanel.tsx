@@ -9,7 +9,7 @@ interface SettingsPanelProps {
   roomSettings: {
     allowChat: boolean;
     allowMic: boolean;
-    allowWebcam: boolean;
+    allowCam: boolean;
   };
   onUpdateSettings: (key: string, value: boolean) => void;
 }
@@ -68,8 +68,8 @@ export const SettingsPanel = ({
             </div>
           </div>
           <Switch
-            checked={roomSettings.allowWebcam}
-            onCheckedChange={(val) => onUpdateSettings("allowWebcam", val)}
+            checked={roomSettings.allowCam}
+            onCheckedChange={(val) => onUpdateSettings("allowCam", val)}
           />
         </div>
 

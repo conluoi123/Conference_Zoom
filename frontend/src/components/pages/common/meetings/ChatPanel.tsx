@@ -21,6 +21,8 @@ interface ChatPanelProps {
   participantName: string;
   participantId: string;
   avatar: string;
+  allowChat?: boolean;
+  isHost?: boolean;
 }
 
 
@@ -31,6 +33,8 @@ const ChatPanel = memo(function ChatPanel({
   participantName,
   participantId,
   avatar,
+  allowChat = true,
+  isHost = false,
 }: ChatPanelProps) {
   console.log("🔄 ChatPanel RENDER"); // Debug log
 
@@ -220,23 +224,30 @@ const ChatPanel = memo(function ChatPanel({
 
       {/* Input Form */}
       <div className="bg-gray-900 px-4 py-4 border-t border-gray-700">
-        <form onSubmit={handleSendMessage} className="flex gap-2 relative">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Nhập tin nhắn..."
-            className="flex-1 bg-gray-800 text-white pl-4 pr-10 py-2.5 rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-500 transition-all"
-          />
-          <button
-            type="submit"
-            disabled={!inputMessage.trim()}
-            className="absolute right-2 top-1.5 p-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-transparent disabled:text-gray-600 text-white rounded-lg transition-colors"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+        {!allowChat && !isHost ? (
+          <div className="flex items-center justify-center gap-2 py-3 px-4 bg-gray-800 rounded-xl border border-gray-700">
+            <X className="w-4 h-4 text-red-400" />
+            <p className="text-sm text-gray-400">Host đã tắt chức năng chat</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSendMessage} className="flex gap-2 relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Nhập tin nhắn..."
+              className="flex-1 bg-gray-800 text-white pl-4 pr-10 py-2.5 rounded-xl border border-gray-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-gray-500 transition-all"
+            />
+            <button
+              type="submit"
+              disabled={!inputMessage.trim()}
+              className="absolute right-2 top-1.5 p-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-transparent disabled:text-gray-600 text-white rounded-lg transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        )}
       </div>
     </motion.div>
   );

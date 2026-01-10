@@ -147,6 +147,19 @@ class SocketService {
     });
   }
 
+  respondToMeetingInvitation(
+    roomId: string,
+    email: string,
+    status: "accepted" | "declined"
+  ) {
+    if (!this.socket?.connected) return;
+    this.socket.emit("notification:meeting_response", {
+      roomId,
+      email,
+      status,
+    });
+  }
+
   // ============ LISTENERS ============
   onMeetingJoin(callback: (message: string) => void) {
     this.socket?.on("meeting:join", callback);

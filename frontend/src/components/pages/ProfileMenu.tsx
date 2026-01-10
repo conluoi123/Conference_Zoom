@@ -78,11 +78,6 @@ export function ProfileDropdown({
           View Profile
         </DropdownMenuItem>
 
-        <DropdownMenuItem>
-          <UserPlus className="mr-2 h-4 w-4 text-purple-600" />
-          Add Account
-        </DropdownMenuItem>
-
         <DropdownMenuItem onClick={onOpenProfile}>
           <Settings className="mr-2 h-4 w-4" />
           Settings

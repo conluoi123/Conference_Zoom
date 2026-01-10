@@ -63,7 +63,8 @@ export const MeetingPage = React.memo(() => {
       <MeetingRoom
         roomId={roomId}
         isHost={hostId === user?.id}
-        hostId = {hostId}
+        hostId={hostId}
+        initialSettings={settings}
         onLeaveMeeting={() => navigate("/home")}
       />
     </MeetingProvider>
