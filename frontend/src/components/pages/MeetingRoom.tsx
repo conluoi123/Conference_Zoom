@@ -279,8 +279,8 @@ export function MeetingRoom({
 
   useEffect(() => {
     const initProcessor = async () => {
-      if (joined === "JOINED" && !processorRef.current) {
-        const processor = new VirtualBackgroundProcessor();
+      if (!processorRef.current) {
+        const processor = await new VirtualBackgroundProcessor();
         await processor.init();
         processorRef.current = processor;
         console.log("✅ Processor Ready");
