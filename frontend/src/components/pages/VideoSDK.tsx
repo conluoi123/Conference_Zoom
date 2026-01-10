@@ -48,6 +48,9 @@ export const MeetingPage = React.memo(() => {
         meetingId: roomId,
         participantId: user?.id || `guest`,
         name: finalDisplayName,
+        metaData: {
+          avatar: user?.avatar,
+        },
         micEnabled: settings.allowMic,
         webcamEnabled: settings.allowCam,
         autoConsume: true,
@@ -59,7 +62,6 @@ export const MeetingPage = React.memo(() => {
       joinWithoutUserInteraction={settings.allowJoin}
       reinitialiseMeetingOnConfigChange={true}
     >
-      
       <MeetingRoom
         roomId={roomId}
         isHost={hostId === user?.id}
