@@ -74,6 +74,9 @@ const meetingSocketHandler = (io, socket) => {
                 socket.disconnect();
             }
             emails.forEach((email) => __awaiter(void 0, void 0, void 0, function* () {
+                console.log("==================================");
+                console.log((0, participant_services_1.isAlreadyJoined)(roomId, email));
+                console.log("==================================");
                 if (!(0, participant_services_1.isAlreadyJoined)(roomId, email)) {
                     (0, session_services_1.addInvitee)(roomId, email);
                     const message = yield (0, notification_services_1.generateMeetingMessage)(roomId, participantId);
