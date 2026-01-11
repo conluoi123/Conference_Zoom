@@ -247,7 +247,7 @@ export default function MeetingsPage() {
                                 className="bg-blue-600 hover:bg-blue-700 px-6 font-bold h-10 rounded-lg"
                                 onClick={() => handleJoin(meeting)}
                               >
-                                JoinNow
+                                Join
                               </Button>
                             ) : status === "ended" || meeting.endTime !== null ? (
                               <span className="px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold">
