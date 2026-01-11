@@ -69,17 +69,16 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
   });
 
   //Mời khi đang họp
-  socket.on("meeting:invite", ({ roomId, participantId, emails }) => {
+  socket.on("meeting:invite", async ({ roomId, participantId, emails }) => {
     try {
-      if (!isHost(roomId, participantId)) {
+      const hostCheck = await isHost(roomId, participantId);
+      if (!hostCheck) {
         console.log("Truy cập không xác định");
         socket.disconnect();
       }
       emails.forEach(async (email) => {
-        console.log(0)
-
-        if (!isAlreadyJoined(roomId, email)) {
-          console.log(1)
+        const isJoined = await isAlreadyJoined(roomId, email);
+        if (!isJoined) {
           addInvitee(roomId, email);
 
           const message = await generateMeetingMessage(roomId, participantId);

@@ -2,7 +2,7 @@ import { session } from "express-session";
 import Session from "../models/session.model";
 import User from "../models/user.model";
 import Room from "../models/room.model";
-import { latestSchedule } from "./schedule.services";
+import { getSchedule, latestSchedule, updateScheduleOnDb } from "./schedule.services";
 import { getIO } from "../socket/socketHandler";
 
 const startSession = async (roomId, sessionId, start: string) => {
@@ -54,8 +54,12 @@ const endSession = async (roomId, sessionId, end: string) => {
   );
   if (room.type === "SCHEDULED") {
     const io = getIO();
-    const ses = await Session.findById(sessionId);
+    const ses = await Session.findOne({sessionId});
+    console.log(ses)
     const scheduleId = ses.scheduleId;
+    const schedule = await getSchedule(scheduleId);
+    console.log(ses.scheduleId, schedule, ses.end)
+    const updatedSchedule = await updateScheduleOnDb(scheduleId, schedule.title as string, schedule.startTime, ses.end, schedule.duration as number);
     room.invited.forEach((email) => {
       io.to(email).emit("meeting:event", {
         sessionId,

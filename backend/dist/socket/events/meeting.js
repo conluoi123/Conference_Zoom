@@ -67,16 +67,19 @@ const meetingSocketHandler = (io, socket) => {
         io.to(roomId).emit("meeting:settings_updated", settings);
     }));
     //Mời khi đang họp
-    socket.on("meeting:invite", ({ roomId, participantId, emails }) => {
+    socket.on("meeting:invite", (_a) => __awaiter(void 0, [_a], void 0, function* ({ roomId, participantId, emails }) {
         try {
-            if (!(0, room_services_1.isHost)(roomId, participantId)) {
+            const hostCheck = yield (0, room_services_1.isHost)(roomId, participantId);
+            if (!hostCheck) {
                 console.log("Truy cập không xác định");
                 socket.disconnect();
             }
             emails.forEach((email) => __awaiter(void 0, void 0, void 0, function* () {
-                if (!(0, participant_services_1.isAlreadyJoined)(roomId, email)) {
+                const isJoined = yield (0, participant_services_1.isAlreadyJoined)(roomId, email);
+                if (!isJoined) {
                     (0, session_services_1.addInvitee)(roomId, email);
                     const message = yield (0, notification_services_1.generateMeetingMessage)(roomId, participantId);
+                    console.log(message);
                     const notification = yield (0, notification_services_1.createNotification)(email, `meeting-${roomId}`, message);
                     const { type, content, isRead, sentAt } = notification;
                     io.to(email).emit("notification:meeting", {
@@ -91,7 +94,7 @@ const meetingSocketHandler = (io, socket) => {
         catch (error) {
             console.log(error);
         }
-    });
+    }));
     //Rời phòng họp
     socket.on("meeting:leave", ({ roomId, participantName }) => {
         /**

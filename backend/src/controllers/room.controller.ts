@@ -48,7 +48,7 @@ const userJoinRoom = async (req: Request, res: Response) => {
 
     if (room.type === "SCHEDULED") {
       const schedule = await latestSchedule(roomId);
-      if(schedule[schedule.length - 1].hostId != peerId)
+      // if(schedule[schedule.length - 1].hostId != peerId)
       if (!isDueSchedule(schedule))
         return res.status(403).json("Chưa đến thời gian vào phòng họp");
     }

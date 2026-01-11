@@ -19,6 +19,7 @@ const isValidTimeToSchedule = async (
             "Thời gian bắt đầu không hợp lệ. Phải sau ít nhất 15 phút 30 giây so với thời điểm hiện tại.",
         });
     }
+    
     const flag = await getScheduleToHandleCreate(roomId, start);
     if (!flag) {
       return res
@@ -48,6 +49,9 @@ const isValidToReschedule = async (
     const schedule = await Schedule.findById(scheduleId);
     if (!schedule) {
       return res.status(404).json({ message: "Schedule is not exists" });
+    }
+    if (schedule.endTime) {
+      return res.status(403).json({ message: "Schedule meeting is end" });
     }
     // startTime mới và startTime hiện tại trong schedule phải cách thời điểm hiện tại ít nhất 15 phút 30s
     const now = Date.now();

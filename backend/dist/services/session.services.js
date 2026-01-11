@@ -31,10 +31,12 @@ const startSession = (roomId, sessionId, start) => __awaiter(void 0, void 0, voi
             end: null,
             invited: [],
         });
+        const scheduleId = session.scheduleId;
         const io = (0, socketHandler_1.getIO)();
         room.invited.forEach((email) => {
             io.to(email).emit("meeting:event", {
                 sessionId,
+                scheduleId,
                 message: "Đang diễn ra",
             });
         });
@@ -63,9 +65,12 @@ const endSession = (roomId, sessionId, end) => __awaiter(void 0, void 0, void 0,
     });
     if (room.type === "SCHEDULED") {
         const io = (0, socketHandler_1.getIO)();
+        const ses = yield session_model_1.default.findById(sessionId);
+        const scheduleId = ses.scheduleId;
         room.invited.forEach((email) => {
             io.to(email).emit("meeting:event", {
                 sessionId,
+                scheduleId,
                 message: "Đã kết thúc",
             });
         });

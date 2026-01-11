@@ -43,7 +43,8 @@ const socketHandler = (io: Server) => {
       socket.on(
         "recording:share",
         async (userId, roomId, sessionId, emails) => {
-          if (!isHost(roomId, userId)) {
+          const hostCheck = await isHost(roomId, userId);
+          if (!hostCheck) {
             console.log("Truy cập không xác định");
             socket.disconnect();
           }
