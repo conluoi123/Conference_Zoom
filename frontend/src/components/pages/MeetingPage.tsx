@@ -17,6 +17,7 @@ import { meetingAPI } from "@/services/meetingApi";
 import { scheduleApi } from "@/services/scheduleApi";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { useMeetingStatus } from "@/context/UpcomingMeetingStatusContext";
 import LoadingScreen from "../ui/LoadingScreen";
 
 export default function MeetingsPage() {
@@ -27,6 +28,7 @@ export default function MeetingsPage() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [allMeetings, setAllMeetings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { meetingsStatus} = useMeetingStatus();
 
   const [searchText, setSearchText] = useState("");
   useEffect(() => {
@@ -195,7 +197,9 @@ export default function MeetingsPage() {
                     const dateStr = new Date(
                       meeting.startTime
                     ).toLocaleString();
-
+                    const status = meetingsStatus[meeting._id]?.status || "upcoming"; 
+                    console.log(status)
+                    console.log(meeting.startTime)
                     return (
                       <Card
                         key={meeting._id}
@@ -238,20 +242,30 @@ export default function MeetingsPage() {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Button
-                              className="bg-blue-600 hover:bg-blue-700 px-6 font-bold h-10 rounded-lg"
-                              onClick={() => handleJoin(meeting)}
-                            >
-                              Join
-                            </Button>
-
-                            {/* <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-slate-400"
-                        >
-                          <MoreVertical className="w-5 h-5" />
-                        </Button> */}
+                            {status === "live" ? (
+                              <Button
+                                className="bg-blue-600 hover:bg-blue-700 px-6 font-bold h-10 rounded-lg"
+                                onClick={() => handleJoin(meeting)}
+                              >
+                                JoinNow
+                              </Button>
+                            ) : status === "ended" || meeting.endTime !== null ? (
+                              <span className="px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold">
+                                Đã kết thúc
+                              </span>
+                            ) : status === "upcoming" &&
+                              new Date() < new Date(meeting.startTime) ? (
+                              <span className="px-4 py-2 rounded-lg bg-slate-200 text-slate-500 font-semibold">
+                                Cuộc họp sắp diễn ra
+                              </span>
+                            ) : (
+                              <Button
+                                className="bg-blue-600 hover:bg-blue-700 px-6 font-bold h-10 rounded-lg"
+                                onClick={() => handleJoin(meeting)}
+                              >
+                                Join
+                              </Button>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

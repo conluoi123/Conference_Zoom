@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useParticipant } from "@videosdk.live/react-sdk";
 import { MicOff, Monitor } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { profileAPI } from "@/services/profileApi";
+// import { useAuth } from "@/context/AuthContext";
+// import { profileAPI } from "@/services/profileApi";
 
 export const ParticipantTile = React.memo(({ participantId }: { participantId: string }) => {
   const {
@@ -95,7 +95,7 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
   const showScreenShare = screenShareOn && screenShareStream;
   const showWebcam = !showScreenShare && webcamOn && webcamStream;
   const showAvatar = !showScreenShare && !showWebcam;
-  const { user } = useAuth();
+  // const { user } = useAuth();
 
   // Speaking indicator - only show when actively speaking
   const isSpeaking = isActiveSpeaker && micOn;

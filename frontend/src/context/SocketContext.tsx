@@ -4,10 +4,11 @@ import { useNotifications } from "./NotificationContext";
 import { socketService } from "@/services/socket";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-
+import { useMeetingStatus } from "@/context/UpcomingMeetingStatusContext";
 export const SocketListener = () => {
   const { user, isLoading } = useAuth();
   const { fetchNotifications } = useNotifications();
+  const { updateMeeting } = useMeetingStatus();
   const navigate = useNavigate();
   const extractRoomId = (type: string): string | null => {
     const parts = type.split("-");
@@ -21,7 +22,7 @@ export const SocketListener = () => {
     if (!isLoading && user?.email) {
       console.log("🔌 SocketListener: Kết nối socket cho", user.email);
       socketService.connect(user.email);
-      
+
       //  Đăng ký listener cho meeting invitation
       const handleMeetingInvite = (data: {
         type: string;
@@ -143,10 +144,13 @@ export const SocketListener = () => {
             onClick: () => {
               if (sessionId && roomId) {
                 navigate(`/recordings/${sessionId}`, {
-                  state: { roomId }
+                  state: { roomId },
                 });
               } else {
-                console.error("Missing sessionId or roomId:", { sessionId, roomId });
+                console.error("Missing sessionId or roomId:", {
+                  sessionId,
+                  roomId,
+                });
               }
             },
           },
@@ -187,6 +191,24 @@ export const SocketListener = () => {
         setTimeout(() => fetchNotifications(), 1000);
       };
 
+      const handleMeetingInviteStatus = (data: {
+        sessionId: string;
+        scheduleId: string;
+        message: string;
+      }) => {
+        let status: "upcoming" | "live" | "ended" = "upcoming";
+
+        if (data.message === "Đang diễn ra") status = "live";
+        if (data.message === "Đã kết thúc") status = "ended";
+
+        updateMeeting({
+          scheduleId: data.scheduleId,
+          sessionId: data.sessionId,
+          status,
+        });
+      };
+
+      socketService.onMeetingInviteStatus(handleMeetingInviteStatus);
       socketService.onMeetingInviteNotification(handleMeetingInvite);
       socketService.onScheduleNotification(handleScheduleNotification);
       socketService.onRecordingShared(handleRecordingShared);

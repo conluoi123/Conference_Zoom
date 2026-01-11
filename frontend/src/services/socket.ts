@@ -176,6 +176,16 @@ class SocketService {
   onChatHistory(callback: (messages: any[]) => void) {
     this.socket?.on("meeting:chat-history", callback);
   }
+
+  onMeetingInviteStatus(
+    callback: (data: {
+      sessionId: string;
+      scheduleId: string;
+      message: string;
+    }) => void
+  ) {
+    this.socket?.on("meeting:event", callback);
+  };
   /*
     on: đăng ký lắng nghe 
     callback: nhận vào một function, có type là (message, roomid)
@@ -239,12 +249,14 @@ class SocketService {
     this.socket.emit("recording:share", userId, roomId, sessionId, emails);
   }
 
-  onRecordingShared(callback: (data: {
-    type: string;
-    content: string;
-    isRead: boolean;
-    sentAt: string;
-  }) => void) {
+  onRecordingShared(
+    callback: (data: {
+      type: string;
+      content: string;
+      isRead: boolean;
+      sentAt: string;
+    }) => void
+  ) {
     this.socket?.on("notification:recording", callback);
   }
 
@@ -260,8 +272,9 @@ class SocketService {
   offNotificationEvents() {
     this.socket?.off("notification:schedule");
     this.socket?.off("notification:meeting");
-    this.socket?.off("notification:invitations")
+    this.socket?.off("notification:invitations");
     this.socket?.off("notification:recording");
+    this.socket?.off("meeting:event");
   }
 
   offAllEvents() {
