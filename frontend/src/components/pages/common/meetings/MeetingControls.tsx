@@ -153,7 +153,11 @@ export const MeetingControls = memo(({
             variant={localWebcamOn ? "default" : "danger"}
           />
           {/*  Chia sẻ */}
-          <ControlButton icon={Share2} label="Chia sẻ" onClick={onShareClick} />
+          {isHost && (
+            <ControlButton icon={Share2} label="Chia sẻ" onClick={onShareClick} />
+          )}
+
+          {/* Trò chuyện */}
           <ControlButton
             onClick={onToggleChat}
             icon={MessageSquare}

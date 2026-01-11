@@ -247,11 +247,10 @@ export function HomePage() {
   }, {});
 
   // const selectedDateKey = getLocalDateKey(currentDay);
-
   if (loading || loadingSchedule) {
     return <LoadingScreen message="" variant="light" />;
   }
-
+  
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -361,7 +360,7 @@ export function HomePage() {
             </div>
 
             {/* Recordings & History */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <Link
                 to="/history"
                 className="bg-white rounded-2xl p-6 hover:shadow-md transition-shadow items-start"

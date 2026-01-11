@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParticipant } from "@videosdk.live/react-sdk";
 import { MicOff, Monitor } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { profileAPI } from "@/services/profileApi";
 
 export const ParticipantTile = React.memo(({ participantId }: { participantId: string }) => {
   const {
@@ -11,11 +12,16 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
     micOn,
     isLocal,
     displayName,
+    participant,
     screenShareStream,
     screenShareOn,
     isActiveSpeaker, // VideoSDK provides this - true when participant is speaking
   } = useParticipant(participantId);
+  const meta = participant?.metaData as {
+    avatar?: string;
+  };
 
+  const avatar = meta?.avatar;
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const screenShareRef = useRef<HTMLVideoElement>(null);
@@ -43,7 +49,6 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
       }
     }
   }, [webcamStream, webcamOn, screenShareOn]);
-
   // 2. Xử lý Audio Stream
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -178,10 +183,10 @@ export const ParticipantTile = React.memo(({ participantId }: { participantId: s
             </>
           )}
 
-          {user?.avatar ? (
+          {avatar ? (
             <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white z-10">
               <img
-                src={user.avatar}
+                src={avatar}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />

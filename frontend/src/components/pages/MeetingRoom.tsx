@@ -37,12 +37,18 @@ interface MeetingRoomProps {
   isHost: boolean;
   onLeaveMeeting: () => void;
   hostId: string;
+  initialSettings?: {
+    allowMic: boolean;
+    allowCam: boolean;
+    allowChat: boolean;
+  };
 }
 export function MeetingRoom({
   roomId,
   isHost,
   onLeaveMeeting,
   hostId,
+  initialSettings,
 }: MeetingRoomProps) {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -68,8 +74,6 @@ export function MeetingRoom({
     meetingId,
     presenterId,
     activeSpeakerId,
-    muteMic,
-    disableWebcam,
     changeWebcam,
     startRecording,
     stopRecording,
@@ -279,8 +283,8 @@ export function MeetingRoom({
 
   useEffect(() => {
     const initProcessor = async () => {
-      if (joined === "JOINED" && !processorRef.current) {
-        const processor = new VirtualBackgroundProcessor();
+      if (!processorRef.current) {
+        const processor = await new VirtualBackgroundProcessor();
         await processor.init();
         processorRef.current = processor;
         console.log("✅ Processor Ready");
@@ -664,9 +668,9 @@ export function MeetingRoom({
   const [isInViteModalOpen, setIsInviteModalOpen] = useState(false);
   // ======================================= XỬ LÍ SETTINGS ========================================\\
   const [roomSettings, setRoomSettings] = useState({
-    allowMic: true,
-    allowWebcam: true,
-    allowChat: true,
+    allowMic: initialSettings?.allowMic ?? true,
+    allowCam: initialSettings?.allowCam ?? true,
+    allowChat: initialSettings?.allowChat ?? true,
   });
   const handleToggleSettings = () => {
     const nextState = !isSettingOpen;
@@ -690,26 +694,6 @@ export function MeetingRoom({
     const handleSettingsUpdate = (newSettings: any) => {
       console.log("📢 Received settings update:", newSettings);
       setRoomSettings(newSettings);
-
-      // Only enforce for non-host participants
-      if (isHost) return;
-
-      // Auto-disable mic if host turned it off
-      if (newSettings.allowMic === false && localParticipant?.micOn) {
-        muteMic();
-        toast.warning("Host đã tắt Micro của toàn phòng");
-      }
-
-      // Auto-disable camera if host turned it off
-      if (newSettings.allowWebcam === false && localParticipant?.webcamOn) {
-        disableWebcam();
-        toast.warning("Host đã tắt Camera của toàn phòng");
-      }
-
-      // Notify about chat restriction
-      if (newSettings.allowChat === false) {
-        toast.warning("Host đã tắt Chat của toàn phòng");
-      }
     };
 
     socketService.onMeetingSettingsUpdated(handleSettingsUpdate);
@@ -717,7 +701,7 @@ export function MeetingRoom({
     return () => {
       socketService.offMeetingEvents();
     };
-  }, [muteMic, disableWebcam, localParticipant, isHost]);
+  }, []);
   //=========================================== RETURN =========================================
   return (
     <div className="bg-gray-900 h-screen w-screen flex flex-col overflow-hidden text-white">
@@ -972,6 +956,8 @@ export function MeetingRoom({
                   participantName={user!.displayName}
                   participantId={user!.id}
                   avatar={user?.avatar || ""}
+                  allowChat={roomSettings.allowChat}
+                  isHost={isHost}
                 />
               )}
               {isParticipantOpen && (
