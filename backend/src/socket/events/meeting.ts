@@ -25,7 +25,6 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
         .to(roomId)
         .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
       const chat = await getChat(roomId);
-      console.log(chat);
       socket.emit("meeting:chat-history", chat);
     } catch (error) {
       console.log(error);

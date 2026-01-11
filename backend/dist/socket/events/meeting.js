@@ -30,7 +30,6 @@ const meetingSocketHandler = (io, socket) => {
                 .to(roomId)
                 .emit("meeting:join", `${participantName} vừa tham gia phòng họp`);
             const chat = yield (0, chat_services_1.getChat)(roomId);
-            console.log(chat);
             socket.emit("meeting:chat-history", chat);
         }
         catch (error) {
@@ -55,18 +54,18 @@ const meetingSocketHandler = (io, socket) => {
         }
     });
     //Chỉnh sửa settings cho phòng họp
-    socket.on("meeting:settings", ({ roomId, participantId, settings }) => {
-        try {
-            if (!(0, room_services_1.isHost)(roomId, participantId)) {
-                console.log("Truy cập không xác định");
-                socket.disconnect();
-            }
-            (0, room_services_1.updateRoomOnDatabase)(roomId, participantId, null, settings, null);
+    socket.on("meeting:settings", (_a) => __awaiter(void 0, [_a], void 0, function* ({ roomId, participantId, settings }) {
+        const hostCheck = yield (0, room_services_1.isHost)(roomId, participantId);
+        if (!hostCheck) {
+            console.log("Truy cập không xác định");
+            socket.disconnect();
+            return;
         }
-        catch (error) {
-            console.log(error);
-        }
-    });
+        // Lưu vào DB
+        yield (0, room_services_1.updateRoomOnDatabase)(roomId, participantId, null, settings, null);
+        // Broadcast cho tất cả người trong phòng (kể cả host)
+        io.to(roomId).emit("meeting:settings_updated", settings);
+    }));
     //Mời khi đang họp
     socket.on("meeting:invite", ({ roomId, participantId, emails }) => {
         try {

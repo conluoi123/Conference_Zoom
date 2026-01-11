@@ -49,7 +49,7 @@ function supportSendOtp(email, otp) {
                 yield redisUpstash_1.redisClient.expire(otp_attempt_pre + email, 300);
             }
             yield nodeMailer_1.default.sendMail({
-                from: env_1.ENV.EMAIL_FROM,
+                from: `${env_1.ENV.EMAIL_FROM}`,
                 to: email,
                 subject: "[ZUS CONFERENCE VIDEO SYSTEM] - OTP CODE",
                 html: `<!DOCTYPE html>
@@ -188,7 +188,7 @@ function outlookLogIn(accessToken, refreshToken, profile, done) {
             }
         }
         catch (error) {
-            console.log("loi: ", error);
+            console.log("Error: ", error);
             return done(new Error("Cannot signin/ signup with outlook"), null);
         }
     });

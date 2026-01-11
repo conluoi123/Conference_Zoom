@@ -1,9 +1,9 @@
 import { ENV } from "../configs/env";
 import nodemailer from "nodemailer";
 const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: ENV.EMAIL_USER,
     pass: ENV.EMAIL_PASS,
@@ -16,7 +16,7 @@ transporter.verify((error, success) => {
       error
     );
   } else {
-    console.log("Email server is ready. Using host:", 465);
+    console.log("Email server is ready.");
   }
 });
 export default transporter;

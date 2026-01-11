@@ -28,7 +28,7 @@ const agenda = new agenda_1.default({
 const startAgenda = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield agenda.start();
-        console.log("🚀 Agenda Scheduler đã bắt đầu chạy!");
+        console.log("Agenda Scheduler đã bắt đầu chạy!");
     }
     catch (error) {
         console.error("Lỗi khởi động Agenda:", error);

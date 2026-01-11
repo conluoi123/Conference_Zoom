@@ -31,7 +31,7 @@ const socketHandler = (io: Server) => {
       const userEmail = socket.handshake.query.email as string;
       if (userEmail) {
         socket.join(userEmail);
-        console.log(`${userEmail} đã join room email (socket: ${socket.id})`);
+        console.log(`${userEmail} đã kết nối (socket: ${socket.id})`);
       } else {
         console.warn(`${socket.id} kết nối mà không có email trong query`);
       }

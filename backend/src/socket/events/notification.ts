@@ -1,6 +1,9 @@
 import Agenda from "agenda";
 import { Server, Socket } from "socket.io";
-import { updateInvitationStatus, getScheduleIdByInvitationId } from "../../services/invitation.services";
+import {
+  updateInvitationStatus,
+  getScheduleIdByInvitationId,
+} from "../../services/invitation.services";
 import { updateRoomOnDatabase } from "../../services/room.services";
 import { getScheduleInfo } from "../../services/schedule.services";
 import { createNotification } from "../../services/notification.services";
@@ -104,15 +107,9 @@ const notificationSocketHandler = (
     "notification:meeting_response",
     async ({ roomId, email, status }) => {
       try {
-        console.log(`📧 Meeting invitation response: ${email} ${status} for room ${roomId}`);
-        
-        // TODO: You can add additional logic here if needed, such as:
-        // - Update database to track who declined
-        // - Send notification to host
-        // - Remove from invited list if declined
-        
-        // For now, just log the response
-        // The frontend already handles the UI update
+        console.log(
+          `Meeting invitation response: ${email} ${status} for room ${roomId}`
+        );
       } catch (error) {
         console.error("Error handling meeting response:", error);
       }

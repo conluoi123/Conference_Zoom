@@ -12,7 +12,7 @@ async function refreshAccessToken(req: RequestWithUser, res: Response) {
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token is wrong" });
     }
-    
+
     const hashRefreshToken = crypto
       .createHash("sha256")
       .update(refreshToken)
@@ -47,7 +47,6 @@ export async function isExistsRefreshToken(req: Request, res: Response) {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
-      console.log(refreshToken);
       return res
         .status(401)
         .json({ message: "Refresh token is wrong", flag: false });
@@ -61,12 +60,11 @@ export async function isExistsRefreshToken(req: Request, res: Response) {
       "refreshToken.refreshToken": hashRefreshToken,
     });
     if (!user) {
-      console.log(1);
       return res
         .status(401)
         .json({ message: "refresh token is expired or wrong", flag: false });
     }
-    
+
     return res.status(200).json({ flag: true });
   } catch (error) {
     console.log("REFRESH TOKEN IS EXPIRED OR NOT EXISTS", error);
@@ -75,4 +73,4 @@ export async function isExistsRefreshToken(req: Request, res: Response) {
       .json({ message: "REFRESH TOKEN IS EXPIRED OR NOT EXISTS", flag: false });
   }
 }
-export default refreshAccessToken
+export default refreshAccessToken;

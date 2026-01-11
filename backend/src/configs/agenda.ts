@@ -16,7 +16,7 @@ scheduleNotification(agenda);
 export const startAgenda = async () => {
   try {
     await agenda.start();
-    console.log("🚀 Agenda Scheduler đã bắt đầu chạy!");
+    console.log("Agenda Scheduler đã bắt đầu chạy!");
   } catch (error) {
     console.error("Lỗi khởi động Agenda:", error);
   }

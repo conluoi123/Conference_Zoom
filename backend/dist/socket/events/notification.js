@@ -86,5 +86,14 @@ const notificationSocketHandler = (io, socket, agenda) => {
             io.to(email).emit("notification:invitation-error", error);
         }
     }));
+    // Handle meeting invitation response (accept/decline)
+    socket.on("notification:meeting_response", (_a) => __awaiter(void 0, [_a], void 0, function* ({ roomId, email, status }) {
+        try {
+            console.log(`Meeting invitation response: ${email} ${status} for room ${roomId}`);
+        }
+        catch (error) {
+            console.error("Error handling meeting response:", error);
+        }
+    }));
 };
 exports.notificationSocketHandler = notificationSocketHandler;

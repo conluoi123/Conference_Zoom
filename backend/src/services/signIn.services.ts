@@ -6,7 +6,7 @@ import User from "../models/user.model";
 import { Response, Request } from "express";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
-import { resend } from "../configs/resend";
+
 interface RequestWithUser extends Request {
   user: any;
   session: any;
@@ -172,7 +172,7 @@ async function outlookLogIn(accessToken, refreshToken, profile, done) {
       return done(null, user);
     }
   } catch (error) {
-    console.log("loi: ", error);
+    console.log("Error: ", error);
     return done(new Error("Cannot signin/ signup with outlook"), null);
   }
 }
