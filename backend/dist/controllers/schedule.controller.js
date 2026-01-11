@@ -22,6 +22,7 @@ const room_services_1 = require("../services/room.services");
 const notification_services_1 = require("../services/notification.services");
 const socketHandler_1 = require("../socket/socketHandler");
 const invitation_services_1 = require("../services/invitation.services");
+const agenda_1 = __importDefault(require("../configs/agenda"));
 function createSchedule(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -60,6 +61,18 @@ function createSchedule(req, res) {
             //Tạo thông báo
             const expires = new Date(startTime);
             expires.setMinutes(expires.getMinutes() - 15); // Lùi lại 15 phút
+            //Tạo job thông báo cho người tạo lịch
+            const hostEmail = yield (0, room_services_1.getHostEmail)(hostId);
+            const uniqueJobId = `schedule_noti_${schedule._id}_${hostEmail}`;
+            yield agenda_1.default.cancel({
+                name: "onScheduleNotification",
+                "data.uniqueJobId": uniqueJobId,
+            });
+            yield agenda_1.default.schedule(expires, "onScheduleNotification", {
+                schedule,
+                hostEmail,
+                uniqueJobId,
+            });
             const message = yield (0, notification_services_1.generateInvitationMessage)(room, hostId);
             emails.forEach((email) => __awaiter(this, void 0, void 0, function* () {
                 const id = yield (0, invitation_services_1.createInvitation)(schedule._id, room, email, expires); //Tạo lời mời

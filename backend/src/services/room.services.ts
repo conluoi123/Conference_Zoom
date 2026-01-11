@@ -185,7 +185,7 @@ const isInvitedForRoom = async (roomId, peerId: string) => {
 const getRoomShedule = async (userId: string, col: string) => {
   const user = await User.findById(userId);
   const roomSchedule = await Room.find({
-    invited: user.email ,
+    invited: user.email,
   }).select(col);
   return roomSchedule;
 };
@@ -198,6 +198,13 @@ const getRoomSheduleInvited = async (roomId: string, hostId: string) => {
   return invitedUser;
 };
 
+const getHostEmail = async (hostId: string) => {
+  const host = await User.findOne({ _id: hostId });
+  if (!host) {
+    throw new Error("Người dùng không tồn tại");
+  }
+  return host.email;
+};
 export {
   generateToken,
   createRoomOnVideoSDK,
@@ -209,4 +216,5 @@ export {
   isInvitedForRoom,
   getRoomShedule,
   getRoomSheduleInvited,
+  getHostEmail,
 };

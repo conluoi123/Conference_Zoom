@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import {
   createScheduleOnDb,
   updateScheduleOnDb,
-  getSchedule
+  getSchedule,
 } from "../services/schedule.services";
 import Schedule from "../models/schedule.model";
 import {
@@ -10,6 +10,7 @@ import {
   createRoomOnVideoSDK,
   findRoomOnDatabase,
   generateToken,
+  getHostEmail,
   getRoomShedule,
   getRoomSheduleInvited,
   updateRoomOnDatabase,
@@ -20,6 +21,7 @@ import {
 } from "../services/notification.services";
 import { getIO } from "../socket/socketHandler";
 import { createInvitation } from "../services/invitation.services";
+import agenda from "../configs/agenda";
 
 async function createSchedule(req: Request, res: Response) {
   try {
@@ -69,6 +71,21 @@ async function createSchedule(req: Request, res: Response) {
     const expires = new Date(startTime);
     expires.setMinutes(expires.getMinutes() - 15); // Lùi lại 15 phút
 
+    //Tạo job thông báo cho người tạo lịch
+    const hostEmail = await getHostEmail(hostId);
+    const uniqueJobId = `schedule_noti_${schedule._id}_${hostEmail}`;
+
+    await agenda.cancel({
+      name: "onScheduleNotification",
+      "data.uniqueJobId": uniqueJobId,
+    });
+
+    await agenda.schedule(expires, "onScheduleNotification", {
+      schedule,
+      hostEmail,
+      uniqueJobId,
+    });
+
     const message = await generateInvitationMessage(room, hostId);
     emails.forEach(async (email) => {
       const id = await createInvitation(schedule._id, room, email, expires); //Tạo lời mời
@@ -105,7 +122,7 @@ async function getListScheduleByHostId(req: Request, res: Response) {
     }
     const listSchedule = await Schedule.find({
       hostId: userId,
-      startTime: {$gte: new Date()},
+      startTime: { $gte: new Date() },
       $or: [{ endTime: null }, { endTime: { $gt: new Date() } }],
     });
     return res.status(200).json({
@@ -318,7 +335,7 @@ const getScheduleById = async (req: Request, res: Response) => {
     console.error("Get Schedule error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 export {
   createSchedule,

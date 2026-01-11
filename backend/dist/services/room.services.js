@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRoomSheduleInvited = exports.getRoomShedule = exports.isInvitedForRoom = exports.isHost = exports.updateRoomOnDatabase = exports.findRoomOnDatabase = exports.createRoomOnDatabase = exports.validateRoomOnVideoSDK = exports.createRoomOnVideoSDK = exports.generateToken = void 0;
+exports.getHostEmail = exports.getRoomSheduleInvited = exports.getRoomShedule = exports.isInvitedForRoom = exports.isHost = exports.updateRoomOnDatabase = exports.findRoomOnDatabase = exports.createRoomOnDatabase = exports.validateRoomOnVideoSDK = exports.createRoomOnVideoSDK = exports.generateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = require("../configs/env");
 const room_model_1 = __importDefault(require("../models/room.model"));
@@ -181,3 +181,11 @@ const getRoomSheduleInvited = (roomId, hostId) => __awaiter(void 0, void 0, void
     return invitedUser;
 });
 exports.getRoomSheduleInvited = getRoomSheduleInvited;
+const getHostEmail = (hostId) => __awaiter(void 0, void 0, void 0, function* () {
+    const host = yield user_model_1.default.findOne({ _id: hostId });
+    if (!host) {
+        throw new Error("Người dùng không tồn tại");
+    }
+    return host.email;
+});
+exports.getHostEmail = getHostEmail;
