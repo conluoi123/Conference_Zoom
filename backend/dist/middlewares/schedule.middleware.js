@@ -54,6 +54,9 @@ const isValidToReschedule = (req, res, next) => __awaiter(void 0, void 0, void 0
         if (!schedule) {
             return res.status(404).json({ message: "Schedule is not exists" });
         }
+        if (schedule.endTime) {
+            return res.status(403).json({ message: "Schedule meeting is end" });
+        }
         // startTime mới và startTime hiện tại trong schedule phải cách thời điểm hiện tại ít nhất 15 phút 30s
         const now = Date.now();
         const newStart = new Date(startTime).getTime();

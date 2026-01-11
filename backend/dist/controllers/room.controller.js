@@ -37,9 +37,9 @@ const userJoinRoom = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const room = res.locals.roomInfo;
         if (room.type === "SCHEDULED") {
             const schedule = yield (0, schedule_services_1.latestSchedule)(roomId);
-            if (schedule[schedule.length - 1].hostId != peerId)
-                if (!(0, schedule_services_1.isDueSchedule)(schedule))
-                    return res.status(403).json("Chưa đến thời gian vào phòng họp");
+            // if(schedule[schedule.length - 1].hostId != peerId)
+            if (!(0, schedule_services_1.isDueSchedule)(schedule))
+                return res.status(403).json("Chưa đến thời gian vào phòng họp");
         }
         let userType = "peer";
         if (peerId === room.hostId) {

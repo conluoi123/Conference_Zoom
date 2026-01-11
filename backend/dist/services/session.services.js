@@ -65,8 +65,12 @@ const endSession = (roomId, sessionId, end) => __awaiter(void 0, void 0, void 0,
     });
     if (room.type === "SCHEDULED") {
         const io = (0, socketHandler_1.getIO)();
-        const ses = yield session_model_1.default.findById(sessionId);
+        const ses = yield session_model_1.default.findOne({ sessionId });
+        console.log(ses);
         const scheduleId = ses.scheduleId;
+        const schedule = yield (0, schedule_services_1.getSchedule)(scheduleId);
+        console.log(ses.scheduleId, schedule, ses.end);
+        const updatedSchedule = yield (0, schedule_services_1.updateScheduleOnDb)(scheduleId, schedule.title, schedule.startTime, ses.end, schedule.duration);
         room.invited.forEach((email) => {
             io.to(email).emit("meeting:event", {
                 sessionId,
