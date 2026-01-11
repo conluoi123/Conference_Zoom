@@ -18,10 +18,12 @@ const startSession = async (roomId, sessionId, start: string) => {
       end: null,
       invited: [],
     });
+    const scheduleId = session.scheduleId;
     const io = getIO();
     room.invited.forEach((email) => {
       io.to(email).emit("meeting:event", {
         sessionId,
+        scheduleId,
         message: "Đang diễn ra",
       });
     });
@@ -52,9 +54,12 @@ const endSession = async (roomId, sessionId, end: string) => {
   );
   if (room.type === "SCHEDULED") {
     const io = getIO();
+    const ses = await Session.findById(sessionId);
+    const scheduleId = ses.scheduleId;
     room.invited.forEach((email) => {
       io.to(email).emit("meeting:event", {
         sessionId,
+        scheduleId,
         message: "Đã kết thúc",
       });
     });

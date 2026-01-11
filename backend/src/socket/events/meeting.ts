@@ -76,9 +76,14 @@ export const meetingSocketHandler = (io: Server, socket: Socket) => {
         socket.disconnect();
       }
       emails.forEach(async (email) => {
+        console.log(0)
+
         if (!isAlreadyJoined(roomId, email)) {
+          console.log(1)
           addInvitee(roomId, email);
+
           const message = await generateMeetingMessage(roomId, participantId);
+          console.log(message)
           const notification = await createNotification(
             email,
             `meeting-${roomId}`,
