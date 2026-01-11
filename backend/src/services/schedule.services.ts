@@ -74,7 +74,7 @@ const getScheduleInfo = async (scheduleId: string) => {
 };
 
 const getScheduleToHandleCreate = async (roomId: string, start: Date) => {
-  // neu co cuoc hen co startTime lon hon startTime hien tai hay startTime  thi khong the tao 
+  // neu co cuoc hen co startTime lon hon startTime hien tai hay startTime  thi khong the tao
   const offsetMs = (15 * 60 + 30) * 1000; // 15p 30s
   const startPlus = new Date(start.getTime() + offsetMs);
 
@@ -90,7 +90,6 @@ const getScheduleToHandleCreate = async (roomId: string, start: Date) => {
 const getSchedule = async (scheduleId: string) => {
   const schedule = await Schedule.findById(scheduleId);
   return schedule;
-}
-
+};
 
 export { getScheduleInfo, getScheduleToHandleCreate, getSchedule };

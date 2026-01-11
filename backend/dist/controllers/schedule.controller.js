@@ -70,7 +70,7 @@ function createSchedule(req, res) {
             });
             yield agenda_1.default.schedule(expires, "onScheduleNotification", {
                 schedule,
-                hostEmail,
+                email: hostEmail,
                 uniqueJobId,
             });
             const message = yield (0, notification_services_1.generateInvitationMessage)(room, hostId);

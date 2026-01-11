@@ -82,7 +82,7 @@ async function createSchedule(req: Request, res: Response) {
 
     await agenda.schedule(expires, "onScheduleNotification", {
       schedule,
-      hostEmail,
+      email: hostEmail,
       uniqueJobId,
     });
 

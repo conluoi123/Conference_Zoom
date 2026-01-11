@@ -1,21 +1,46 @@
 import { session } from "express-session";
 import Session from "../models/session.model";
 import User from "../models/user.model";
+import Room from "../models/room.model";
+import { latestSchedule } from "./schedule.services";
+import { getIO } from "../socket/socketHandler";
 
 const startSession = async (roomId, sessionId, start: string) => {
-  const session = await Session.create({
-    roomId: roomId,
-    sessionId: sessionId,
-    start: new Date(start),
-    end: null,
-    invited: [],
-  });
+  const room = await Room.findOne({ roomId: roomId });
+  let session;
+  if (room.type === "SCHEDULED") {
+    const schedule = await latestSchedule(roomId);
+    session = await Session.create({
+      roomId: roomId,
+      sessionId: sessionId,
+      scheduleId: schedule[schedule.length - 1]._id,
+      start: new Date(start),
+      end: null,
+      invited: [],
+    });
+    const io = getIO();
+    room.invited.forEach((email) => {
+      io.to(email).emit("meeting:event", {
+        sessionId,
+        message: "Đang diễn ra",
+      });
+    });
+  } else {
+    session = await Session.create({
+      roomId: roomId,
+      sessionId: sessionId,
+      start: new Date(start),
+      end: null,
+      invited: [],
+    });
+  }
   if (!session) {
     throw new Error("Lỗi database: Tạo phiên thất bại");
   }
 };
 
 const endSession = async (roomId, sessionId, end: string) => {
+  const room = await Room.findOne({ roomId: roomId });
   const session = await Session.updateOne(
     {
       roomId: roomId,
@@ -25,6 +50,15 @@ const endSession = async (roomId, sessionId, end: string) => {
       end: new Date(end),
     }
   );
+  if (room.type === "SCHEDULED") {
+    const io = getIO();
+    room.invited.forEach((email) => {
+      io.to(email).emit("meeting:event", {
+        sessionId,
+        message: "Đã kết thúc",
+      });
+    });
+  }
   if (!session) {
     throw new Error("Lỗi database: Phiên không tồn tại");
   }

@@ -73,7 +73,7 @@ const getScheduleInfo = (scheduleId) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getScheduleInfo = getScheduleInfo;
 const getScheduleToHandleCreate = (roomId, start) => __awaiter(void 0, void 0, void 0, function* () {
-    // neu co cuoc hen co startTime lon hon startTime hien tai hay startTime  thi khong the tao 
+    // neu co cuoc hen co startTime lon hon startTime hien tai hay startTime  thi khong the tao
     const offsetMs = (15 * 60 + 30) * 1000; // 15p 30s
     const startPlus = new Date(start.getTime() + offsetMs);
     const schedule = yield schedule_model_1.default.findOne({
