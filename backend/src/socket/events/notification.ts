@@ -98,6 +98,26 @@ const notificationSocketHandler = (
       }
     }
   );
+
+  // Handle meeting invitation response (accept/decline)
+  socket.on(
+    "notification:meeting_response",
+    async ({ roomId, email, status }) => {
+      try {
+        console.log(`📧 Meeting invitation response: ${email} ${status} for room ${roomId}`);
+        
+        // TODO: You can add additional logic here if needed, such as:
+        // - Update database to track who declined
+        // - Send notification to host
+        // - Remove from invited list if declined
+        
+        // For now, just log the response
+        // The frontend already handles the UI update
+      } catch (error) {
+        console.error("Error handling meeting response:", error);
+      }
+    }
+  );
 };
 
 export { notificationSocketHandler, scheduleNotification };
