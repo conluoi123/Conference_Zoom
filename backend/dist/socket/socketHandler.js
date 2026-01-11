@@ -51,7 +51,8 @@ const socketHandler = (io) => {
             (0, notification_1.notificationSocketHandler)(io, socket, agenda_1.default);
             //Thông báo khi được chia sẻ bản ghi
             socket.on("recording:share", (userId, roomId, sessionId, emails) => __awaiter(void 0, void 0, void 0, function* () {
-                if (!(0, room_services_1.isHost)(roomId, userId)) {
+                const hostCheck = yield (0, room_services_1.isHost)(roomId, userId);
+                if (!hostCheck) {
                     console.log("Truy cập không xác định");
                     socket.disconnect();
                 }
