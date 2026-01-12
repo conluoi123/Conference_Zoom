@@ -125,17 +125,21 @@ export function ParticipantPanel({ onClose, joinedRequest, setJoinRequests, host
           // Lấy trạng thái Mic và Camera của từng người
           const isMicOn = participant.micOn;
           const isWebcamOn = participant.webcamOn;
+          const meta = participant?.metaData as {
+            avatar?: string;
+          };
 
+          const avatar = meta?.avatar;
           return (
             <div
               key={participant.id}
               className="flex items-center gap-3 p-3 hover:bg-gray-800/60 rounded-xl transition-all group"
             >
               {/* Avatar */}
-              {user?.avatar ? (
+              {avatar ? (
                 <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getGradientClass(participant.id)} flex items-center justify-center font-bold text-white shadow-inner`}>
                   <img
-                    src={user.avatar}
+                    src={avatar}
                     alt="Profile"
                     className="w-full h-full object-cover rounded-full"
                   />
