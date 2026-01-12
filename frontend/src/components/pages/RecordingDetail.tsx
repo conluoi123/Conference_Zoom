@@ -26,9 +26,6 @@ export function RecordingDetail() {
   const [shareEmails, setShareEmails] = useState("");
 
   const roomId = location.state?.roomId || "";
-  if (loading) {
-    return <LoadingScreen message="" variant="light" />;
-  }
   useEffect(() => {
     if (sessionId) {
       if (!roomId) {
@@ -45,7 +42,9 @@ export function RecordingDetail() {
     try {
       setLoading(true);
       setError("");
+      console.log(1);
       const urls = await recordingAPI.getSessionRecordings(roomId, sessionId!);
+      console.log(urls);
       setRecordingUrls(urls);
     } catch (err: any) {
       console.error("❌ Error fetching recordings:", err);
@@ -73,6 +72,9 @@ export function RecordingDetail() {
     setShareEmails("");
     alert("Đã chia sẻ recording thành công!");
   };
+  if (loading) {
+    return <LoadingScreen message="" variant="light" />;
+  }
 
   if (loading) {
     return (

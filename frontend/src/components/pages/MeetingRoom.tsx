@@ -183,12 +183,6 @@ export function MeetingRoom({
           return;
         }
 
-        // Gọi API để lưu recording vào database
-        await api.post("/rooms/recordings/start", {
-          sessionId: sessionId,
-          roomId: roomId,
-        });
-
         console.log("✅ Recording saved to database");
         toast.success("Đã bắt đầu ghi hình");
       } catch (error: any) {
@@ -200,6 +194,7 @@ export function MeetingRoom({
     },
     onRecordingStopped: () => {
       console.log("⏹️ Ghi hình đã dừng");
+      // toast.success("Ghi hình đã dừng");
       setIsRecording(false);
     },
   });
