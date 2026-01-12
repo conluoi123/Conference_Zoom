@@ -25,27 +25,33 @@ const videoSdkWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
         switch (webhookType) {
             case "session-started": {
                 const { sessionId, meetingId, start } = data;
+                console.log(`Bắt đầu: Room:${meetingId} - ${sessionId}`);
                 yield (0, session_services_1.startSession)(meetingId, sessionId, start);
                 break;
             }
             case "session-ended": {
                 const { sessionId, meetingId, end } = data;
+                console.log(`Kết thúc: Room:${meetingId} - ${sessionId}`);
                 yield (0, session_services_1.endSession)(meetingId, sessionId, end);
                 break;
             }
             case "participant-joined": {
+                console.log(`Room:${data.meetingId} - ${data.sessionId} - ${data.participantId} đã tham gia`);
                 yield (0, participant_services_1.onParticipantJoined)(data);
                 break;
             }
             case "participant-left": {
+                console.log(`Room:${data.meetingId} - ${data.sessionId} - ${data.participantId} đã rời phòng`);
                 yield (0, participant_services_1.onParticipantLeft)(data);
                 break;
             }
             case "recording-started": {
+                console.log(`Room:${data.meetingId} - ${data.sessionId} - Bắt đầu ghi hình`);
                 yield (0, recording_services_1.startRecording)(data);
                 break;
             }
             case "recording-stopped": {
+                console.log(`Room:${data.meetingId} - ${data.sessionId} - Kết thúc ghi hình`);
                 yield (0, recording_services_1.endRecording)(data);
                 break;
             }
