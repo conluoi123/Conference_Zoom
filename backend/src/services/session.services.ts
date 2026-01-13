@@ -1,0 +1,112 @@
+import { session } from "express-session";
+import Session from "../models/session.model";
+import User from "../models/user.model";
+import Room from "../models/room.model";
+import { getSchedule, latestSchedule, updateScheduleOnDb } from "./schedule.services";
+import { getIO } from "../socket/socketHandler";
+
+const startSession = async (roomId, sessionId, start: string) => {
+  const room = await Room.findOne({ roomId: roomId });
+  let session;
+  if (room.type === "SCHEDULED") {
+    const schedule = await latestSchedule(roomId);
+    session = await Session.create({
+      roomId: roomId,
+      sessionId: sessionId,
+      scheduleId: schedule[schedule.length - 1]._id,
+      start: new Date(start),
+      end: null,
+      invited: [],
+    });
+    const scheduleId = session.scheduleId;
+    const io = getIO();
+    room.invited.forEach((email) => {
+      io.to(email).emit("meeting:event", {
+        sessionId,
+        scheduleId,
+        message: "Đang diễn ra",
+      });
+    });
+  } else {
+    session = await Session.create({
+      roomId: roomId,
+      sessionId: sessionId,
+      start: new Date(start),
+      end: null,
+      invited: [],
+    });
+  }
+  if (!session) {
+    throw new Error("Lỗi database: Tạo phiên thất bại");
+  }
+};
+
+const endSession = async (roomId, sessionId, end: string) => {
+  const room = await Room.findOne({ roomId: roomId });
+  const session = await Session.updateOne(
+    {
+      roomId: roomId,
+      sessionId: sessionId,
+    },
+    {
+      end: new Date(end),
+    }
+  );
+  if (room.type === "SCHEDULED") {
+    const io = getIO();
+    const ses = await Session.findOne({sessionId});
+    console.log(ses)
+    const scheduleId = ses.scheduleId;
+    const schedule = await getSchedule(scheduleId);
+    console.log(ses.scheduleId, schedule, ses.end)
+    const updatedSchedule = await updateScheduleOnDb(scheduleId, schedule.title as string, schedule.startTime, ses.end, schedule.duration as number);
+    room.invited.forEach((email) => {
+      io.to(email).emit("meeting:event", {
+        sessionId,
+        scheduleId,
+        message: "Đã kết thúc",
+      });
+    });
+  }
+  if (!session) {
+    throw new Error("Lỗi database: Phiên không tồn tại");
+  }
+};
+
+const findProgressingSession = async (roomId: string) => {
+  const session = await Session.findOne({ roomId: roomId, end: null });
+  if (!session) {
+    throw new Error("Phiên họp đã kết thúc");
+  }
+  return session;
+};
+
+const addInvitee = async (roomId, email: string) => {
+  await Session.updateOne(
+    { roomId: roomId },
+    { $addToSet: { invited: email } }
+  );
+};
+
+const isInvitedForSession = async (roomId, peerId: string) => {
+  const [user, session] = await Promise.all([
+    User.findOne({ _id: peerId }),
+    Session.findOne({ roomId: roomId, end: null }),
+  ]);
+  if (!user) {
+    throw new Error("Phát hiện truy cập bất thường");
+  }
+  if (!session) {
+    return false;
+  }
+  if (session.invited.includes(user.email)) return true;
+  return false;
+};
+
+export {
+  findProgressingSession,
+  addInvitee,
+  isInvitedForSession,
+  startSession,
+  endSession,
+};

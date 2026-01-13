@@ -1,0 +1,35 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ENV = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const ENV = {
+    PORT: process.env.PORT,
+    DB_URL: process.env.DB_URL,
+    FRONTEND_URL: process.env.FRONTEND_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    JWT_SECRET: process.env.JWT_SECRET,
+    REDIS_URL: process.env.REDIS_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_SECRET_ID: process.env.GOOGLE_SECRET_ID,
+    GOOGLE_REDIRECT_URL: process.env.GOOGLE_REDIRECT_URL,
+    OUTLOOK_APP_ID: process.env.OUTLOOK_APP_ID,
+    OUTLOOK_APP_SECRET: process.env.OUTLOOK_APP_SECRET,
+    OUTLOOK_REDIRECT_URL: process.env.OUTLOOK_REDIRECT_URL,
+    SESSION_SECRET: process.env.SESSION_SECRET,
+    EMAIL_USER: process.env.EMAIL_USER,
+    EMAIL_PASS: process.env.EMAIL_PASS,
+    EMAIL_FROM: process.env.EMAIL_FROM,
+    VIDEOSDK_API_ENDPOINT: process.env.VIDEOSDK_API_ENDPOINT,
+    VIDEOSDK_API_KEY: process.env.VIDEOSDK_API_KEY,
+    VIDEOSDK_SECRET_KEY: process.env.VIDEOSDK_SECRET_KEY,
+    GOOGLE_LOGIN_URL: process.env.GOOGLE_LOGIN_URL,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_SECRET_KEY: process.env.CLOUDINARY_SECRET_KEY,
+    CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
+    BACKEND_URL: process.env.BACKEND_URL,
+};
+exports.ENV = ENV;

@@ -1,0 +1,74 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { MeetingProvider, useMeeting } from "@videosdk.live/react-sdk";
+import { MeetingRoom } from "./MeetingRoom.tsx";
+import { useAuth } from "../../context/AuthContext.tsx";
+import LoadMeeting from "./common/meetings/LoadMeeting.tsx";
+
+export const MeetingPage = React.memo(() => {
+  const navigate = useNavigate();
+  const { roomId: paramRoomId } = useParams();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  // 1. Lấy dữ liệu an toàn và ghi nhớ vào memo/state để tránh tính toán lại mỗi lần render
+  const meetingData = (() => {
+    const stateData = location.state;
+    const storageData = JSON.parse(sessionStorage.getItem(`meeting_${paramRoomId}`) || "null");
+    return stateData || storageData || {};
+  })();
+
+  const { 
+    token, 
+    roomId: stateRoomId, 
+    hostId,
+    settings,
+    displayName: stateName 
+  } = meetingData;
+
+  const roomId = stateRoomId || paramRoomId;
+  const finalDisplayName = stateName || user?.displayName || "Guest";
+
+  // 2. Kiểm tra điều kiện ngay lập tức
+  useEffect(() => {
+    if (!roomId || !token) {
+      console.error("❌ Thiếu dữ liệu quan trọng để khởi tạo cuộc họp.");
+      navigate("/home");
+    }
+  }, [roomId, token, navigate]);
+
+  if (!token || !roomId) {
+    return <LoadMeeting />; 
+  }
+
+  return (
+    <MeetingProvider
+      key={Date.now().toString()}
+      config={{
+        meetingId: roomId,
+        participantId: user?.id || `guest`,
+        name: finalDisplayName,
+        metaData: {
+          avatar: user?.avatar,
+        },
+        micEnabled: settings.allowMic,
+        webcamEnabled: settings.allowCam,
+        autoConsume: true,
+        debugMode: true,
+        multiStream: true,
+        maxResolution: "hd",
+      }}
+      token={token}
+      joinWithoutUserInteraction={settings.allowJoin}
+      reinitialiseMeetingOnConfigChange={true}
+    >
+      <MeetingRoom
+        roomId={roomId}
+        isHost={hostId === user?.id}
+        hostId={hostId}
+        initialSettings={settings}
+        onLeaveMeeting={() => navigate("/home")}
+      />
+    </MeetingProvider>
+  );
+})
